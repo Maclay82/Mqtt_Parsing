@@ -1,10 +1,5 @@
 #include <Arduino.h>
-#include "a_def_hard.h"     // Определение параметров матрицы, пинов подключения и т.п
-#include "a_def_soft.h"     // Определение параметров эффектов, переменных программы и т.п.
-#include "eeprom1.h"
-#include "setters.h"
-#include "mqtt.h"
-//#include "a_main.h"
+#include "def_soft.h"     // Определение параметров эффектов, переменных программы и т.п.
 
 // Для поддержки работы MQTT нужно знать какой параметр изменился, чтобы отправить изменения на сервер
 // По этой причмне нельзя напрямую присваивать новое значение переменной, нужно выполнить дополнительный действия,
@@ -23,7 +18,7 @@ void addKeyToChanged(String key) {
     }
   #endif  
 }
-
+/*
 // DM manualMode
 void set_manualMode(bool value) {
   if (manualMode == value) return;
@@ -99,13 +94,7 @@ void set_thisMode(int8_t value) {
   //if (value < 0 || (valid && old_SE != getStateValue(keySE, value)))  addKeyToChanged("SE");
   //if (value < 0 || (valid && old_BE != getStateValue(keyBE, value)))  addKeyToChanged("BE");
 }
-
-// OM memoryAvail
-void set_memoryAvail(uint16_t value) {
-  if (memoryAvail == value) return;
-  memoryAvail = value;
-  addKeyToChanged("OM");
-}
+*/
 
 // NP useNtp
 void set_useNtp(bool value) {
@@ -187,7 +176,7 @@ void set_StaticIP(byte p1, byte p2, byte p3, byte p4) {
   putStaticIP(p1, p2, p3, p4);
   addKeyToChanged("IP");
 }              
-
+/*
 // AW alarmWeekDay
 void set_alarmWeekDay(byte value) {
   if (alarmWeekDay == value) return;
@@ -222,7 +211,7 @@ void set_alarmTime(byte wd, byte hour_value, byte minute_value) {
   alarmMinute[wd-1] = getAlarmMinute(wd);
   addKeyToChanged("AT");
 }
-
+*/
 // AU useSoftAP
 void set_useSoftAP(bool value) {
   if (useSoftAP == value) return;
@@ -230,7 +219,7 @@ void set_useSoftAP(bool value) {
   useSoftAP = getUseSoftAP();
   addKeyToChanged("AU");
 }
-
+/*
 // AM1T AM1_hour
 void set_AM1_hour(byte value) {
   if (AM1_hour == value) return;
@@ -342,6 +331,7 @@ void set_dusk_effect_id(int8_t value) {
   dusk_effect_id = getAM6effect();
   addKeyToChanged("AM6A");
 }
+*/
 
 #if (USE_MQTT == 1)
 // QA useMQTT

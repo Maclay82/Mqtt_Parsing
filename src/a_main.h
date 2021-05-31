@@ -1,9 +1,10 @@
 #ifndef A_MAIN_H
 #define A_MAIN_H
+
 void startWiFi(unsigned long waitTime);
 void startSoftAP();
 void process();
-//void processButtonStep();
+
 // ********************* ПРИНИМАЕМ ДАННЫЕ **********************
 
 void parsing();
@@ -16,9 +17,11 @@ String getStateValue(String &key, int8_t effect, JsonVariant* value = nullptr);
 
 String getStateString(String keys);
 void sendAcknowledge(eSources src);
-void setSpecialMode(int spc_mode);
-void setEffect(byte eff);
-void setManualModeTo(bool isManual);
+
 void parseNTP();
 void getNTP();
+
+String padNum(int16_t num, byte cnt);
+String getDateTimeString(time_t t);
+
 #endif

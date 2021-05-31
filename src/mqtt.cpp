@@ -1,8 +1,8 @@
 #include <Arduino.h>
-#include "a_def_hard.h"     // Определение параметров матрицы, пинов подключения и т.п
-#include "a_def_soft.h"     // Определение параметров эффектов, переменных программы и т.п.
-#include "mqtt.h"
-#include "a_main.h"
+//#include "def_hard.h"     // Определение параметров матрицы, пинов подключения и т.п
+#include "def_soft.h"     // Определение параметров эффектов, переменных программы и т.п.
+//#include "mqtt.h"
+//#include "a_main.h"
 
 #if (USE_MQTT == 1)
 
@@ -238,7 +238,7 @@ void mqttSendStartState() {
   SendCurrentState(STATE_KEYS, TOPIC_STT, !mqtt_state_packet);  
 }
 
-// Отправка сообщений из очереди на червер
+// Отправка сообщений из очереди на сервер
 void processOutQueue() {
   if (stopMQTT) {
     outQueueReadIdx = 0;
