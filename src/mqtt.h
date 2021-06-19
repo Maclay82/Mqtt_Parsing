@@ -14,7 +14,7 @@ String mqtt_topic(String topic);
 void putOutQueue(String topic, String message, bool retain = false);
 void SendMQTT(String &message, String topic);
 void notifyUnknownCommand(const char* text);
-bool subscribeMqttTopicCmd();
+bool subscribeMqttTopics();
 void checkMqttConnection();
 // Отправка в MQTT канал - текущие значения переменных
 void SendCurrentState(String keys, String topic, bool immediate);

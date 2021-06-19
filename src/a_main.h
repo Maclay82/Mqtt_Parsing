@@ -10,18 +10,10 @@ void process();
 void parsing();
 
 void sendPageParams(int page);
-
 void sendPageParams(int page, eSources src);
 void sendStringData(String &str, eSources src);
 String getStateValue(String &key, int8_t effect, JsonVariant* value = nullptr);
-
 String getStateString(String keys);
 void sendAcknowledge(eSources src);
-
-void parseNTP();
-void getNTP();
-
-String padNum(int16_t num, byte cnt);
-String getDateTimeString(time_t t);
 
 #endif

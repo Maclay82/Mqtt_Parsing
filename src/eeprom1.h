@@ -1,6 +1,6 @@
 #ifndef EEPROM1_H
 #define EEPROM1_H
-// void loadSettings();
+void loadSettings();
 void clearEEPROM();
 void saveDefaults();
 void saveSettings();
@@ -66,9 +66,9 @@ void EEPROM_int_write(uint16_t addr, uint16_t num);
 uint32_t EEPROM_long_read(uint16_t addr);
 // запись uint32_t
 void EEPROM_long_write(uint16_t addr, uint32_t num);
-void EEPROMWriteFloat(int addr, float val); // запись в ЕЕПРОМ
+void EEPROMWriteFloat(uint16_t addr, float val); // запись в ЕЕПРОМ
 
-float EEPROMReadFloat(int addr); // чтение из ЕЕПРОМ
+float EEPROMReadFloat(uint16_t addr); // чтение из ЕЕПРОМ
 
 String EEPROM_string_read(uint16_t addr, int16_t len);
 void EEPROM_string_write(uint16_t addr, String buffer, uint16_t max_len);

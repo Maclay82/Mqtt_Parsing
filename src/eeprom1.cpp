@@ -1,139 +1,133 @@
 #include <Arduino.h>
 #include "def_soft.h"     // Определение параметров эффектов, переменных программы и т.п.
 
-// void loadSettings() {
+bool     eepromModified = false;            // флаг: EEPROM изменен, требует сохранения
+// ------------------- ФАЙЛОВАЯ СИСТЕМА SPIFFS ----------------------
 
-//   // Адреса в EEPROM:
-//   //    0 - если EEPROM_OK - EEPROM инициализировано, если другое значение - нет                             // EEPROMread(0)                 // EEPROMWrite(0, EEPROM_OK)
+bool       spiffs_ok = false;                    // Флаг - файловая система SPIFFS доступна для использования
+size_t     spiffs_total_bytes;                   // Доступно байт в SPIFFS
+size_t     spiffs_used_bytes;                    // Использовано байт в SPIFFS
+int8_t     eeprom_backup = 0;                    // Флаг - backup настроек 0 - нeт; 1 - FS; 2 - SD; 3 - FS и SD
 
-//   //    5 - использовать синхронизацию времени через NTP                                                     // getUseNtp()                   // putUseNtp(useNtp)
-//   //  6,7 - период синхронизации NTP (int16_t - 2 байта) в минутах                                           // getNtpSyncTime()              // putNtpSyncTime(SYNC_TIME_PERIOD)
-//   //    8 - time zone UTC+X                                                                                  // getTimeZone();                // putTimeZone(timeZoneOffset)
 
-//   //   10 - IP[0]                                                                                            // getStaticIP()                 // putStaticIP(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3])
-//   //   11 - IP[1]                                                                                            // - " -                         // - " -
-//   //   12 - IP[2]                                                                                            // - " -                         // - " -
-//   //   13 - IP[3]                                                                                            // - " -                         // - " -
-//   //   14 - Использовать режим точки доступа                                                                 // getUseSoftAP()                // putUseSoftAP(useSoftAP)
+void loadSettings() {
+
+  // Адреса в EEPROM:
+  //    0 - если EEPROM_OK - EEPROM инициализировано, если другое значение - нет                             // EEPROMread(0)                 // EEPROMWrite(0, EEPROM_OK)
+
+  //    5 - использовать синхронизацию времени через NTP                                                     // getUseNtp()                   // putUseNtp(useNtp)
+  //  6,7 - период синхронизации NTP (int16_t - 2 байта) в минутах                                           // getNtpSyncTime()              // putNtpSyncTime(SYNC_TIME_PERIOD)
+  //    8 - time zone UTC+X                                                                                  // getTimeZone();                // putTimeZone(timeZoneOffset)
+
+  //   10 - IP[0]                                                                                            // getStaticIP()                 // putStaticIP(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3])
+  //   11 - IP[1]                                                                                            // - " -                         // - " -
+  //   12 - IP[2]                                                                                            // - " -                         // - " -
+  //   13 - IP[3]                                                                                            // - " -                         // - " -
+  //   14 - Использовать режим точки доступа                                                                 // getUseSoftAP()                // putUseSoftAP(useSoftAP)
   
-//   //   15 - maxhum                                                                                           // getMaxHum()                   // putMaxHum(maxhum)
-//   //   19 - minhum                                                                                           // getMinHum()                   // putMinHum(minhum)
-//   //   23 - 
+  //   15 - maxhum                                                                                           // getMaxHum()                   // putMaxHum(maxhum)
+  //   19 - minhum                                                                                           // getMinHum()                   // putMinHum(minhum)
+  //   23 - 
 
   
-//   //  54-63   - имя точки доступа    - 10 байт                                                               // getSoftAPName().toCharArray(apName, 10)       // putSoftAPName(String(apName))       // char apName[11] = ""
-//   //  64-79   - пароль точки доступа - 16 байт                                                               // getSoftAPPass().toCharArray(apPass, 17)       // putSoftAPPass(String(apPass))       // char apPass[17] = "" 
-//   //  80-103  - имя сети  WiFi       - 24 байта                                                              // getSsid().toCharArray(ssid, 25)               // putSsid(String(ssid))               // char ssid[25]   = ""
-//   //  104-119 - пароль сети  WiFi    - 16 байт                                                               // getPass().toCharArray(pass, 17)               // putPass(String(pass))               // char pass[17]   = ""
-//   //  120-149 - имя NTP сервера      - 30 байт                                                               // getNtpServer().toCharArray(ntpServerName, 31) // putNtpServer(String(ntpServerName)) // char ntpServerName[31] = ""
+  //  54-63   - имя точки доступа    - 10 байт                                                               // getSoftAPName().toCharArray(apName, 10)       // putSoftAPName(String(apName))       // char apName[11] = ""
+  //  64-79   - пароль точки доступа - 16 байт                                                               // getSoftAPPass().toCharArray(apPass, 17)       // putSoftAPPass(String(apPass))       // char apPass[17] = "" 
+  //  80-103  - имя сети  WiFi       - 24 байта                                                              // getSsid().toCharArray(ssid, 25)               // putSsid(String(ssid))               // char ssid[25]   = ""
+  //  104-119 - пароль сети  WiFi    - 16 байт                                                               // getPass().toCharArray(pass, 17)               // putPass(String(pass))               // char pass[17]   = ""
+  //  120-149 - имя NTP сервера      - 30 байт                                                               // getNtpServer().toCharArray(ntpServerName, 31) // putNtpServer(String(ntpServerName)) // char ntpServerName[31] = ""
  
-//   //  161 - Режим 3 по времени - часы                                                                        // getAM3hour()                   // putAM3hour(AM3_hour)
-//   //  162 - Режим 3 по времени - минуты                                                                      // getAM3minute()                 // putAM3minute(AM3_minute) 
-//   //  163 - Режим 3 по времени - так же как для режима 1                                                     // getAM3effect()                 // putAM3effect(AM3_effect_id)
-//   //  164 - Режим 4 по времени - часы                                                                        // getAM4hour()                   // putAM4hour(AM4_hour)
-//   //  165 - Режим 4 по времени - минуты                                                                      // getAM4minute()                 // putAM4minute(AM4_minute)
-//   //  166 - Режим 4 по времени - так же как для режима 1                                                     // getAM4effect()                 // putAM4effect(AM4_effect_id)
+  // 182-206 - MQTT сервер (24 симв)                                                                         // getMqttServer().toCharArray(mqtt_server, 24)  // putMqttServer(String(mqtt_server))       // char mqtt_server[25] = ""
+  // 207-221 - MQTT user (14 симв)                                                                           // getMqttUser().toCharArray(mqtt_user, 14)      // putMqttUser(String(mqtt_user))           // char mqtt_user[15] = ""
+  // 222-236 - MQTT pwd (14 симв)                                                                            // getMqttPass().toCharArray(mqtt_pass, 14)      // putMqttPass(String(mqtt_pass))           // char mqtt_pass[15] = ""
+  // 237,238 - MQTT порт                                                                                     // getMqttPort()                  // putMqttPort(mqtt_port)
+  // 239 - использовать MQTT канал управления: 0 - нет 1 - да                                                // getUseMqtt()                   // putUseMqtt(useMQTT)  
 
-//   // 182-206 - MQTT сервер (24 симв)                                                                         // getMqttServer().toCharArray(mqtt_server, 24)  // putMqttServer(String(mqtt_server))       // char mqtt_server[25] = ""
-//   // 207-221 - MQTT user (14 симв)                                                                           // getMqttUser().toCharArray(mqtt_user, 14)      // putMqttUser(String(mqtt_user))           // char mqtt_user[15] = ""
-//   // 222-236 - MQTT pwd (14 симв)                                                                            // getMqttPass().toCharArray(mqtt_pass, 14)      // putMqttPass(String(mqtt_pass))           // char mqtt_pass[15] = ""
-//   // 237,238 - MQTT порт                                                                                     // getMqttPort()                  // putMqttPort(mqtt_port)
-//   // 239 - использовать MQTT канал управления: 0 - нет 1 - да                                                // getUseMqtt()                   // putUseMqtt(useMQTT)  
+  // 241,242 - задержка отпракии запросов MQTT серверу                                                       // getMqttSendDelay()             // putMqttSendDelay(mqtt_send_delay)
 
-//   // 241,242 - задержка отпракии запросов MQTT серверу                                                       // getMqttSendDelay()             // putMqttSendDelay(mqtt_send_delay)
+  // 249 - отправка параметров состояния в MQTT 0 - индивидуально, 1 - пакетами                              // getSendStateInPacket()         // putSendStateInPacket(mqtt_state_packet)  
+  // 250-279 - префикс топика сообщения (30 симв)                                                            // getMqttPrefix()                // putMqttPrefix(mqtt_prefix)
+  // 280,281 - интервал отправки значения uptime на MQTT-сервер                                              // getUpTimeSendInterval()        // putUpTimeSendInterval(upTimeSendInterval)
+  //**282 - не используется
+  //  ...
+  //**299 - не используется
 
-//   // 249 - отправка параметров состояния в MQTT 0 - индивидуально, 1 - пакетами                              // getSendStateInPacket()         // putSendStateInPacket(mqtt_state_packet)  
-//   // 250-279 - префикс топика сообщения (30 симв)                                                            // getMqttPrefix()                // putMqttPrefix(mqtt_prefix)
-//   // 280,281 - интервал отправки значения uptime на MQTT-сервер                                              // getUpTimeSendInterval()        // putUpTimeSendInterval(upTimeSendInterval)
-//   //**282 - не используется
-//   //  ...
-//   //**299 - не используется
+  // Сначала инициализируем имя сети/точки доступа, пароли и имя NTP-сервера значениями по умолчанию.
+  // Ниже, если EEPROM уже инициализирован - из него будут загружены актуальные значения
+  strcpy(apName, DEFAULT_AP_NAME);
+  strcpy(apPass, DEFAULT_AP_PASS);
+  strcpy(ssid, NETWORK_SSID);
+  strcpy(pass, NETWORK_PASS);
+  strcpy(ntpServerName, DEFAULT_NTP_SERVER);    
 
-//   // Сначала инициализируем имя сети/точки доступа, пароли и имя NTP-сервера значениями по умолчанию.
-//   // Ниже, если EEPROM уже инициализирован - из него будут загружены актуальные значения
-//   strcpy(apName, DEFAULT_AP_NAME);
-//   strcpy(apPass, DEFAULT_AP_PASS);
-//   strcpy(ssid, NETWORK_SSID);
-//   strcpy(pass, NETWORK_PASS);
-//   strcpy(ntpServerName, DEFAULT_NTP_SERVER);    
+  #if (USE_MQTT == 1)
+  strcpy(mqtt_server, DEFAULT_MQTT_SERVER);
+  strcpy(mqtt_user,   DEFAULT_MQTT_USER);
+  strcpy(mqtt_pass,   DEFAULT_MQTT_PASS);
+  strcpy(mqtt_prefix, DEFAULT_MQTT_PREFIX);
+  #endif
 
-//   #if (USE_MQTT == 1)
-//   strcpy(mqtt_server, DEFAULT_MQTT_SERVER);
-//   strcpy(mqtt_user,   DEFAULT_MQTT_USER);
-//   strcpy(mqtt_pass,   DEFAULT_MQTT_PASS);
-//   strcpy(mqtt_prefix, DEFAULT_MQTT_PREFIX);
-//   #endif
-
-//   // Инициализировано ли EEPROM
-//   bool isInitialized = EEPROMread(0) == EEPROM_OK;  
+  // Инициализировано ли EEPROM
+  bool isInitialized = EEPROMread(0) == EEPROM_OK;  
   
-//   // Serial.print('\n');
-//   // Serial.print(F("EEPROMread(0) - "));
-//   // Serial.print(EEPROMread(0));
-//   // Serial.print(F(" EEPROM_OK - "));
-//   // Serial.println(EEPROM_OK);
-//   Serial.println(isInitialized);
+    if (isInitialized) {    
 
-//   if (isInitialized) {    
-//     maxhum = getMaxHum();
-//     minhum = getMinHum();
-//     Serial.print('\n');
-//     Serial.print("maxhum - ");
-//     Serial.print(maxhum);
-//     Serial.print(" - ");
-//     Serial.println(getMaxHum());
+    maxhum = getMaxHum();
+    minhum = getMinHum();
+  
+    useNtp = getUseNtp();
+    timeZoneOffset = getTimeZone();
 
-//     useNtp = getUseNtp();
-//     timeZoneOffset = getTimeZone();
-
-//     SYNC_TIME_PERIOD = getNtpSyncTime();
-//     useSoftAP = getUseSoftAP();
-//     getSoftAPName().toCharArray(apName, 10);        //  54-63   - имя точки доступа    ( 9 байт макс) + 1 байт '\0'
-//     getSoftAPPass().toCharArray(apPass, 17);        //  64-79   - пароль точки доступа (16 байт макс) + 1 байт '\0'
-//     getSsid().toCharArray(ssid, 25);                //  80-103  - имя сети  WiFi       (24 байта макс) + 1 байт '\0'
-//     getPass().toCharArray(pass, 17);                //  104-119 - пароль сети  WiFi    (16 байт макс) + 1 байт '\0'
-//     getNtpServer().toCharArray(ntpServerName, 31);  //  120-149 - имя NTP сервера      (30 байт макс) + 1 байт '\0'
+    SYNC_TIME_PERIOD = getNtpSyncTime();
+    useSoftAP = getUseSoftAP();
+    getSoftAPName().toCharArray(apName, 10);        //  54-63   - имя точки доступа    ( 9 байт макс) + 1 байт '\0'
+    getSoftAPPass().toCharArray(apPass, 17);        //  64-79   - пароль точки доступа (16 байт макс) + 1 байт '\0'
+    getSsid().toCharArray(ssid, 25);                //  80-103  - имя сети  WiFi       (24 байта макс) + 1 байт '\0'
+    getPass().toCharArray(pass, 17);                //  104-119 - пароль сети  WiFi    (16 байт макс) + 1 байт '\0'
+    getNtpServer().toCharArray(ntpServerName, 31);  //  120-149 - имя NTP сервера      (30 байт макс) + 1 байт '\0'
     
-//     if (strlen(apName) == 0) strcpy(apName, DEFAULT_AP_NAME);
-//     if (strlen(apPass) == 0) strcpy(apPass, DEFAULT_AP_PASS);
-//     if (strlen(ntpServerName) == 0) strcpy(ntpServerName, DEFAULT_NTP_SERVER);
+    if (strlen(apName) == 0) strcpy(apName, DEFAULT_AP_NAME);
+    if (strlen(apPass) == 0) strcpy(apPass, DEFAULT_AP_PASS);
+    if (strlen(ntpServerName) == 0) strcpy(ntpServerName, DEFAULT_NTP_SERVER);
 
-//     #if (USE_MQTT == 1)
-//     useMQTT = getUseMqtt();
-//     mqtt_state_packet = getSendStateInPacket();
-//     getMqttServer().toCharArray(mqtt_server, 25);   //  182-206 - mqtt сервер          (24 байт макс) + 1 байт '\0'
-//     getMqttUser().toCharArray(mqtt_user, 15);       //  207-221 - mqtt user            (14 байт макс) + 1 байт '\0'
-//     getMqttPass().toCharArray(mqtt_pass, 15);       //  222-236 - mqtt password        (14 байт макс) + 1 байт '\0'
-//     getMqttPrefix().toCharArray(mqtt_prefix, 31);   //  250-279 - mqtt password        (30 байт макс) + 1 байт '\0'
-//     if (strlen(mqtt_server) == 0) strcpy(mqtt_server, DEFAULT_MQTT_SERVER);
-//     if (strlen(mqtt_user)   == 0) strcpy(mqtt_user,   DEFAULT_MQTT_USER);
-//     if (strlen(mqtt_pass)   == 0) strcpy(mqtt_pass,   DEFAULT_MQTT_PASS);
-//     if (strlen(mqtt_prefix) == 0) strcpy(mqtt_prefix, DEFAULT_MQTT_PREFIX);
-//     mqtt_port = getMqttPort();
-//     mqtt_send_delay = getMqttSendDelay();
-//     upTimeSendInterval = getUpTimeSendInterval();
-//     #endif
+    #if (USE_MQTT == 1)
+    useMQTT = getUseMqtt();
+    mqtt_state_packet = getSendStateInPacket();
+    getMqttServer().toCharArray(mqtt_server, 25);   //  182-206 - mqtt сервер          (24 байт макс) + 1 байт '\0'
+    getMqttUser().toCharArray(mqtt_user, 15);       //  207-221 - mqtt user            (14 байт макс) + 1 байт '\0'
+    getMqttPass().toCharArray(mqtt_pass, 15);       //  222-236 - mqtt password        (14 байт макс) + 1 байт '\0'
+    getMqttPrefix().toCharArray(mqtt_prefix, 31);   //  250-279 - mqtt password        (30 байт макс) + 1 байт '\0'
+    if (strlen(mqtt_server) == 0) strcpy(mqtt_server, DEFAULT_MQTT_SERVER);
+    if (strlen(mqtt_user)   == 0) strcpy(mqtt_user,   DEFAULT_MQTT_USER);
+    if (strlen(mqtt_pass)   == 0) strcpy(mqtt_pass,   DEFAULT_MQTT_PASS);
+    if (strlen(mqtt_prefix) == 0) strcpy(mqtt_prefix, DEFAULT_MQTT_PREFIX);
+    mqtt_port = getMqttPort();
+    mqtt_send_delay = getMqttSendDelay();
+    upTimeSendInterval = getUpTimeSendInterval();
+    #endif
 
-//     getStaticIP();
+    getStaticIP();
     
-//   } else {
+  } else {
 
-//     Serial.println(F("Инициализация EEPROM..."));
+    Serial.println(F("Инициализация EEPROM..."));
 
-//     // Значения переменных по умолчанию определяются в месте их объявления - в файле def_soft.h
-//     // Здесь выполняются только инициализация массивов и некоторых специальных параметров
-//     clearEEPROM();
+    // Значения переменных по умолчанию определяются в месте их объявления - в файле def_soft.h
+    // Здесь выполняются только инициализация массивов и некоторых специальных параметров
+    clearEEPROM();
 
-//     // После первой инициализации значений - сохранить их принудительно
-//     saveDefaults();
-//     saveSettings();
+    // После первой инициализации значений - сохранить их принудительно
+    saveDefaults();
+    saveSettings();
     
-//   }  
+    maxhum = getMaxHum();
+    minhum = getMinHum();
 
-//   #if (USE_MQTT == 1) 
-//   changed_keys = "";
-//   #endif
-// }
+  }  
+
+  #if (USE_MQTT == 1) 
+  changed_keys = "";
+  #endif
+}
 
 void clearEEPROM() {
   for (int addr = 1; addr < EEPROM_MAX; addr++) {
@@ -193,7 +187,7 @@ void saveSettings() {
   saveSettingsTimer.reset();
   if (!eepromModified) return;
   
-  // Поставить отметку, что EEPROM инициализировано параметрами эффектов
+  // Поставить отметку, что EEPROM инициализировано
   EEPROMwrite(0, EEPROM_OK);
   
   EEPROM.commit();
@@ -467,13 +461,14 @@ void EEPROM_long_write(uint16_t addr, uint32_t num) {
   for (byte i = 0; i < 4; i++) EEPROMwrite(addr+i, raw[i]);
 }
 
-void EEPROMWriteFloat(int addr, float val) // запись в ЕЕПРОМ
+void EEPROMWriteFloat(uint16_t addr, float val) // запись в ЕЕПРОМ
 {
   byte *x = (byte *)&val;
   for(byte i = 0; i < 4; i++) EEPROM.write(i+addr, x[i]);
+  saveSettingsTimer.reset();
 }
 
-float EEPROMReadFloat(int addr) // чтение из ЕЕПРОМ
+float EEPROMReadFloat(uint16_t addr) // чтение из ЕЕПРОМ
 {
   byte x[4];
   for(byte i = 0; i < 4; i++) x[i] = EEPROM.read(i+addr);

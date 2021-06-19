@@ -1,7 +1,7 @@
 #ifndef DEF_HARD_H
 #define DEF_HARD_H
 
-#define EEPROM_OK     0xA2      // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA3      // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    1024       // Максимальный размер EEPROM доступный для использования
 // #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  300       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
@@ -37,7 +37,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #endif
 
 #ifndef DEFAULT_IP
-#define DEFAULT_IP {192, 168, 1, 100}       // Сетевой адрес устройства по умолчанию
+#define DEFAULT_IP {192, 168, 1, 101}       // Сетевой адрес устройства по умолчанию
 #endif
 
 
@@ -76,9 +76,9 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
-#define HOST_NAME   F("Main")
+//#define HOST_NAME   F("Main")
 
-#define DEVICE_ID   0               // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID   1               // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
 
@@ -90,70 +90,50 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
  * В менеджере плат выбрано NodeMCU v1.0 (ESP-12E)
  */
 //#if defined(ESP8266)
+#define DEFAULT_MQTT_PREFIX "ghTest"      // Префикс топика сообщения или пустая строка, если префикс не требуется
+
+#define HOST_NAME   F("humCtrlTest")
+
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
                               // 0 - Настройки MQTT и API KEY OpenWeatherMap в скетче в def_soft.h в строках: (пароли и ключи доступа определены в тексте скетча)
                               // Файл a_def_pass.h в комплект не входит, нужно создать, скопировать туда указанные строки
 #define HUMPWR D6
-#define REFRESHTIME 5000
+#define REFRESHTIME 10000
 #define MEMFLAG 0
 
 #define minhumDEF 69
 #define maxhumDEF 74
 
-//#endif
-// Update these with values suitable for your network.
-
 #define mqttClient "GHTest"
-#define mqtt_topic_temp "/ghTest/humCtrl/temp"
-#define mqtt_topic_hum "/ghTest/humCtrl/hum"
-#define mqtt_topic_max_hum "/ghTest/humCtrl/maxhum" // MQTT Topic
-#define mqtt_topic_min_hum "/ghTest/humCtrl/minhum" // MQTT Topic
-#define mqtt_topic_relay "/ghTest/humCtrl/relay" // MQTT Topic
-#define mqtt_topic_com "/ghTest/humCtrl/cmd" // MQTT Топик - получение команды управления от клиента
-#define mqtt_topic_stat "/ghTest/humCtrl/stt" // MQTT Топик - отправка клиенту сообщений о текущем статусе параметров устройства - основной набор параеметров (пакет)
 
 #endif
 
 #if (DEVICE_ID == 1)
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 
+#define HOST_NAME   F("humCtrl")
+
+#define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
-#define HUMPWR D6
+#define HUMPWR D7
 #define REFRESHTIME 5000
 #define MEMFLAG 0
 
 #define minhumDEF 69
 #define maxhumDEF 74
 
-#define mqttClient F("GH1_Hum_cli1")
-//const char *mqtt_client = "GH1_Hum_cli1";
-const char *mqtt_topic_temp = "/gh1/humCtrl/temp"; // MQTT Topic
-const char *mqtt_topic_hum = "/gh1/humCtrl/hum"; // MQTT Topic
-const char *mqtt_topic_max_hum = "/gh1/humCtrl/maxhum"; // MQTT Topic
-const char *mqtt_topic_min_hum = "/gh1/humCtrl/minhum"; // MQTT Topic
-//const char *mqtt_topic_hum_on = "/gh1/humCtrl/on"; // MQTT Topic
-const char *mqtt_topic_relay = "/gh1/humCtrl/relay"; // MQTT Topic
-const char *mqtt_topic_com = "/gh1/humCtrl/cmd"; // MQTT Топик - получение команды управления от клиента
-const char *mqtt_topic_stat = "/gh1/humCtrl/stt"; // MQTT Топик - отправка клиенту сообщений о текущем статусе параметров устройства - основной набор параеметров (пакет)
+#define mqttClient "GH1_Hum_cli1"
 #endif
 
 #if (DEVICE_ID == 2)
+#define HOST_NAME   F("humCtrl")
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
+#define DEFAULT_MQTT_PREFIX "gh2"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
- 
-#define mqttClient F("GH2HumControl000")
-//const char *mqtt_client = "GH2HumControl000";
-const char *mqtt_topic_temp = "/gh2_/humCtrl/temp"; // MQTT Topic
-const char *mqtt_topic_hum = "/gh2_/humCtrl/hum"; // MQTT Topic
-const char *mqtt_topic_max_hum = "/gh2_/humCtrl/maxhum"; // MQTT Topic
-const char *mqtt_topic_min_hum = "/gh2_/humCtrl/minhum"; // MQTT Topic
-//const char *mqtt_topic_hum_on = "/gh2_/humCtrl/on"; // MQTT Topic
-const char *mqtt_topic_relay = "/gh2_/humCtrl/relay"; // MQTT Topic
-const char *mqtt_topic_com = "/gh2/humCtrl/cmd"; // MQTT Топик - получение команды управления от клиента
-const char *mqtt_topic_stat = "/gh2/humCtrl/stt"; // MQTT Топик - отправка клиенту сообщений о текущем статусе параметров устройства - основной набор параеметров (пакет)
+
 #endif
 
 // =======================================================
@@ -185,7 +165,7 @@ const char *mqtt_topic_stat = "/gh2/humCtrl/stt"; // MQTT Топик - отпр�
 #include "eeprom1.h"             // Библиотека для работы с постоянной памятью
 #include "mqtt.h"
 #include "setters.h"
-
+#include "utility.h"
 
 #include "FS.h"                  // Работа с внутренней файловой системой чипа ESP8266/ESP32
 #if defined(ESP32)

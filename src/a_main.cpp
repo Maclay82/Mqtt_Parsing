@@ -4,7 +4,34 @@
 // ----------------------------------------------------
 eSources cmdSource; // Источник команды; NONE - нет значения; BOTH - любой, UDP-клиент, MQTT-клиент
 eModes parseMode; // Текущий режим парсера
-extern float minhum, maxhum; // = minhumDEF // = maxhumDEF;
+
+//extern float minhum, maxhum; // = minhumDEF // = maxhumDEF;
+
+// ********************* ДЛЯ ПАРСЕРА КОМАНДНЫХ ПАКЕТОВ *************************
+ 
+int32_t    intData[PARSE_AMOUNT];           // массив численных значений после парсинга - для WiFi часы время синхр м.б отрицательным + 
+                                            // период синхронизации м.б больше 255 мин - нужен тип int32_t
+char       incomeBuffer[BUF_MAX_SIZE];      // Буфер для приема строки команды из wifi udp сокета; также используется для загрузки строк из EEPROM
+char       replyBuffer[8];                  // ответ клиенту - подтверждения получения команды: "ack;/r/n/0"
+
+byte       ackCounter = 0;                  // счетчик отправляемых ответов для создания уникальности номера ответа
+
+
+// --------------- ВРЕМЕННЫЕ ПЕРЕМЕННЫЕ ПАРСЕРА ------------------
+
+boolean    recievedFlag;                               // буфер содержит принятые данные
+boolean    parseStarted;
+byte       parse_index;
+String     string_convert;
+String     receiveText;
+bool       haveIncomeData;
+char       incomingByte;
+
+int16_t    bufIdx = 0;                                 // Могут приниматься пакеты > 255 байт - тип int16_t
+int16_t    packetSize = 0;
+
+//extern String     host_name;                       // Имя для регистрации в сети, а так же как имя клиента та сервере MQTT
+
 
 // Контроль времени цикла
 // uint32_t last_ms = millis();  
@@ -396,7 +423,7 @@ void parsing() {
              mqtt.disconnect();
              // Если подключаемся к серверу с другим именем и/или на другом порту - 
              // простой вызов 
-             // mqtt.setServer(mqtt_server, mqtt_port)
+              mqtt.setServer(mqtt_server, mqtt_port);
              // не срабатывает - соединяемся к прежнему серверу, который был обозначен при старте программы
              // Единственный вариант - программно перезагрузить контроллер. После этого новый сервер подхватывается
              if (last_mqtt_server != String(mqtt_server) || last_mqtt_port != mqtt_port) {              
@@ -1262,96 +1289,4 @@ void sendAcknowledge(eSources src) {
       Serial.println(String(F("Ответ на ")) + udp.remoteIP().toString() + ":" + String(udp.remotePort()) + " >> " + String(replyBuffer));
     }
   }
-}
-
-void parseNTP() {
-  getNtpInProgress = false;
-  Serial.println(F("Разбор пакета NTP"));
-  ntp_t = 0; ntp_cnt = 0; init_time = true; refresh_time = false;
-  unsigned long highWord = word(incomeBuffer[40], incomeBuffer[41]);
-  unsigned long lowWord = word(incomeBuffer[42], incomeBuffer[43]);
-  // combine the four bytes (two words) into a long integer
-  // this is NTP time (seconds since Jan 1 1900):
-  unsigned long secsSince1900 = highWord << 16 | lowWord;    
-  // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
-  unsigned long seventyYears = 2208988800UL ;
-  unsigned long t = secsSince1900 - seventyYears + (timeZoneOffset) * 3600UL;
-  
-  String t2 = getDateTimeString(t);
-
-  Serial.print(F("Секунд с 1970: "));
-  Serial.println(t);
-  Serial.print(F("Текущее время: ")); 
-  Serial.println(t2);
-
-  setTime(t);  
-  // calculateDawnTime();
-  // rescanTextEvents();
-
-  // Если время запуска еще не определено - инициализировать его
-  if (upTime == 0) {
-    upTime = t - millis() / 1000L;
-  }
-
-  #if (USE_MQTT == 1)
-  DynamicJsonDocument doc(256);
-  String out;
-  doc["act"] = F("TIME");
-  doc["server_name"] = ntpServerName;
-  doc["server_ip"] = timeServerIP.toString();
-  doc["result"] = F("OK");
-  doc["time"] = secsSince1900;
-  doc["s_time2"] = t2;
-  serializeJson(doc, out);      
-  SendMQTT(out, TOPIC_TME);
-  #endif
-}
-
-void getNTP() {
-  if (!wifi_connected) return;
-  WiFi.hostByName(ntpServerName, timeServerIP);
-  IPAddress ip1, ip2;
-  ip1.fromString(F("0.0.0.0"));
-  ip2.fromString(F("255.255.255.255"));
-  if (timeServerIP == ip1 || timeServerIP == ip2) {
-    Serial.print(F("Не удалось получить IP aдрес сервера NTP -> "));
-    Serial.print(ntpServerName);
-    Serial.print(F(" -> "));
-    Serial.println(timeServerIP);
-    timeServerIP.fromString(F("85.21.78.91"));  // Один из ru.pool.ntp.org  // 91.207.136.55, 91.207.136.50, 46.17.46.226
-    Serial.print(F("Используем сервер по умолчанию: "));
-    Serial.println(timeServerIP);
-  }
-  getNtpInProgress = true;
-  // sendNTPpacket(timeServerIP); // send an NTP packet to a time server
-  // wait to see if a reply is available
-  ntp_t = millis();  
-
-  #if (USE_MQTT == 1)
-  DynamicJsonDocument doc(256);
-  String out;
-  doc["act"] = F("TIME");
-  doc["server_name"] = ntpServerName;
-  doc["server_ip"] = timeServerIP.toString();
-  doc["result"] = F("REQUEST");
-  serializeJson(doc, out);
-  SendMQTT(out, TOPIC_TME);
-  #endif
-}
-
-String padNum(int16_t num, byte cnt) {
-  char data[12];
-  String fmt = "%0"+ String(cnt) + "d";
-  sprintf(data, fmt.c_str(), num);
-  return String(data);
-}
-
-String getDateTimeString(time_t t) {
-  uint8_t hr = hour(t);
-  uint8_t mn = minute(t);
-  uint8_t sc = second(t);
-  uint8_t dy = day(t);
-  uint8_t mh = month(t);
-  uint16_t yr = year(t);
-  return padNum(dy,2) + "." + padNum(mh,2) + "." + padNum(yr,4) + " " + padNum(hr,2) + ":" + padNum(mn,2) + ":" + padNum(sc,2);  
 }
