@@ -7,10 +7,35 @@ void saveSettings();
 uint16_t getUpTimeSendInterval();
 void putUpTimeSendInterval(uint16_t value);
 
+#ifdef HUMCONTROL  
 float getMaxHum();
 void putMaxHum(float value);
 float getMinHum();
 void putMinHum(float value);
+#endif
+
+#ifdef PHTDSCONTROL
+void putPhKa (uint16_t value);  // усиление
+uint16_t getPhKa ();  // усиление
+void putPhKb (uint16_t value);  // ст
+uint16_t getPhKb ();  // ст
+void putTDSKa (uint16_t value); // усиление
+uint16_t getTDSKa (); // усиление
+void putTDSKb (uint16_t value); //средняя точка
+uint16_t getTDSKb (); //средняя точка
+
+    // phmin   =  EEPROMReadFloat(5);
+    // phmax   =  EEPROMReadFloat(9);
+    // tds   =  EEPROMReadFloat(13);
+    // tdsHI =  EEPROMReadFloat(17);
+
+void EEPROMWriteFloat(uint16_t addr, float val); // запись в ЕЕПРОМ
+
+float EEPROMReadFloat(uint16_t addr); // чтение из ЕЕПРОМ
+
+
+
+#endif
 
 void putUseNtp(boolean value);
 bool getUseNtp();

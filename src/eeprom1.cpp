@@ -19,15 +19,28 @@ void loadSettings() {
   //  6,7 - период синхронизации NTP (int16_t - 2 байта) в минутах                                           // getNtpSyncTime()              // putNtpSyncTime(SYNC_TIME_PERIOD)
   //    8 - time zone UTC+X                                                                                  // getTimeZone();                // putTimeZone(timeZoneOffset)
 
-  //   10 - IP[0]                                                                                            // getStaticIP()                 // putStaticIP(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3])
-  //   11 - IP[1]                                                                                            // - " -                         // - " -
-  //   12 - IP[2]                                                                                            // - " -                         // - " -
-  //   13 - IP[3]                                                                                            // - " -                         // - " -
-  //   14 - Использовать режим точки доступа                                                                 // getUseSoftAP()                // putUseSoftAP(useSoftAP)
+  //  10 - IP[0]                                                                                            // getStaticIP()                 // putStaticIP(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3])
+  //  11 - IP[1]                                                                                            // - " -                         // - " -
+  //  12 - IP[2]                                                                                            // - " -                         // - " -
+  //  13 - IP[3]                                                                                            // - " -                         // - " -
+  //  14 - Использовать режим точки доступа                                                                 // getUseSoftAP()                // putUseSoftAP(useSoftAP)
   
-  //   15 - maxhum                                                                                           // getMaxHum()                   // putMaxHum(maxhum)
-  //   19 - minhum                                                                                           // getMinHum()                   // putMinHum(minhum)
-  //   23 - 
+  //  15 - maxhum                                                                                           // getMaxHum()                   // putMaxHum(maxhum)
+  //  19 - minhum                                                                                           // getMinHum()                   // putMinHum(minhum)
+  
+  //  23 //getPhKa, putPhKa усиление
+  //  25 //getPhKb, getPhKb средняя точка
+  //  27 //getTDSKa, getTDSKa усиление
+  //  29 //getTDSKb, getTDSKb средняя точка
+
+// float phmin, phmax, tdsmin, tdsmax, phk=1, phb=0, tdsk=1, tdsb=0;
+
+// float 
+// realPhCalPoint1, realPhCalPoint2, 
+// realTDSCalPoint1, realTDSCalPoint2;
+// int 
+// rawPhCalPoint1=802, rawPhCalPoint2=1750, 
+// rawTDSCalPoint1=220, rawTDSCalPoint2=1924,
 
   
   //  54-63   - имя точки доступа    - 10 байт                                                               // getSoftAPName().toCharArray(apName, 10)       // putSoftAPName(String(apName))       // char apName[11] = ""
@@ -53,6 +66,7 @@ void loadSettings() {
 
   // Сначала инициализируем имя сети/точки доступа, пароли и имя NTP-сервера значениями по умолчанию.
   // Ниже, если EEPROM уже инициализирован - из него будут загружены актуальные значения
+  
   strcpy(apName, DEFAULT_AP_NAME);
   strcpy(apPass, DEFAULT_AP_PASS);
   strcpy(ssid, NETWORK_SSID);
@@ -69,11 +83,7 @@ void loadSettings() {
   // Инициализировано ли EEPROM
   bool isInitialized = EEPROMread(0) == EEPROM_OK;  
   
-    if (isInitialized) {    
-
-    maxhum = getMaxHum();
-    minhum = getMinHum();
-  
+  if (isInitialized) {    
     useNtp = getUseNtp();
     timeZoneOffset = getTimeZone();
 
@@ -106,7 +116,19 @@ void loadSettings() {
     #endif
 
     getStaticIP();
-    
+
+#ifdef HUMCONTROL  
+    maxhum = getMaxHum();
+    minhum = getMinHum();
+#endif
+
+#ifdef PHTDSCONTROL
+    phKa  = getPhKa(); //getPhKa усиление
+    phKb  = getPhKb(); //getPhKb средняя точка
+    tdsKa = getTDSKa(); //getTDSKa усиление
+    tdsKb = getTDSKb(); //getTDSKb средняя точка
+#endif
+
   } else {
 
     Serial.println(F("Инициализация EEPROM..."));
@@ -118,10 +140,6 @@ void loadSettings() {
     // После первой инициализации значений - сохранить их принудительно
     saveDefaults();
     saveSettings();
-    
-    maxhum = getMaxHum();
-    minhum = getMinHum();
-
   }  
 
   #if (USE_MQTT == 1) 
@@ -136,8 +154,17 @@ void clearEEPROM() {
 }
 
 void saveDefaults() {
+#ifdef HUMCONTROL  
   putMaxHum(maxhumDEF);
   putMinHum(minhumDEF);
+#endif
+
+#ifdef PHTDSCONTROL
+  putPhKa  (150);  // усиление
+  putPhKb  (125);  // ст
+  putTDSKa (60);  // усиление
+  putTDSKb (110); //средняя точка
+#endif
 
   putUseNtp(useNtp);
   putTimeZone(timeZoneOffset);
@@ -205,6 +232,7 @@ void putUpTimeSendInterval(uint16_t value) {
   }
 }
 
+#ifdef HUMCONTROL  
 float getMaxHum() {
   return EEPROMReadFloat(15);
 }
@@ -226,6 +254,44 @@ void putMinHum(float value) {
     EEPROM.commit();
   }
 }
+#endif
+
+#ifdef PHTDSCONTROL
+
+void putPhKa (uint16_t value)  // коэфициент усиления Ph
+{
+  EEPROM_int_write(23, value);
+}
+uint16_t getPhKa ()  // коэфициент усиления Ph
+{
+  return EEPROM_int_read(23);
+}
+void putPhKb (uint16_t value)  // средняя точка Ph
+{
+  EEPROM_int_write(25, value);
+}
+uint16_t getPhKb ()  // средняя точка Ph
+{
+  return EEPROM_int_read(25);
+}
+void putTDSKa (uint16_t value) // коэфициент усиления TDS
+{
+  EEPROM_int_write(27, value);
+}
+uint16_t getTDSKa () // коэфициент усиления TDS
+{
+  return EEPROM_int_read(27);
+}
+void putTDSKb (uint16_t value) //средняя точка TDS
+{
+  EEPROM_int_write(29, value);
+}
+uint16_t getTDSKb () //средняя точка TDS
+{
+  return EEPROM_int_read(29);
+}
+
+#endif
 
 void putUseNtp(boolean value) {
   if (value != getUseNtp()) {

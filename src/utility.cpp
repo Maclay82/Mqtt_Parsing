@@ -214,9 +214,16 @@ void profpub() {
   if (mqtt.connected()) {
     DynamicJsonDocument doc(256);
     String out;
+#ifdef HUMCONTROL
     doc["minhum"] = minhum;
     doc["maxhum"] = maxhum;
     doc["hum_relay"] = digitalRead(HUMPWR);
+#endif
+
+#ifdef PHTDSCONTROL
+
+#endif
+
     if(auto_mode){
       doc["auto_mode"] = 1;
     } else{

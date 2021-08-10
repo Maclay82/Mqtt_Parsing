@@ -3,11 +3,9 @@
 
 #define FIRMWARE_VER F("WiFiMQTTNode-0.1")
 
-unsigned long timing, per;
 
-float temp = 0, humd = 0, humcorr = 3.2,
-tempcorr = 0.0;
-float minhum, maxhum; // = minhumDEF // = maxhumDEF;
+
+
 
 uint16_t AUTO_MODE_PERIOD = 10;      // Период активации автоматического режима в минутах по умолчанию
 bool     auto_mode = true;         // Флаг автоматического режима
@@ -52,7 +50,6 @@ uint32_t upTime = 0;                        // время работы сист�
 #define    BUF_MQTT_SIZE  384               // максимальный размер выделяемого буфера для входящих сообщений по MQTT каналу
 char incomeMqttBuffer[BUF_MQTT_SIZE]; // Буфер для приема строки команды из MQTT
 #endif
-
 // ************************* ПРОЧИЕ ПЕРЕМЕННЫЕ *************************
 
 // ---------------------------------------------------------------
@@ -131,6 +128,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print(" payload ");
   Serial.println(temp);
 
+#ifdef HUMCONTROL
   if ((String)topic == (String)mqtt_topic(TOPIC_MAXHUM).c_str())
   {
     maxhum = atof(temp);
@@ -158,7 +156,81 @@ void callback(char* topic, byte* payload, unsigned int length) {
       profpub();
     }
   }
+#endif
 
+#ifdef PHTDSCONTROL
+  if ((String)topic == (String)TOPIC_phKa)
+  {
+    phKa = atoi(temp);
+    Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
+    Wire.write(byte(0x01));            // sends instruction byte  
+    Wire.write(phKa);             // sends potentiometer value byte  
+    Wire.endTransmission();     // stop transmitting
+
+    Serial.print(" phKa:");
+    Serial.print(phKa);
+    Serial.println();
+    putPhKa  (phKa);
+    profpub();
+  }
+  if ((String)topic == (String)TOPIC_phKb)
+  {
+    phKb = atoi(temp);
+    Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
+    Wire.write(byte(0x02));            // sends instruction byte  
+    Wire.write(phKb);             // sends potentiometer value byte  
+    Wire.endTransmission();     // stop transmitting
+
+    Serial.print(" phKb:");
+    Serial.print(phKb);
+    Serial.println();
+    putPhKb  (phKb);
+    profpub();
+  }
+  if ((String)topic == (String)TOPIC_phKb)
+  {
+    phKb = atoi(temp);
+    Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
+    Wire.write(byte(0x02));            // sends instruction byte  
+    Wire.write(phKb);             // sends potentiometer value byte  
+    Wire.endTransmission();     // stop transmitting
+
+    Serial.print(" phKb:");
+    Serial.print(phKb);
+    Serial.println();
+    putPhKb  (phKb);
+    profpub();
+  }
+
+  if ((String)topic == (String)TOPIC_tdsKa)
+  {
+    tdsKa = atoi(temp);
+    Wire.beginTransmission(TDSREGADR); // transmit to device #44 (0x2c)
+    Wire.write(byte(0x01));            // sends instruction byte  
+    Wire.write(tdsKa);             // sends potentiometer value byte  
+    Wire.endTransmission();     // stop transmitting
+
+    Serial.print(" tdsKa:");
+    Serial.print(tdsKa);
+    Serial.println();
+    putTDSKa (tdsKa);  // усиление
+    profpub();
+  }
+
+  if ((String)topic == (String)TOPIC_tdsKb)
+  {
+    tdsKb = atoi(temp);
+    Wire.beginTransmission(TDSREGADR); // transmit to device #44 (0x2c)
+    Wire.write(byte(0x02));            // sends instruction byte  
+    Wire.write(tdsKb);             // sends potentiometer value byte  
+    Wire.endTransmission();     // stop transmitting
+
+    Serial.print(" tdsKb:");
+    Serial.print(tdsKb);
+    putTDSKb (tdsKb);
+    profpub();
+  }
+#endif
 }
 
 #endif
@@ -289,10 +361,42 @@ void setup() {
 //  reconnect();
   profpub();
 
-  pinMode(HUMPWR, OUTPUT);
   timing = millis() + REFRESHTIME;
 
+#ifdef HUMCONTROL
+  pinMode(HUMPWR, OUTPUT);
   myHumidity.begin();
+#endif
+
+#ifdef PHTDSCONTROL
+  phk = ( PhCalp2 - PhCalp1 ) / ( rawPhCalp2 - rawPhCalp1 );
+  phb = phk * rawPhCalp1 - PhCalp1;
+  tdsk = ( TDSCalp2 - TDSCalp1 ) / ( rawTDSCalp2 - rawTDSCalp1 );
+  tdsb = tdsk * rawTDSCalp1 - TDSCalp1;
+
+  Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
+  Wire.write(byte(0x01));            // sends instruction byte  
+  Wire.write(phKa);             // sends potentiometer value byte  
+  // Wire.endTransmission();     // stop transmitting
+  // delay(200);
+  // Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
+  Wire.write(byte(0x02));            // sends instruction byte  
+  Wire.write(phKb);             // sends potentiometer value byte  
+  Wire.endTransmission();     // stop transmitting
+
+  delay(200);
+
+  Wire.beginTransmission(TDSREGADR); // transmit to device #44 (0x2c)
+  Wire.write(byte(0x01));            // sends instruction byte  
+  Wire.write(tdsKa);             // sends potentiometer value byte  
+  // Wire.endTransmission();     // stop transmitting
+  // delay(200);
+  // Wire.beginTransmission(TDSREGADR); // transmit to device #44 (0x2c)
+  Wire.write(byte(0x02));            // sends instruction byte  
+  Wire.write(tdsKb);             // sends potentiometer value byte  
+  Wire.endTransmission();     // stop transmitting
+#endif
+
 }
 
 void loop() {
@@ -312,57 +416,6 @@ void loop() {
   if(AutoModeTimer.isReady()){
     auto_mode = true;
     profpub();
-  }
-  
-  if (millis() - timing > REFRESHTIME){
-
-    Serial.print("Time:");
-    Serial.print(millis());
-  
-    humd = myHumidity.readHumidity() + humcorr;
-    temp = myHumidity.readTemperature() + tempcorr;
-
-    if(humd < 998)
-    {
-      if (auto_mode){
-        if ( humd > maxhum ){
-          digitalWrite (HUMPWR, LOW);  
-        }
-        if ( humd < minhum ){
-          digitalWrite (HUMPWR, HIGH);  
-        }
-      }
-      Serial.print(" Temperature:");
-      Serial.print(temp, 3);
-      Serial.print("C");
-      Serial.print(" Humidity:");
-      Serial.print(humd, 3);
-      Serial.println("%");
-      
-      if (mqtt.connected()) {
-        char s[8];
-        String Str;
-        dtostrf(humd, 2, 2, s);
-        // Str = "";
-        // Str += s;
-        Str= s;
-        SendMQTT(Str, TOPIC_HUM);
-       
-        dtostrf(temp, 2, 2, s);
-        Str = "";
-        Str += s;
-        SendMQTT(Str, TOPIC_TEMP);
-       
-/*
-        if (digitalRead(HUMPWR) == true) 
-          mqtt.publish(mqtt_topic_hum_on, "1");
-        else 
-          mqtt.publish(mqtt_topic_hum_on, "0");
-*/
-      }
-    }
-    Serial.print("\n");
-    timing = millis();
   }
   mqtt.loop();
 }

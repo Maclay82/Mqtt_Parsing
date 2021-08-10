@@ -106,6 +106,7 @@ bool subscribeMqttTopics() {
     if (ok) Serial.println(F("OK"));
     else    Serial.println(F("FAIL"));
 
+#ifdef HUMCONTROL
     Serial.print(F("Подписка на topic='minhum' >> "));
     Serial.print(mqtt_topic(TOPIC_MINHUM));
     Serial.print('\t');
@@ -126,7 +127,11 @@ bool subscribeMqttTopics() {
     ok = mqtt.subscribe(mqtt_topic(TOPIC_RELAY).c_str());
     if (ok) Serial.println(F("OK"));
     else    Serial.println(F("FAIL"));
+#endif
 
+#ifdef PHTDSCONTROL
+
+#endif
     mqtt_send_last = millis();
   }
   return ok;

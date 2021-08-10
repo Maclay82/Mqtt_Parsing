@@ -7,6 +7,47 @@ eModes parseMode; // Текущий режим парсера
 
 //extern float minhum, maxhum; // = minhumDEF // = maxhumDEF;
 
+unsigned long timing, timing1, per;
+
+#ifdef HUMCONTROL
+HTU21D myHumidity;
+float temp = 0, humd = 0, humcorr = 3.2,
+tempcorr = 0.0;
+float minhum, maxhum; // = minhumDEF // = maxhumDEF;
+#endif
+
+#ifdef PHTDSCONTROL
+
+// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+OneWire oneWire(D5);
+// Pass our oneWire reference to Dallas Temperature. 
+DallasTemperature TempSensors(&oneWire);
+
+float realPh = 0, realTDS = 0, Wtemp =0;
+
+boolean TDScalib = false;  // TDS Calibration complete 
+boolean Phcalib = false;  //  Ph Calibration complete
+
+int rawPh = 0, rawTDS = 0;
+boolean RAWMode = true;  // RAW read mode
+
+float phmin, phmax, tdsmin, tdsmax, phk=1, phb=0, tdsk=1, tdsb=0;
+
+float 
+PhCalp1 = 4.0, PhCalp2 = 7.0, 
+TDSCalp1 = 206, TDSCalp2 = 1930;
+int 
+rawPhCalp1=802, rawPhCalp2=1750, 
+rawTDSCalp1=220, rawTDSCalp2=1924,
+
+phKa = 150,  // усиление
+phKb = 125,  // ст
+tdsKa = 60, // усиление
+tdsKb = 110; //средняя точка
+
+#endif
+
+
 // ********************* ДЛЯ ПАРСЕРА КОМАНДНЫХ ПАКЕТОВ *************************
  
 int32_t    intData[PARSE_AMOUNT];           // массив численных значений после парсинга - для WiFi часы время синхр м.б отрицательным + 
@@ -30,8 +71,32 @@ char       incomingByte;
 int16_t    bufIdx = 0;                                 // Могут приниматься пакеты > 255 байт - тип int16_t
 int16_t    packetSize = 0;
 
-//extern String     host_name;                       // Имя для регистрации в сети, а так же как имя клиента та сервере MQTT
+//*************************************************************************8
 
+#ifdef PHTDSCONTROL
+float phrl, tdsrl;
+long average;                 // перем. среднего
+int  PhvalArray[NUM_AVER];    // массив
+int  TDSvalArray[NUM_AVER];   // массив
+byte idx = 0;                 // индекс
+
+//Заполнение массива
+void ArrayFill(int newVal, int *valArray){
+//  if (++idx >= NUM_AVER) idx = 0;   // перезаписывая самое старое значение
+  if (idx >= NUM_AVER) idx = 0;   // перезаписывая самое старое значение
+  valArray[idx] = newVal;           // пишем каждый раз в новую ячейку
+}
+//Вычисление среднего значения массива
+int middleArifm(int *valArray) {       // принимает новое значение
+  average = 0;                      // обнуляем среднее
+  for (int i = 0; i < NUM_AVER; i++) {
+    average += valArray[i];         // суммируем
+  }
+  average /= NUM_AVER;              // делим
+  return average;                   // возвращаем
+}
+#endif
+//********************************************************************************
 
 // Контроль времени цикла
 // uint32_t last_ms = millis();  
@@ -49,6 +114,157 @@ void process() {
 
   // принимаем данные
   parsing();
+
+#ifdef PHTDSCONTROL
+  if (millis() - timing1 >=  OPROSDELAY){  // opros datchikov Ph i TDS
+    uint16_t result = 0;
+    Wire.requestFrom(PHADDRESS, 2);        //requests 2 bytes
+    if (Wire.available()) {
+      result = Wire.read();
+      result = result << 8;
+      result += Wire.read();
+      rawPh = result;
+    }
+    else rawPh = -1;
+    ArrayFill(rawPh, PhvalArray);
+
+    Wire.requestFrom(TDSADDRESS, 2);        //requests 2 bytes
+    if (Wire.available()) {
+      result = Wire.read();
+      result = result << 8;
+      result += Wire.read();
+      rawTDS = result;
+    }
+    else rawTDS = -1;
+    ArrayFill(rawTDS, TDSvalArray);
+    ++idx;
+    timing1 = millis();
+  }
+#endif
+    
+  if (millis() - timing >= REFRESHTIME){
+
+    Serial.print("Time:");
+    Serial.print(millis());
+  
+    char s[8];   //строка mqtt сообщения
+    String Str;
+    Str = "";
+
+
+#ifdef HUMCONTROL
+    humd = myHumidity.readHumidity() + humcorr;
+    temp = myHumidity.readTemperature() + tempcorr;
+
+    if(humd < 998){
+      if (auto_mode){
+        if ( humd > maxhum ){
+          digitalWrite (HUMPWR, LOW);  
+        }
+        if ( humd < minhum ){
+          digitalWrite (HUMPWR, HIGH);  
+        }
+      }
+      Serial.print(" Temperature:");
+      Serial.print(temp, 3);
+      Serial.print("C");
+      Serial.print(" Humidity:");
+      Serial.print(humd, 3);
+      Serial.println("%");
+      
+      if (mqtt.connected()) {
+        dtostrf(humd, 2, 2, s);
+        Str= s;
+        SendMQTT(Str, TOPIC_HUM);
+       
+        dtostrf(temp, 2, 2, s);
+        Str = "";
+        Str += s;
+        SendMQTT(Str, TOPIC_TEMP);    
+/*
+        if (digitalRead(HUMPWR) == true) 
+          mqtt.publish(mqtt_topic_hum_on, "1");
+        else 
+          mqtt.publish(mqtt_topic_hum_on, "0");
+*/
+      }
+    }
+#endif
+
+#ifdef PHTDSCONTROL
+    TempSensors.requestTemperatures(); // Send the command to get temperatures
+    
+    Wtemp = TempSensors.getTempCByIndex(0);
+    
+
+    phrl = phk * middleArifm(PhvalArray) - phb;
+    if ( phrl < 0 ) phrl = 0;
+    Serial.print("Ph=");
+    if (rawPh == -1) Serial.print("null");
+    else Serial.print(phrl);
+    Serial.print("; ");
+
+    tdsrl = tdsk * middleArifm(TDSvalArray) - tdsb;
+    if ( tdsrl < 0 ) tdsrl = 0;
+    Serial.print("TDS=");
+    if (rawTDS == -1) Serial.print("null");
+    else Serial.print(tdsrl);
+    Serial.print("; ");
+
+    if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
+      Serial.print(" Water temp:");
+      Serial.print(Wtemp, 3);
+      Serial.print(" C; ");
+    }
+    else {
+       Serial.print("Error");
+    }
+    if (rawPh != -1){
+      Serial.print("Avg Ph RAW:");
+      Serial.print(middleArifm(PhvalArray));
+      Serial.print("; ");
+//      Serial.print(" Ph RAW:");
+//      Serial.print(rawPh);
+//      Serial.print("; ");
+    }
+    if (rawTDS != -1){  
+      Serial.print("Avg TDS RAW:");
+      Serial.print(middleArifm(TDSvalArray));
+      Serial.print("; ");
+//      Serial.print(" TDS RAW:");
+//      Serial.print(rawTDS);
+//      Serial.print("; ");
+    }
+
+    if (mqtt.connected()){
+      if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
+        dtostrf(Wtemp, 2, 2, s);
+        Str = s;
+        SendMQTT(Str, TOPIC_Wtemp);    
+      }
+      if (rawPh != -1){
+        dtostrf(middleArifm(PhvalArray), 2, 0, s);
+        Str = s;
+        SendMQTT(Str, TOPIC_rawPh);    
+        dtostrf(phrl, 2, 3, s);
+        Str = s;
+        SendMQTT(Str, TOPIC_ph);    
+      }
+      if (rawTDS != -1){  
+        dtostrf(middleArifm(TDSvalArray), 2, 0, s);
+        Str = s;
+        SendMQTT(Str, (TOPIC_rawTDS));    
+        dtostrf(tdsrl, 2, 0, s);
+        Str = s;
+        SendMQTT(Str, TOPIC_tds);    
+      } 
+    } 
+
+#endif
+
+    Serial.print("\n");
+    timing = timing1 = millis();
+  }
 
   if (!parseStarted) 
   {
@@ -90,8 +306,8 @@ void process() {
           getNTP();
         }
       }
-
     }
+
 /*    
     clockTicker();
     
@@ -100,8 +316,7 @@ void process() {
     checkAutoMode2Time();
     checkAutoMode3Time();
     checkAutoMode4Time();
-*/
-/*
+
     butt.tick();  // обязательная функция отработки. Должна постоянно опрашиваться
     // byte clicks = 0;
     // Один клик
@@ -176,7 +391,6 @@ void process() {
     }
   }
 }
-
 /*
 void processButtonStep() {
   if (brightDirection) {
@@ -247,7 +461,8 @@ void parsing() {
   */  
 
   // Если прием данных завершен и управляющая команда в intData[0] распознана
-  if (recievedFlag && intData[0] > 0 && intData[0] <= 23) {
+  if (recievedFlag && intData[0] > 0 && intData[0] <= 23) 
+  {
     recievedFlag = false;
 
     switch (intData[0]) {

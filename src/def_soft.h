@@ -5,9 +5,18 @@
 
 // Определения программных констант и переменных
 
+extern unsigned long timing, timing1, per;
+
+#ifdef HUMCONTROL
 #ifndef MINMAXHUM
 #define MINMAXHUM
+#endif
 extern float minhum, maxhum; // = minhumDEF // = maxhumDEF;
+#endif
+
+#ifdef PHTDSCONTROL
+#define OPROSDELAY 150
+#define NUM_AVER 20           // выборка (из скольки усредняем)
 #endif
 
 extern uint16_t AUTO_MODE_PERIOD;  // Период активации автоматического режима в минутах по умолчанию
@@ -64,11 +73,51 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 #define  TOPIC_TME      "tme"                    // Топик - отправка клиенту сообщений о событиях времени
 #define  TOPIC_PWR      "pwr"                    // Топик - отправка клиенту сообщений о включении/выключении устройства
 #define  TOPIC_STT      "stt"                    // Топик - отправка клиенту сообщений о текущем статусе параметров устройства - основной набор параеметров (пакет)
-#define  TOPIC_TEMP     "temp"                   // Топик - отправка клиенту сообщений о текущей влажности
+
+#ifdef HUMCONTROL
+#define  TOPIC_TEMP     "temp"                   // Топик - отправка клиенту сообщений о текущей температуре
 #define  TOPIC_HUM      "hum"                    // Топик - отправка клиенту сообщений о текущем 
 #define  TOPIC_MAXHUM   "maxhum"                 // Топик - отправка клиенту значения максимальной влажности
 #define  TOPIC_MINHUM   "minhum"                 // Топик - отправка клиенту значения минимальной влажности
 #define  TOPIC_RELAY    "relay"                  // Топик - отправка клиенту сообщений статусе
+#endif                                           // Если нет ограничений на частоту отправки сообщений - поставьте здесь 0
+
+#ifdef PHTDSCONTROL
+
+#define  TOPIC_tds      "tds"                  // MQTT Topic
+#define  TOPIC_rawTDS   "rawTDS"               // MQTT Topic
+#define  TOPIC_ph       "ph"                   // MQTT Topic
+#define  TOPIC_rawPh    "rawPh"                // MQTT Topic
+#define  TOPIC_Wtemp    "Wtemp"                // MQTT Topic
+
+#define  TOPIC_phKa     "phKa"                 // MQTT Topic
+#define  TOPIC_phKb     "phKb"                 // MQTT Topic
+#define  TOPIC_tdsKa    "tdsKa"                // MQTT Topic
+#define  TOPIC_tdsKb    "tdsKb"                // MQTT Topic
+#define  TOPIC_phCP1    "phCP1"                // MQTT Topic
+#define  TOPIC_phCP2    "phCP2"                // MQTT Topic
+#define  TOPIC_tdsCP1   "tdsCP1"               // MQTT Topic
+#define  TOPIC_tdsCP2   "tdsCP2"               // MQTT Topic
+
+extern  float realPh, realTDS,
+Wtemp;
+
+extern  boolean TDScalib;  // TDS Calibration complete 
+extern  boolean Phcalib;  //  Ph Calibration complete
+
+extern  int rawPh, rawTDS;
+extern  boolean RAWMode;  // RAW read mode
+
+extern  float phmin, phmax, tdsmin, tdsmax, 
+              phk, phb, tdsk, tdsb, PhCalp1, PhCalp2, TDSCalp1, TDSCalp2;
+
+extern  int rawPhCalp1, rawPhCalp2, rawTDSCalp1, rawTDSCalp2,
+phKa,  // усиление
+phKb,  // средняя точка
+tdsKa, // усиление
+tdsKb; // средняя точка
+
+#endif
 
 extern  bool     useMQTT;                        // Использовать канал управления через MQTT - флаг намерения    // При отключении из приложения set_useMQTT(false) устанавлифается соответствующее состояние (параметр QA), состояние 'намерение отключить MQTT'
 extern  bool     stopMQTT;                       // Использовать канал управления через MQTT - флаг результата   // которое должно быть отправлено на MQTT-сервер, значит реально состояние 'MQTT остановлен' - только после отправки флага QA на сервер
@@ -173,19 +222,6 @@ extern char       incomeBuffer[];      // Буфер для приема стр�
 extern char       replyBuffer[];                  // ответ клиенту - подтверждения получения команды: "ack;/r/n/0"
 
 //extern byte       ackCounter = 0;                  // счетчик отправляемых ответов для создания уникальности номера ответа
-
-// // --------------- ВРЕМЕННЫЕ ПЕРЕМЕННЫЕ ПАРСЕРА ------------------
-
-// extern boolean    recievedFlag;                               // буфер содержит принятые данные
-// extern boolean    parseStarted;
-// extern byte       parse_index;
-// extern String     string_convert;
-// extern String     receiveText;
-// extern bool       haveIncomeData;
-// extern char       incomingByte;
-
-// extern int16_t    bufIdx = 0;                                 // Могут приниматься пакеты > 255 байт - тип int16_t
-// extern int16_t    packetSize = 0;
 
 extern String     host_name;                       // Имя для регистрации в сети, а так же как имя клиента та сервере MQTT
 

@@ -1,10 +1,13 @@
 #ifndef DEF_HARD_H
 #define DEF_HARD_H
+#endif
 
-#define EEPROM_OK     0xA3      // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA1      // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    1024       // Максимальный размер EEPROM доступный для использования
 // #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  300       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
+
+
 
 // *************************************************************************
 
@@ -76,13 +79,14 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
-//#define HOST_NAME   F("Main")
 
-#define DEVICE_ID   1               // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID   3               // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
+                                    // 3 - PhTDS контроллер тестовый
+                                    // 4 - PhTDS контроллер Зеленка
 
-// ================== Тестовый стенд =====================
+// ================== Увлажнитель тестовый стенд =====================
 
 #if (DEVICE_ID == 0)
 /*
@@ -90,33 +94,64 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
  * В менеджере плат выбрано NodeMCU v1.0 (ESP-12E)
  */
 //#if defined(ESP8266)
-#define DEFAULT_MQTT_PREFIX "ghTest"      // Префикс топика сообщения или пустая строка, если префикс не требуется
+#ifndef HUMCONTROL
+#define HUMCONTROL
+#endif
+
+#define REFRESHTIME 10000
+#define MEMFLAG 0
 
 #define HOST_NAME   F("humCtrlTest")
 
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
-
+#define DEFAULT_MQTT_PREFIX "ghTest"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
                               // 0 - Настройки MQTT и API KEY OpenWeatherMap в скетче в def_soft.h в строках: (пароли и ключи доступа определены в тексте скетча)
                               // Файл a_def_pass.h в комплект не входит, нужно создать, скопировать туда указанные строки
+#define mqttClient "GHTest"
+
 #define HUMPWR D6
-#define REFRESHTIME 10000
-#define MEMFLAG 0
 
 #define minhumDEF 69
 #define maxhumDEF 74
 
-#define mqttClient "GHTest"
 
 #endif
 
+// ================== Увлажнитель Зеленка =====================
 #if (DEVICE_ID == 1)
+#ifndef HUMCONTROL
+#define HUMCONTROL
+#endif
+
+#define REFRESHTIME 5000
+#define MEMFLAG 0
+
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
-
 #define HOST_NAME   F("humCtrl")
-
 #define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
+#define mqttClient "GH1_Hum_cli1"
+
+#define HUMPWR D7
+
+#define minhumDEF 69
+#define maxhumDEF 74
+
+#endif
+
+// ================== Увлажнитель Перцы =====================
+#if (DEVICE_ID == 2)
+#ifndef HUMCONTROL
+#define HUMCONTROL
+#endif
+
+#define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
+#define HOST_NAME   F("humCtrl")
+#define DEFAULT_MQTT_PREFIX "gh2"      // Префикс топика сообщения или пустая строка, если префикс не требуется
+#define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
+#define mqttClient "GH2_Hum_cli1"
+
 #define HUMPWR D7
 #define REFRESHTIME 5000
 #define MEMFLAG 0
@@ -124,15 +159,56 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #define minhumDEF 69
 #define maxhumDEF 74
 
-#define mqttClient "GH1_Hum_cli1"
 #endif
 
-#if (DEVICE_ID == 2)
-#define HOST_NAME   F("humCtrl")
-#define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
-#define DEFAULT_MQTT_PREFIX "gh2"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 
+// ================== PhTDS контроллер тестовый =====================
+#if (DEVICE_ID == 3)
+
+/*
+I2C address 0x2C Ph adj
+I2C address 0x2E TDS adj
+I2C address 0x48 Ph
+I2C address 0x49 TDS
+
+1 - V+ кр
+2 - temp data син
+3 - V- Gnd 
+4 - tds elec. 1 зел
+5 - tds elec. 2 жел
+*/
+
+#ifndef PHTDSCONTROL
+#define PHTDSCONTROL
+#endif
+
+#define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
+#define HOST_NAME   F("PhTDSCtrl")
+#define DEFAULT_MQTT_PREFIX "ghTest"      // Префикс топика сообщения или пустая строка, если префикс не требуется
+#define mqttClient "GHTest_PhTDSCtrl_cli1"
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
+
+#define REFRESHTIME 5000
+#define MEMFLAG 10
+
+
+
+#endif
+
+// ================== PhTDS контроллер Зеленка =====================
+#if (DEVICE_ID == 4)
+#ifndef PHTDSCONTROL
+#define PHTDSCONTROL
+#endif
+
+#define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
+#define HOST_NAME   F("PhTDSCtrl")
+#define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
+#define mqttClient "GH1_PhTDSCtrl_cli1"
+#define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
+
+#define REFRESHTIME 5000
+#define MEMFLAG 10
 
 #endif
 
@@ -155,6 +231,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #include <PubSubClient.h>        // Библиотека для работы с MQTT
 #endif
 
+#include <DallasTemperature.h>   // Библиотека работы с датчиком температуры DS18B20 
 #include <ArduinoOTA.h>          // Библиотека обновления "по воздуху"
 #include <WiFiUdp.h>             // Библиотека поддержки WiFi
 #include <TimeLib.h>             // Библиотека поддержки функций времени
@@ -182,6 +259,15 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #endif
 
 //Create an instance of the object
-static HTU21D myHumidity;
+#ifdef HUMCONTROL
+extern HTU21D myHumidity;
+#endif                                           // Если нет ограничений на частоту отправки сообщений - поставьте здесь 0
+
+#ifdef PHTDSCONTROL
+
+#define PHREGADR   0x2C //  PH reg. AD5282 address in 7bit format
+#define TDSREGADR  0x2E // TDS reg. AD5282 address in 7bit format
+#define PHADDRESS  0x48 //  PH ADC MCP3221 address in 7bit format
+#define TDSADDRESS 0x49 // TDS ADC MCP3221 address in 7bit format
 
 #endif
