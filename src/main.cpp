@@ -21,7 +21,7 @@ char   apPass[17] = DEFAULT_AP_PASS;        // Пароль подключени
 char   ssid[25]   = NETWORK_SSID;           // SSID (имя) вашего роутера (конфигурируется подключением через точку доступа и сохранением в EEPROM)
 char   pass[17]   = NETWORK_PASS;           // пароль роутера
 byte   IP_STA[]   = DEFAULT_IP;             // Статический адрес в локальной сети WiFi по умолчанию при первом запуске. Потом - загружается из настроек, сохраненных в EEPROM
-unsigned int localPort = 2390;              // локальный порт на котором слушаются входящие команды управления от приложения на смартфоне, передаваемые через локальную сеть
+unsigned int loCalPort = 2390;              // локальный порт на котором слушаются входящие команды управления от приложения на смартфоне, передаваемые через локальную сеть
 // --------------------Режимы работы Wifi соединения-----------------------
 
 bool   useSoftAP = false;                   // использовать режим точки доступа
@@ -47,7 +47,7 @@ char   ntpServerName[31] = "";              // Используемый серв
 uint32_t upTime = 0;                        // время работы системы с последней перезагрузки
 
 #if (USE_MQTT == 1)
-#define    BUF_MQTT_SIZE  384               // максимальный размер выделяемого буфера для входящих сообщений по MQTT каналу
+#define    BUF_MQTT_SIZE  1024//384               // максимальный размер выделяемого буфера для входящих сообщений по MQTT каналу
 char incomeMqttBuffer[BUF_MQTT_SIZE]; // Буфер для приема строки команды из MQTT
 #endif
 // ************************* ПРОЧИЕ ПЕРЕМЕННЫЕ *************************
@@ -159,10 +159,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
 #endif
 
 #ifdef PHTDSCONTROL
-  if ((String)topic == (String)TOPIC_phKa)
-  {
+  if ((String)topic == (String)TOPIC_phKa){
     phKa = atoi(temp);
-    Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
+    Wire.beginTransmission(PHREGADR); // transmit to device
     Wire.write(byte(0x01));            // sends instruction byte  
     Wire.write(phKa);             // sends potentiometer value byte  
     Wire.endTransmission();     // stop transmitting
@@ -173,10 +172,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
     putPhKa  (phKa);
     profpub();
   }
-  if ((String)topic == (String)TOPIC_phKb)
-  {
+  if ((String)topic == (String)TOPIC_phKb){
     phKb = atoi(temp);
-    Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
+    Wire.beginTransmission(PHREGADR); // transmit to device
     Wire.write(byte(0x02));            // sends instruction byte  
     Wire.write(phKb);             // sends potentiometer value byte  
     Wire.endTransmission();     // stop transmitting
@@ -187,10 +185,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
     putPhKb  (phKb);
     profpub();
   }
-  if ((String)topic == (String)TOPIC_phKb)
-  {
+  if ((String)topic == (String)TOPIC_phKb){
     phKb = atoi(temp);
-    Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
+    Wire.beginTransmission(PHREGADR); // transmit to device
     Wire.write(byte(0x02));            // sends instruction byte  
     Wire.write(phKb);             // sends potentiometer value byte  
     Wire.endTransmission();     // stop transmitting
@@ -202,10 +199,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
     profpub();
   }
 
-  if ((String)topic == (String)TOPIC_tdsKa)
-  {
+  if ((String)topic == (String)TOPIC_tdsKa){
     tdsKa = atoi(temp);
-    Wire.beginTransmission(TDSREGADR); // transmit to device #44 (0x2c)
+    Wire.beginTransmission(TDSREGADR); // transmit to device
     Wire.write(byte(0x01));            // sends instruction byte  
     Wire.write(tdsKa);             // sends potentiometer value byte  
     Wire.endTransmission();     // stop transmitting
@@ -217,10 +213,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
     profpub();
   }
 
-  if ((String)topic == (String)TOPIC_tdsKb)
-  {
+  if ((String)topic == (String)TOPIC_tdsKb){
     tdsKb = atoi(temp);
-    Wire.beginTransmission(TDSREGADR); // transmit to device #44 (0x2c)
+    Wire.beginTransmission(TDSREGADR); // transmit to device
     Wire.write(byte(0x02));            // sends instruction byte  
     Wire.write(tdsKb);             // sends potentiometer value byte  
     Wire.endTransmission();     // stop transmitting
@@ -239,13 +234,32 @@ void setup() {
   #if defined(ESP8266)
     ESP.wdtEnable(WDTO_8S);
   #endif
+  
+  Wire.begin();
+
+#ifdef PHTDSCONTROL
+  i2cPumps pumps(0x20, true);
+  for(int i = 0; i <= 7; i++ ){ 
+    // ioDevicePinMode(ioExp, i, OUTPUT);
+    ioDevicePinMode(ioExp2, i, OUTPUT);
+    ioDevicePinMode(ioExpInp, i, INPUT);
+  }
+
+  for(int i = 0; i <= 7; i++ ){
+    // ioDeviceDigitalWrite(ioExp, i, !true);
+    ioDeviceDigitalWrite(ioExp2, i, true);
+  }
+  ioDeviceSync(ioExp2);
+  ioDeviceSync(ioExpInp);
+#endif
 
   EEPROM.begin(EEPROM_MAX);
 
   Serial.begin(115200);
   delay(300);
 
-  host_name = String(HOST_NAME) + "-" + String(DEVICE_ID);
+
+  host_name = String(HOST_NAME) + "-" + String(DEV_ID);
 
 
   Serial.println();
@@ -355,8 +369,9 @@ void setup() {
   });
 
   ArduinoOTA.begin();
+  
   // UDP-клиент на указанном порту
-  udp.begin(localPort);
+  udp.begin(loCalPort);
 
 //  reconnect();
   profpub();
@@ -369,10 +384,16 @@ void setup() {
 #endif
 
 #ifdef PHTDSCONTROL
-  phk = ( PhCalp2 - PhCalp1 ) / ( rawPhCalp2 - rawPhCalp1 );
-  phb = phk * rawPhCalp1 - PhCalp1;
-  tdsk = ( TDSCalp2 - TDSCalp1 ) / ( rawTDSCalp2 - rawTDSCalp1 );
-  tdsb = tdsk * rawTDSCalp1 - TDSCalp1;
+//Инициализация платы моторов
+  // Wire.beginTransmission(0X20);
+  // Wire.write(B11111111);
+  // Wire.endTransmission();
+
+
+  phk = ( PhCalP2 - PhCalP1 ) / ( rawPhCalP2 - rawPhCalP1 );
+  phb = phk * rawPhCalP1 - PhCalP1;
+  tdsk = ( TDSCalP2 - TDSCalP1 ) / ( rawTDSCalP2 - rawTDSCalP1 );
+  tdsb = tdsk * rawTDSCalP1 - TDSCalP1;
 
   Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
   Wire.write(byte(0x01));            // sends instruction byte  
@@ -396,7 +417,6 @@ void setup() {
   Wire.write(tdsKb);             // sends potentiometer value byte  
   Wire.endTransmission();     // stop transmitting
 #endif
-
 }
 
 void loop() {
@@ -419,5 +439,3 @@ void loop() {
   }
   mqtt.loop();
 }
-
-

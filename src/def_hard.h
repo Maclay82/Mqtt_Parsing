@@ -2,10 +2,10 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA1      // Флаг, показывающий, что EEPROM инициализирована корректными данными 
-#define EEPROM_MAX    1024       // Максимальный размер EEPROM доступный для использования
-// #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
-#define EFFECT_EEPROM  300       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
+#define EEPROM_OK     0xA2      // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+//#define EEPROM_MAX    1024       // Максимальный размер EEPROM доступный для использования
+#define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
+#define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
 
 
@@ -97,7 +97,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #ifndef HUMCONTROL
 #define HUMCONTROL
 #endif
-
+#define DEV_ID 0
 #define REFRESHTIME 10000
 #define MEMFLAG 0
 
@@ -123,7 +123,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #ifndef HUMCONTROL
 #define HUMCONTROL
 #endif
-
+#define DEV_ID 0
 #define REFRESHTIME 5000
 #define MEMFLAG 0
 
@@ -145,7 +145,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #ifndef HUMCONTROL
 #define HUMCONTROL
 #endif
-
+#define DEV_ID 0
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 #define HOST_NAME   F("humCtrl")
 #define DEFAULT_MQTT_PREFIX "gh2"      // Префикс топика сообщения или пустая строка, если префикс не требуется
@@ -176,11 +176,15 @@ I2C address 0x49 TDS
 3 - V- Gnd 
 4 - tds elec. 1 зел
 5 - tds elec. 2 жел
+
+
 */
 
 #ifndef PHTDSCONTROL
 #define PHTDSCONTROL
 #endif
+
+#define DEV_ID 0
 
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 #define HOST_NAME   F("PhTDSCtrl")
@@ -201,6 +205,7 @@ I2C address 0x49 TDS
 #define PHTDSCONTROL
 #endif
 
+#define DEV_ID 1
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 #define HOST_NAME   F("PhTDSCtrl")
 #define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
@@ -209,6 +214,7 @@ I2C address 0x49 TDS
 
 #define REFRESHTIME 5000
 #define MEMFLAG 10
+
 
 #endif
 
@@ -237,6 +243,11 @@ I2C address 0x49 TDS
 #include <TimeLib.h>             // Библиотека поддержки функций времени
 #include <EEPROM.h>              // Библиотека поддержки постоянной памяти
 #include <ArduinoJson.h>         // Библиотека для работы с JSON (mqtt, состояние системы)
+#ifdef PHTDSCONTROL
+#include <IoAbstraction.h>
+#include <IoAbstractionWire.h>
+#include "i2cPumps.h"
+#endif
 #include "timerMinim.h"          // Библиотека таймеров
 #include "a_main.h"     
 #include "eeprom1.h"             // Библиотека для работы с постоянной памятью
@@ -246,7 +257,7 @@ I2C address 0x49 TDS
 
 #include "FS.h"                  // Работа с внутренней файловой системой чипа ESP8266/ESP32
 #if defined(ESP32)
-  #define   LittleFS LITTLEFS
+  #define  LittleFS LITTLEFS
   #include <LITTLEFS.h>
 #else
   #include <LittleFS.h>
@@ -264,10 +275,13 @@ extern HTU21D myHumidity;
 #endif                                           // Если нет ограничений на частоту отправки сообщений - поставьте здесь 0
 
 #ifdef PHTDSCONTROL
+//extern i2cPumps pumps;
 
 #define PHREGADR   0x2C //  PH reg. AD5282 address in 7bit format
 #define TDSREGADR  0x2E // TDS reg. AD5282 address in 7bit format
 #define PHADDRESS  0x48 //  PH ADC MCP3221 address in 7bit format
 #define TDSADDRESS 0x49 // TDS ADC MCP3221 address in 7bit format
+
+extern IoAbstractionRef ioExp, ioExp2, ioExpInp; //классы плат I2C расширителей
 
 #endif

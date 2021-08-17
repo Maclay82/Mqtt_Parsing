@@ -380,6 +380,6 @@ void connectToNetwork() {  // Подключиться к WiFi сети, ожи�
   // Сообщить UDP порт, на который ожидаются подключения
   if (wifi_connected || ap_connected) {
     Serial.print(F("UDP-сервер на порту "));
-    Serial.println(localPort);
+    Serial.println(loCalPort);
   }
 }

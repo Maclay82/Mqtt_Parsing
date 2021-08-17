@@ -5,8 +5,6 @@
 eSources cmdSource; // Источник команды; NONE - нет значения; BOTH - любой, UDP-клиент, MQTT-клиент
 eModes parseMode; // Текущий режим парсера
 
-//extern float minhum, maxhum; // = minhumDEF // = maxhumDEF;
-
 unsigned long timing, timing1, per;
 
 #ifdef HUMCONTROL
@@ -23,7 +21,13 @@ OneWire oneWire(D5);
 // Pass our oneWire reference to Dallas Temperature. 
 DallasTemperature TempSensors(&oneWire);
 
-float realPh = 0, realTDS = 0, Wtemp =0;
+//Инициализация плат I2C расширителей
+//Экзэмпляры классов
+IoAbstractionRef ioExp    = ioFrom8574(0x20);     //Pumps
+IoAbstractionRef ioExp2   = ioFrom8574(0x24);     //Leds
+IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
+
+float realPh = 0, realTDS = 0, Wtemp = 0;
 
 boolean TDScalib = false;  // TDS Calibration complete 
 boolean Phcalib = false;  //  Ph Calibration complete
@@ -31,14 +35,13 @@ boolean Phcalib = false;  //  Ph Calibration complete
 int rawPh = 0, rawTDS = 0;
 boolean RAWMode = true;  // RAW read mode
 
-float phmin, phmax, tdsmin, tdsmax, phk=1, phb=0, tdsk=1, tdsb=0;
+float phmin, phmax, phk=1, phb=0, tdsk=1, tdsb=0,
+PhCalP1 = 4.0, PhCalP2 = 7.0;
 
-float 
-PhCalp1 = 4.0, PhCalp2 = 7.0, 
-TDSCalp1 = 206, TDSCalp2 = 1930;
-int 
-rawPhCalp1=802, rawPhCalp2=1750, 
-rawTDSCalp1=220, rawTDSCalp2=1924,
+int  tdsmin, tdsmax, 
+TDSCalP1 = 206, TDSCalP2 = 1930,
+rawPhCalP1=802, rawPhCalP2=1750, 
+rawTDSCalP1=220, rawTDSCalP2=1924,
 
 phKa = 150,  // усиление
 phKb = 125,  // ст
@@ -107,8 +110,10 @@ void process() {
   /*
   uint16_t duration = millis() - last_ms;
   if (duration > 0) {
+    #ifdef USE_LOG
     Serial.print(F("duration="));
     Serial.println(duration);
+    #endif
   }
   */
 
@@ -144,9 +149,10 @@ void process() {
     
   if (millis() - timing >= REFRESHTIME){
 
+    #ifdef USE_LOG
     Serial.print("Time:");
     Serial.print(millis());
-  
+    #endif  
     char s[8];   //строка mqtt сообщения
     String Str;
     Str = "";
@@ -165,13 +171,14 @@ void process() {
           digitalWrite (HUMPWR, HIGH);  
         }
       }
+      #ifdef USE_LOG
       Serial.print(" Temperature:");
       Serial.print(temp, 3);
       Serial.print("C");
       Serial.print(" Humidity:");
       Serial.print(humd, 3);
       Serial.println("%");
-      
+      #endif      
       if (mqtt.connected()) {
         dtostrf(humd, 2, 2, s);
         Str= s;
@@ -192,6 +199,71 @@ void process() {
 #endif
 
 #ifdef PHTDSCONTROL
+
+// I2C Scan
+    byte error, address;
+    int nDevices;
+
+    #ifdef USE_LOG
+    Serial.println("Scanning...");
+    nDevices = 0;
+    for(address = 1; address < 127; address++ ) 
+    {
+      Wire.beginTransmission(address);
+      error = Wire.endTransmission();
+      if (error == 0)
+      {
+        Serial.print("I2C device found at address 0x");
+        if (address<16) 
+        #ifdef USE_LOG
+        Serial.print("0");
+        Serial.print(address,HEX);
+        Serial.println("  !");
+        #endif
+        nDevices++;
+      }
+      else if (error==4) 
+      {
+        Serial.print("Unknow error at address 0x");
+        if (address<16) Serial.print("0");
+        Serial.println(address,HEX);
+      }    
+    }
+    if (nDevices == 0)
+      Serial.println("No I2C devices found\n");
+    else
+      Serial.println("done\n");
+// ***************I2C Scan
+#endif
+  ioDeviceSync(ioExpInp);
+  for(int i = 0; i <= 7; i++ ){
+    ioDeviceDigitalWrite(ioExp2, i, ioDeviceDigitalRead(ioExpInp, i));
+#ifdef USE_LOG
+    Serial.print(i);
+    Serial.print("-");
+    Serial.print(ioDeviceDigitalRead(ioExpInp, i));
+    Serial.print(" ");
+#endif
+  }
+
+#ifdef USE_LOG
+  Serial.print("\n");
+#endif
+  ioDeviceSync(ioExp2);
+
+//    Serial.print(t);
+// //   ioDeviceDigitalWriteS(ioExp, t, true);  
+//    ioDeviceDigitalWriteS(ioExp2, t, true);  
+//    Serial.print(" on");
+//    delay(2000);
+// //   ioDeviceDigitalWriteS(ioExp, t, !true);
+//    ioDeviceDigitalWriteS(ioExp2, t, !true);
+//    Serial.print(" off");
+//   delay(1000);
+//   Serial.print("\n");
+//   t++;
+
+
     TempSensors.requestTemperatures(); // Send the command to get temperatures
     
     Wtemp = TempSensors.getTempCByIndex(0);
@@ -199,41 +271,50 @@ void process() {
 
     phrl = phk * middleArifm(PhvalArray) - phb;
     if ( phrl < 0 ) phrl = 0;
+#ifdef USE_LOG
     Serial.print("Ph=");
     if (rawPh == -1) Serial.print("null");
     else Serial.print(phrl);
-    Serial.print("; ");
+        Serial.print("; ");
+#endif
 
     tdsrl = tdsk * middleArifm(TDSvalArray) - tdsb;
     if ( tdsrl < 0 ) tdsrl = 0;
-    Serial.print("TDS=");
+#ifdef USE_LOG
+Serial.print("TDS=");
     if (rawTDS == -1) Serial.print("null");
     else Serial.print(tdsrl);
     Serial.print("; ");
-
+#endif
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
+      #ifdef USE_LOG
       Serial.print(" Water temp:");
       Serial.print(Wtemp, 3);
       Serial.print(" C; ");
     }
     else {
-       Serial.print("Error");
+      Serial.print("Error");
+      # endif    
     }
     if (rawPh != -1){
+      #ifdef USE_LOG
       Serial.print("Avg Ph RAW:");
       Serial.print(middleArifm(PhvalArray));
       Serial.print("; ");
 //      Serial.print(" Ph RAW:");
 //      Serial.print(rawPh);
 //      Serial.print("; ");
+      #endif
     }
     if (rawTDS != -1){  
+      #ifdef USE_LOG
       Serial.print("Avg TDS RAW:");
       Serial.print(middleArifm(TDSvalArray));
       Serial.print("; ");
 //      Serial.print(" TDS RAW:");
 //      Serial.print(rawTDS);
 //      Serial.print("; ");
+      #endif
     }
 
     if (mqtt.connected()){
@@ -259,10 +340,11 @@ void process() {
         SendMQTT(Str, TOPIC_tds);    
       } 
     } 
-
 #endif
 
+#ifdef USE_LOG
     Serial.print("\n");
+#endif
     timing = timing1 = millis();
   }
 
@@ -279,11 +361,15 @@ void process() {
       // Если настройки программы предполагают синхронизацию с NTP сервером и время пришло - выполнить синхронизацию
       if (useNtp) {
         if ((ntp_t > 0) && getNtpInProgress && (millis() - ntp_t > 5000)) {
+#ifdef USE_LOG
           Serial.println(F("Таймаут NTP запроса!"));
+#endif
           ntp_cnt++;
           getNtpInProgress = false;
           if (init_time && ntp_cnt >= 10) {
+#ifdef USE_LOG
             Serial.println(F("Не удалось установить соединение с NTP сервером."));  
+#endif
             refresh_time = false;
           }
           
@@ -467,6 +553,28 @@ void parsing() {
 
     switch (intData[0]) {
 
+      // ----------------------------------------------------
+      // 1 - калибровка насосов
+      //   0 X N - налить калибровочный обьем X насосом N
+      //   1 X N - сообщить какой обьём жидкости X налил насос N  
+      // ----------------------------------------------------
+
+      case 1:
+        // Настройки подключения к сети
+        switch (intData[1]) { 
+          // $1 0 X N - налить калибровочный обьем X насосом N
+          case 0:
+            if (intData[2] > 0 && intData[3] > 0 && intData[3] <= PUMPCOUNT){
+              pumps.pourCalVol(uint16_t(intData[2]), uint8_t(intData[3]));
+            }
+          break;
+          // $1 1 X N - сообщить какой обьём жидкости X налил насос N 
+          case 1:  
+            if (intData[2] > 0 && intData[3] > 0 && intData[3] <= PUMPCOUNT){
+              pumps.returnCalVol(uint16_t(intData[2]), uint8_t(intData[3]));
+            }
+          break;
+        }
       // ----------------------------------------------------
       // 6 - прием строки: строка принимается в формате N|text, где N:
       //   0 - принятый текст бегущей строки $6 0|X|text - X - 0..9,A..Z - индекс строки
@@ -877,7 +985,7 @@ void parsing() {
       Serial.print(":");
       Serial.print(udp.remotePort());
       Serial.print("'");
-      if (udp.remotePort() == localPort) {
+      if (udp.remotePort() == loCalPort) {
         Serial.print(F("; cmd='"));
         Serial.print(incomeBuffer);
         Serial.print("'");
@@ -999,7 +1107,7 @@ void sendPageParams(int page, eSources src) {
     case 1:  // Настройки
       str = getStateString("W|H|DM|PS|PD|IT|AL|RM|PW|BR|WU|WT|WR|WS|WC|WN|WZ|SD|FS|EE");
       break;
-   case 4:  // Настройки часов
+    case 4:  // Настройки часов
       str = getStateString("CE|CC|CO|CK|NC|SC|C1|DC|DD|DI|NP|NT|NZ|NS|DW|OF|TM");
       break;
     case 6:  // Настройки подключения

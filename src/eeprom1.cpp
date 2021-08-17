@@ -13,11 +13,11 @@ int8_t     eeprom_backup = 0;                    // Флаг - backup настр
 void loadSettings() {
 
   // Адреса в EEPROM:
-  //    0 - если EEPROM_OK - EEPROM инициализировано, если другое значение - нет                             // EEPROMread(0)                 // EEPROMWrite(0, EEPROM_OK)
+  //   0 - если EEPROM_OK - EEPROM инициализировано, если другое значение - нет                             // EEPROMread(0)                 // EEPROMWrite(0, EEPROM_OK)
 
-  //    5 - использовать синхронизацию времени через NTP                                                     // getUseNtp()                   // putUseNtp(useNtp)
-  //  6,7 - период синхронизации NTP (int16_t - 2 байта) в минутах                                           // getNtpSyncTime()              // putNtpSyncTime(SYNC_TIME_PERIOD)
-  //    8 - time zone UTC+X                                                                                  // getTimeZone();                // putTimeZone(timeZoneOffset)
+  //   5 - использовать синхронизацию времени через NTP                                                     // getUseNtp()                   // putUseNtp(useNtp)
+  // 6,7 - период синхронизации NTP (int16_t - 2 байта) в минутах                                           // getNtpSyncTime()              // putNtpSyncTime(SYNC_TIME_PERIOD)
+  //   8 - time zone UTC+X                                                                                  // getTimeZone();                // putTimeZone(timeZoneOffset)
 
   //  10 - IP[0]                                                                                            // getStaticIP()                 // putStaticIP(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3])
   //  11 - IP[1]                                                                                            // - " -                         // - " -
@@ -25,44 +25,45 @@ void loadSettings() {
   //  13 - IP[3]                                                                                            // - " -                         // - " -
   //  14 - Использовать режим точки доступа                                                                 // getUseSoftAP()                // putUseSoftAP(useSoftAP)
   
-  //  15 - maxhum                                                                                           // getMaxHum()                   // putMaxHum(maxhum)
-  //  19 - minhum                                                                                           // getMinHum()                   // putMinHum(minhum)
+  //  15 - RAWMode              //getRAWMode, putRAWMode режим чтения "сырых" данных с Ph TDS
+  //  16 - PhKa                 //getPhKa, putPhKa усиление аппаратное
+  //  18 - PhKb                 //getPhKb, putPhKb средняя точка аппаратная
+  //  20 - TDSKa                //getTDSKa, putTDSKa усиление аппаратное
+  //  22 - TDSKb                //getTDSKb, putTDSKb средняя точка аппаратная
+  //  24 - rawPhCalP1
+  //  26 - rawPhCalP2
+  //  28 - rawTDSCalP1
+  //  30 - rawTDSCalP2
+  //  32 - PhCalP1
+  //  36 - PhCalP2
+  //  40 - TDSCalP1
+  //  42 - TDSCalP2
   
-  //  23 //getPhKa, putPhKa усиление
-  //  25 //getPhKb, getPhKb средняя точка
-  //  27 //getTDSKa, getTDSKa усиление
-  //  29 //getTDSKb, getTDSKb средняя точка
-
-// float phmin, phmax, tdsmin, tdsmax, phk=1, phb=0, tdsk=1, tdsb=0;
-
-// float 
-// realPhCalPoint1, realPhCalPoint2, 
-// realTDSCalPoint1, realTDSCalPoint2;
-// int 
-// rawPhCalPoint1=802, rawPhCalPoint2=1750, 
-// rawTDSCalPoint1=220, rawTDSCalPoint2=1924,
-
   
-  //  54-63   - имя точки доступа    - 10 байт                                                               // getSoftAPName().toCharArray(apName, 10)       // putSoftAPName(String(apName))       // char apName[11] = ""
-  //  64-79   - пароль точки доступа - 16 байт                                                               // getSoftAPPass().toCharArray(apPass, 17)       // putSoftAPPass(String(apPass))       // char apPass[17] = "" 
-  //  80-103  - имя сети  WiFi       - 24 байта                                                              // getSsid().toCharArray(ssid, 25)               // putSsid(String(ssid))               // char ssid[25]   = ""
-  //  104-119 - пароль сети  WiFi    - 16 байт                                                               // getPass().toCharArray(pass, 17)               // putPass(String(pass))               // char pass[17]   = ""
-  //  120-149 - имя NTP сервера      - 30 байт                                                               // getNtpServer().toCharArray(ntpServerName, 31) // putNtpServer(String(ntpServerName)) // char ntpServerName[31] = ""
- 
+  // 66 - phmin
+  // 70 - phmax
+  // 74 - tdsmin
+  // 76 - tdsmax
+  // 78 - maxhum                                                                                             // getMaxHum()                   // putMaxHum(maxhum)
+  // 82 - minhum                                                                                             // getMinHum()                   // putMinHum(minhum)  
+  // 86-95   - имя точки доступа    - 10 байт                                                                // getSoftAPName().toCharArray(apName, 10)       // putSoftAPName(String(apName))       // char apName[11] = ""
+  // 96-111  - пароль точки доступа - 16 байт                                                                // getSoftAPPass().toCharArray(apPass, 17)       // putSoftAPPass(String(apPass))       // char apPass[17] = "" 
+  // 112-135 - имя сети  WiFi       - 24 байта                                                               // getSsid().toCharArray(ssid, 25)               // putSsid(String(ssid))               // char ssid[25]   = ""
+  // 136-151 - пароль сети  WiFi    - 16 байт                                                                // getPass().toCharArray(pass, 17)               // putPass(String(pass))               // char pass[17]   = ""
+  // 152-181 - имя NTP сервера      - 30 байт                                                                // getNtpServer().toCharArray(ntpServerName, 31) // putNtpServer(String(ntpServerName)) // char ntpServerName[31] = ""
   // 182-206 - MQTT сервер (24 симв)                                                                         // getMqttServer().toCharArray(mqtt_server, 24)  // putMqttServer(String(mqtt_server))       // char mqtt_server[25] = ""
   // 207-221 - MQTT user (14 симв)                                                                           // getMqttUser().toCharArray(mqtt_user, 14)      // putMqttUser(String(mqtt_user))           // char mqtt_user[15] = ""
   // 222-236 - MQTT pwd (14 симв)                                                                            // getMqttPass().toCharArray(mqtt_pass, 14)      // putMqttPass(String(mqtt_pass))           // char mqtt_pass[15] = ""
   // 237,238 - MQTT порт                                                                                     // getMqttPort()                  // putMqttPort(mqtt_port)
   // 239 - использовать MQTT канал управления: 0 - нет 1 - да                                                // getUseMqtt()                   // putUseMqtt(useMQTT)  
-
-  // 241,242 - задержка отпракии запросов MQTT серверу                                                       // getMqttSendDelay()             // putMqttSendDelay(mqtt_send_delay)
-
-  // 249 - отправка параметров состояния в MQTT 0 - индивидуально, 1 - пакетами                              // getSendStateInPacket()         // putSendStateInPacket(mqtt_state_packet)  
-  // 250-279 - префикс топика сообщения (30 симв)                                                            // getMqttPrefix()                // putMqttPrefix(mqtt_prefix)
-  // 280,281 - интервал отправки значения uptime на MQTT-сервер                                              // getUpTimeSendInterval()        // putUpTimeSendInterval(upTimeSendInterval)
-  //**282 - не используется
+  // 240 - отправка параметров состояния в MQTT 0 - индивидуально, 1 - пакетами                              // getSendStateInPacket()         // putSendStateInPacket(mqtt_state_packet)  
+  // 241,242 - задержка отправкии запросов MQTT серверу                                                      // getMqttSendDelay()             // putMqttSendDelay(mqtt_send_delay)
+  // 243-272 - префикс топика сообщения (30 симв)                                                            // getMqttPrefix()                // putMqttPrefix(mqtt_prefix)
+  // 273,274 - интервал отправки значения uptime на MQTT-сервер                                              // getUpTimeSendInterval()        // putUpTimeSendInterval(upTimeSendInterval)
+  
+  //**275 - не используется
   //  ...
-  //**299 - не используется
+  //**499 - не используется
 
   // Сначала инициализируем имя сети/точки доступа, пароли и имя NTP-сервера значениями по умолчанию.
   // Ниже, если EEPROM уже инициализирован - из него будут загружены актуальные значения
@@ -123,20 +124,31 @@ void loadSettings() {
 #endif
 
 #ifdef PHTDSCONTROL
+    RAWMode = getRAWMode(); // режим чтения "сырых" данных с Ph TDS
     phKa  = getPhKa(); //getPhKa усиление
     phKb  = getPhKb(); //getPhKb средняя точка
     tdsKa = getTDSKa(); //getTDSKa усиление
     tdsKb = getTDSKb(); //getTDSKb средняя точка
+    phmin = getPhmin();
+    phmax = getPhmax();
+    tdsmin = getTDSmin();
+    tdsmax = getTDSmax();
+    PhCalP1 = getPhCalP1(), 
+    PhCalP2 = getPhCalP2();
+    TDSCalP1 = getTDSCalP1(); 
+    TDSCalP2 = getTDSCalP2();
+    rawPhCalP1 = getRawPhCalP1();
+    rawPhCalP2 = getRawPhCalP2();
+    rawTDSCalP1 = getRawTDSCalP1();
+    rawTDSCalP2 = getRawTDSCalP2();
 #endif
 
-  } else {
-
+  } 
+  else {
     Serial.println(F("Инициализация EEPROM..."));
-
     // Значения переменных по умолчанию определяются в месте их объявления - в файле def_soft.h
     // Здесь выполняются только инициализация массивов и некоторых специальных параметров
     clearEEPROM();
-
     // После первой инициализации значений - сохранить их принудительно
     saveDefaults();
     saveSettings();
@@ -160,10 +172,23 @@ void saveDefaults() {
 #endif
 
 #ifdef PHTDSCONTROL
+  putRAWMode (true);
   putPhKa  (150);  // усиление
   putPhKb  (125);  // ст
   putTDSKa (60);  // усиление
   putTDSKb (110); //средняя точка
+  putPhmin (6.0); //нижняя граница Ph
+  putPhmax (6.8); //верхняя граница Ph
+  putTDSmin (700); //нижняя граница TDS
+  putTDSmax (1200); //верхняя граница TDS
+  putPhCalP1    (4.0); 
+  putRawPhCalP1 (802); 
+  putPhCalP2    (7.0);
+  putRawPhCalP2 (1750);
+  putTDSCalP1   (206); 
+  putRawTDSCalP1(220); 
+  putTDSCalP2   (1930);
+  putRawTDSCalP2(1924);
 #endif
 
   putUseNtp(useNtp);
@@ -223,34 +248,35 @@ void saveSettings() {
 }
 
 uint16_t getUpTimeSendInterval() {
-  return EEPROM_int_read(280);
+  return EEPROM_int_read(273);
 }
 
 void putUpTimeSendInterval(uint16_t value) {
   if (value != getUpTimeSendInterval()) {
-    EEPROM_int_write(280, value);
+    EEPROM_int_write(273, value);
   }
 }
 
 #ifdef HUMCONTROL  
+
 float getMaxHum() {
-  return EEPROMReadFloat(15);
+  return EEPROMReadFloat(78);
 }
 
 void putMaxHum(float value) {
   if (value != getMaxHum() ) {
-    EEPROMWriteFloat(15, value);
+    EEPROMWriteFloat(78, value);
     EEPROM.commit();
   }
 }
 
 float getMinHum() {
-  return EEPROMReadFloat(19);
+  return EEPROMReadFloat(82);
 }
 
 void putMinHum(float value) {
   if (value != getMinHum() ) {
-    EEPROMWriteFloat(19, value);
+    EEPROMWriteFloat(82, value);
     EEPROM.commit();
   }
 }
@@ -258,40 +284,125 @@ void putMinHum(float value) {
 
 #ifdef PHTDSCONTROL
 
-void putPhKa (uint16_t value)  // коэфициент усиления Ph
-{
-  EEPROM_int_write(23, value);
+void putRAWMode (boolean value){
+  if (value != getRAWMode()) EEPROMwrite(15, value);
 }
-uint16_t getPhKa ()  // коэфициент усиления Ph
-{
-  return EEPROM_int_read(23);
+bool getRAWMode() {
+  return EEPROMread(15) == 1;
 }
-void putPhKb (uint16_t value)  // средняя точка Ph
-{
-  EEPROM_int_write(25, value);
+void putPhKa (uint16_t value){  // коэфициент усиления Ph
+  if (value != getPhKa ()) EEPROM_int_write(16, value);
 }
-uint16_t getPhKb ()  // средняя точка Ph
-{
-  return EEPROM_int_read(25);
+uint16_t getPhKa (){  // коэфициент усиления Ph
+  return EEPROM_int_read(16);
 }
-void putTDSKa (uint16_t value) // коэфициент усиления TDS
-{
-  EEPROM_int_write(27, value);
+void putPhKb (uint16_t value){  // средняя точка Ph
+  if (value != getPhKb ()) EEPROM_int_write(18, value);
 }
-uint16_t getTDSKa () // коэфициент усиления TDS
-{
-  return EEPROM_int_read(27);
+uint16_t getPhKb (){  // средняя точка Ph
+  return EEPROM_int_read(18);
 }
-void putTDSKb (uint16_t value) //средняя точка TDS
-{
-  EEPROM_int_write(29, value);
+void putTDSKa (uint16_t value){ // коэфициент усиления TDS
+  if (value != getTDSKa ()) EEPROM_int_write(20, value);
+} 
+uint16_t getTDSKa (){ // коэфициент усиления TDS
+  return EEPROM_int_read(20);
 }
-uint16_t getTDSKb () //средняя точка TDS
-{
-  return EEPROM_int_read(29);
+void putTDSKb (uint16_t value){ //средняя точка TDS
+  if (value != getTDSKb ()) EEPROM_int_write(22, value);
+}
+uint16_t getTDSKb (){ //средняя точка TDS
+  return EEPROM_int_read(22);
+}
+void putPhmin (float value) {  // 66 - phmin
+  if (value != getPhmin()) {
+    EEPROMWriteFloat(66, value);
+    EEPROM.commit();
+  }
+}
+float getPhmin() {
+  return EEPROMReadFloat(66);
+}
+void putPhmax (float value) {  // 70 - phmax
+  if (value != getPhmax() ) {
+    EEPROMWriteFloat(70, value);
+    EEPROM.commit();
+  }
+}
+float getPhmax() {
+  return EEPROMReadFloat(70);
+}
+void putTDSmin (uint16_t value){ // 74 - tdsmin
+  if (value != getTDSmin ()) EEPROM_int_write(74, value);
+}
+uint16_t getTDSmin (){
+  return EEPROM_int_read(74);
+}
+void putTDSmax (uint16_t value){  // 76 - tdsmax
+  if (value != getTDSmax ()) EEPROM_int_write(76, value);
+}
+uint16_t getTDSmax (){
+  return EEPROM_int_read(76);
+}
+void putRawPhCalP1 (uint16_t value){ //Загрузка 1ой калибровочной точки Ph (сырые данные)  //  24 - rawPhCalP1
+  if (value != getTDSmax ()) EEPROM_int_write(24, value);
+}
+uint16_t getRawPhCalP1 (){ //Выгрузка 1ой калибровочной точки (сырые данные)
+  return EEPROM_int_read(24);
+}
+void putRawPhCalP2 (uint16_t value){ //Загрузка 2ой калибровочной точки Ph (сырые данные)  //  26 - rawPhCalP2
+  if (value != getTDSmax ()) EEPROM_int_write(26, value);
+}
+uint16_t getRawPhCalP2 (){ //Выгрузка 2ой калибровочной точки (сырые данные)
+  return EEPROM_int_read(26);
+}
+void putRawTDSCalP1 (uint16_t value){ //Загрузка 1ой калибровочной точки TDS (сырые данные)  //  28 - rawTDSCalP1
+  if (value != getTDSmax ()) EEPROM_int_write(28, value);
+}
+uint16_t getRawTDSCalP1 (){ //Выгрузка 1ой калибровочной точки (сырые данные)
+  return EEPROM_int_read(28);
+}
+void putRawTDSCalP2 (uint16_t value){ //Загрузка 2ой калибровочной точки TDS (сырые данные)  //  30 - rawTDSCalP2
+  if (value != getTDSmax ()) EEPROM_int_write(30, value);
+}
+uint16_t getRawTDSCalP2 (){ //Выгрузка 2ой калибровочной точки (сырые данные)
+  return EEPROM_int_read(30);
+}
+void putPhCalP1 (float value) { //Загрузка 1ой калибровочной точки Ph //  32 - PhCalP1
+  if (value != getPhmin()) {
+    EEPROMWriteFloat(32, value);
+    EEPROM.commit();
+  }
+}
+float getPhCalP1(){             //Выгрузка 1ой калибровочной точки Ph 
+  return EEPROMReadFloat(32);
+}
+void putPhCalP2 (float value) {//Загрузка 2ой калибровочной точки Ph //  36 - PhCalP2
+  if (value != getPhmin()) {
+    EEPROMWriteFloat(36, value);
+    EEPROM.commit();
+  }
+}
+float getPhCalP2(){           //Выгрузка 1ой калибровочной точки Ph 
+  return EEPROMReadFloat(36);
+}
+void putTDSCalP1 (uint16_t value){ //Загрузка 1ой калибровочной точки TDS   //  40 - TDSCalP1
+
+  if (value != getTDSmax ()) EEPROM_int_write(40, value);
+}
+uint16_t getTDSCalP1 (){ //Выгрузка 1ой калибровочной точки (сырые данные)
+  return EEPROM_int_read(40);
+}
+void putTDSCalP2 (uint16_t value){ //Загрузка 2ой калибровочной точки TDS   //  42 - TDSCalP2
+
+  if (value != getTDSmax ()) EEPROM_int_write(42, value);
+}
+uint16_t getTDSCalP2 (){ //Выгрузка 2ой калибровочной точки (сырые данные)
+  return EEPROM_int_read(42);
 }
 
 #endif
+
 
 void putUseNtp(boolean value) {
   if (value != getUseNtp()) {
@@ -336,52 +447,52 @@ void putUseSoftAP(boolean use) {
 }
 
 String getSoftAPName() {
-  return EEPROM_string_read(54, 10);
+  return EEPROM_string_read(86, 10);
 }
 
 void putSoftAPName(String SoftAPName) {
   if (SoftAPName != getSoftAPName()) {
-    EEPROM_string_write(54, SoftAPName, 10);
+    EEPROM_string_write(86, SoftAPName, 10);
   }
 }
 
 String getSoftAPPass() {
-  return EEPROM_string_read(64, 16);
+  return EEPROM_string_read(96, 16);
 }
 
 void putSoftAPPass(String SoftAPPass) {
   if (SoftAPPass != getSoftAPPass()) {
-    EEPROM_string_write(64, SoftAPPass, 16);
+    EEPROM_string_write(96, SoftAPPass, 16);
   }
 }
 
 String getSsid() {
-  return EEPROM_string_read(80, 24);
+  return EEPROM_string_read(112, 24);
 }
 
 void putSsid(String Ssid) {
   if (Ssid != getSsid()) {
-    EEPROM_string_write(80, Ssid, 24);
+    EEPROM_string_write(112, Ssid, 24);
   }
 }
 
 String getPass() {
-  return EEPROM_string_read(104, 16);
+  return EEPROM_string_read(136, 16);
 }
 
 void putPass(String Pass) {
   if (Pass != getPass()) {
-    EEPROM_string_write(104, Pass, 16);
+    EEPROM_string_write(136, Pass, 16);
   }
 }
 
 String getNtpServer() {
-  return EEPROM_string_read(120, 30);
+  return EEPROM_string_read(152, 30);
 }
 
 void putNtpServer(String server) {
   if (server != getNtpServer()) {
-    EEPROM_string_write(120, server, 30);
+    EEPROM_string_write(152, server, 30);
   }
 }
 
@@ -412,12 +523,12 @@ void putUseMqtt(boolean use) {
 }
 
 bool getSendStateInPacket() {
-  return EEPROMread(249) == 1;
+  return EEPROMread(240) == 1;
 }
 
 void putSendStateInPacket(boolean use_packet) {  
   if (use_packet != getSendStateInPacket()) {
-    EEPROMwrite(249, use_packet ? 1 : 0);
+    EEPROMwrite(240, use_packet ? 1 : 0);
   }
 }
 
@@ -463,12 +574,12 @@ void putMqttPass(String pass) {
 }
 
 String getMqttPrefix() {
-  return EEPROM_string_read(250, 30);
+  return EEPROM_string_read(243, 30);
 }
 
 void putMqttPrefix(String prefix) {  
   if (prefix != getMqttPrefix()) {
-    EEPROM_string_write(250, prefix, 30);
+    EEPROM_string_write(243, prefix, 30);
   }
 }
 
