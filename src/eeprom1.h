@@ -51,6 +51,10 @@ uint16_t getTDSmin ();
 void putTDSmax (uint16_t value);  // 76 - tdsmax
 uint16_t getTDSmax ();
 
+float getPumpScl(int numpump);
+void putPumpScl(float value, int numpump);
+void putPumpCalVol (uint16_t value, int numpump);
+uint16_t getPumpCalVol(int numpump);
 #endif
 
 

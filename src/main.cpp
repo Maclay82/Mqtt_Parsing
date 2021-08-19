@@ -238,15 +238,15 @@ void setup() {
   Wire.begin();
 
 #ifdef PHTDSCONTROL
-  i2cPumps pumps(0x20, true);
+//  i2cPumps pumps(0x20, true);
   for(int i = 0; i <= 7; i++ ){ 
-    // ioDevicePinMode(ioExp, i, OUTPUT);
+    //ioDevicePinMode(ioExp, i, OUTPUT);
     ioDevicePinMode(ioExp2, i, OUTPUT);
     ioDevicePinMode(ioExpInp, i, INPUT);
   }
 
   for(int i = 0; i <= 7; i++ ){
-    // ioDeviceDigitalWrite(ioExp, i, !true);
+    //ioDeviceDigitalWrite(ioExp, i, !true);
     ioDeviceDigitalWrite(ioExp2, i, true);
   }
   ioDeviceSync(ioExp2);
@@ -341,6 +341,7 @@ void setup() {
   // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
 
   ArduinoOTA.onStart([]() {
+    
     String type;
     if (ArduinoOTA.getCommand() == U_FLASH)
       type = F("скетча...");
@@ -384,16 +385,11 @@ void setup() {
 #endif
 
 #ifdef PHTDSCONTROL
-//Инициализация платы моторов
-  // Wire.beginTransmission(0X20);
-  // Wire.write(B11111111);
-  // Wire.endTransmission();
-
 
   phk = ( PhCalP2 - PhCalP1 ) / ( rawPhCalP2 - rawPhCalP1 );
-  phb = phk * rawPhCalP1 - PhCalP1;
+  PhMP = phk * rawPhCalP1 - PhCalP1;
   tdsk = ( TDSCalP2 - TDSCalP1 ) / ( rawTDSCalP2 - rawTDSCalP1 );
-  tdsb = tdsk * rawTDSCalP1 - TDSCalP1;
+  TdsMP = tdsk * rawTDSCalP1 - TDSCalP1;
 
   Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
   Wire.write(byte(0x01));            // sends instruction byte  

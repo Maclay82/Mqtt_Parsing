@@ -14,8 +14,6 @@ extern float minhum, maxhum;
 #ifdef PHTDSCONTROL
 #define OPROSDELAY 150
 #define NUM_AVER 20           // выборка (из скольки усредняем)
-
-extern i2cPumps pumps;
 #endif
 
 extern uint16_t AUTO_MODE_PERIOD;  // Период активации автоматического режима в минутах по умолчанию
@@ -58,7 +56,7 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 #endif
 
 #ifndef MQTT_SEND_DELAY                          // Отправлять сообщение на MQTT-сервер не чаще 1 сообщения в секунду (ограничение бесплатного MQTT сервера);
-#define MQTT_SEND_DELAY     0                    // Сообщения, отправленные чаще защитного интервала "съедаются" сервером (игнорируются, пропадают); 
+#define MQTT_SEND_DELAY     1                    // Сообщения, отправленные чаще защитного интервала "съедаются" сервером (игнорируются, пропадают); 
 #endif                                           // Если нет ограничений на частоту отправки сообщений - поставьте здесь 0
                                                   
 
@@ -108,7 +106,7 @@ extern  int rawPh, rawTDS;
 extern  boolean RAWMode;  // RAW read mode
 
 extern  float phmin, phmax, 
-              phk, phb, tdsk, tdsb, PhCalP1, PhCalP2;
+              phk, PhMP, tdsk, TdsMP, PhCalP1, PhCalP2;
 
 extern  int 
 tdsmin, tdsmax, 

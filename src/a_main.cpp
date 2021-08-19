@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "def_soft.h"     // Определение параметров эффектов, переменных программы и т.п.
+extern i2cPumps pumps;
 
 // ----------------------------------------------------
 eSources cmdSource; // Источник команды; NONE - нет значения; BOTH - любой, UDP-клиент, MQTT-клиент
@@ -23,9 +24,11 @@ DallasTemperature TempSensors(&oneWire);
 
 //Инициализация плат I2C расширителей
 //Экзэмпляры классов
-IoAbstractionRef ioExp    = ioFrom8574(0x20);     //Pumps
+i2cPumps pumps(0x20, true);
+
 IoAbstractionRef ioExp2   = ioFrom8574(0x24);     //Leds
 IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
+
 
 float realPh = 0, realTDS = 0, Wtemp = 0;
 
@@ -35,7 +38,7 @@ boolean Phcalib = false;  //  Ph Calibration complete
 int rawPh = 0, rawTDS = 0;
 boolean RAWMode = true;  // RAW read mode
 
-float phmin, phmax, phk=1, phb=0, tdsk=1, tdsb=0,
+float phmin, phmax, phk=1, PhMP=0, tdsk=1, TdsMP=0,
 PhCalP1 = 4.0, PhCalP2 = 7.0;
 
 int  tdsmin, tdsmax, 
@@ -199,12 +202,15 @@ void process() {
 #endif
 
 #ifdef PHTDSCONTROL
-
+  #ifdef USE_LOG
 // I2C Scan
+  #if (ICCSCAN== 1)
     byte error, address;
     int nDevices;
 
-    #ifdef USE_LOG
+ //   #define ICCSCAN 1
+
+
     Serial.println("Scanning...");
     nDevices = 0;
     for(address = 1; address < 127; address++ ) 
@@ -233,7 +239,9 @@ void process() {
       Serial.println("No I2C devices found\n");
     else
       Serial.println("done\n");
-// ***************I2C Scan
+  #endif
+
+// ***************I2C Scan end
 #endif
   ioDeviceSync(ioExpInp);
   for(int i = 0; i <= 7; i++ ){
@@ -269,7 +277,7 @@ void process() {
     Wtemp = TempSensors.getTempCByIndex(0);
     
 
-    phrl = phk * middleArifm(PhvalArray) - phb;
+    phrl = phk * middleArifm(PhvalArray) - PhMP;
     if ( phrl < 0 ) phrl = 0;
 #ifdef USE_LOG
     Serial.print("Ph=");
@@ -278,7 +286,7 @@ void process() {
         Serial.print("; ");
 #endif
 
-    tdsrl = tdsk * middleArifm(TDSvalArray) - tdsb;
+    tdsrl = tdsk * middleArifm(TDSvalArray) - TdsMP;
     if ( tdsrl < 0 ) tdsrl = 0;
 #ifdef USE_LOG
 Serial.print("TDS=");
@@ -310,7 +318,7 @@ Serial.print("TDS=");
       #ifdef USE_LOG
       Serial.print("Avg TDS RAW:");
       Serial.print(middleArifm(TDSvalArray));
-      Serial.print("; ");
+      Serial.println("; ");
 //      Serial.print(" TDS RAW:");
 //      Serial.print(rawTDS);
 //      Serial.print("; ");
@@ -506,6 +514,11 @@ void parsing() {
   bool err = false;
 
   /*
+      ----------------------------------------------------
+    1 - калибровка насосов
+        0 X N - налить калибровочный обьем X насосом N
+        1 X N - сообщить какой обьём жидкости X налил насос N  
+
     Протокол связи, посылка начинается с режима. Режимы:
     6 - текст $6 N|some text, где N - назначение текста;
 
@@ -560,7 +573,12 @@ void parsing() {
       // ----------------------------------------------------
 
       case 1:
-        // Настройки подключения к сети
+            // Serial.print("$1 ");
+            // Serial.print(intData[1]);
+            // Serial.print(" ");
+            // Serial.print(intData[2]);
+            // Serial.print(" ");
+            // Serial.println(intData[3]);
         switch (intData[1]) { 
           // $1 0 X N - налить калибровочный обьем X насосом N
           case 0:
@@ -570,11 +588,36 @@ void parsing() {
           break;
           // $1 1 X N - сообщить какой обьём жидкости X налил насос N 
           case 1:  
-            if (intData[2] > 0 && intData[3] > 0 && intData[3] <= PUMPCOUNT){
-              pumps.returnCalVol(uint16_t(intData[2]), uint8_t(intData[3]));
+            if (intData[2] > 0 && intData[3] >= 1 && intData[3] <= PUMPCOUNT){
+              // Serial.print("scale ");
+              // Serial.println(pumps.getPumpScale((uint8_t)intData[3]-1));
+              // Serial.println((int)intData[3]);
+              putPumpScl(pumps.returnScaleCalVol(uint16_t(intData[2]), uint8_t(intData[3])), (int)(intData[3]) );
+              // Serial.print("scale new ");
+              // Serial.println(pumps.getPumpScale((int)(intData[3]-1)));    
+              // for(int i = 0; i < PUMPCOUNT; i++ ){
+              //   Serial.println(pumps.getPumpScale((int)i));
+              // }
+
             }
           break;
         }
+      // ----------------------------------------------------
+      // 2 - налить обьем X насосом N
+      // $2 X N - налить обьем X насосом N
+      // ----------------------------------------------------
+
+      case 2:
+          // Serial.print("$2 ");
+          // Serial.print(intData[1]);
+          // Serial.print(" ");
+          // Serial.println(intData[2]);
+          if (intData[1] > 0 && intData[2] >= 1 && intData[2] <= PUMPCOUNT){          
+//            Serial.println(pumps.pourVol((uint16_t)(intData[1]), uint8_t(intData[2])));
+            pumps.pourVol((uint16_t)(intData[1]), uint8_t(intData[2]));
+          }
+        break;
+
       // ----------------------------------------------------
       // 6 - прием строки: строка принимается в формате N|text, где N:
       //   0 - принятый текст бегущей строки $6 0|X|text - X - 0..9,A..Z - индекс строки
@@ -896,7 +939,7 @@ void parsing() {
         // $23 2 ST   - Загрузить EEPROM из файла  ST = 0 - внутр. файл. системы; 1 - на SD-карты
         switch(intData[1]) {
           case 1:
-            err = !saveEepromToFile(intData[2] == 1 ? "SD" : "FS");
+           err = !saveEepromToFile(intData[2] == 1 ? "SD" : "FS");
             if (err) {
               str = F("$18 ER:[E~Не удалось сохранить резервную копию настроек]|EE:");
             } else {

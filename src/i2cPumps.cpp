@@ -2,39 +2,81 @@
 
 i2cPumps::i2cPumps(byte address, bool revers) {
   onpump = revers;
-  // Wire.beginTransmission(address); // transmit to device
-  // Wire.write(byte(B00000000));            // sends instruction byte  
-  // Wire.endTransmission();     // stop transmitting
-//  IoAbstractionRef ioExp  = ioFrom8574(address);     //Pumps
-  for(int i = 0; i <= 7; i++ ){ 
-    ioDevicePinMode(ioExp, i, OUTPUT);
+  Wire.begin();
+  I2CExp    = ioFrom8574(address);//0x20);     //Pumps
+  for(int i = 0; i <= PUMPCOUNT-1; i++ ){ 
+    ioDevicePinMode(I2CExp, i, OUTPUT);
+    ioDeviceDigitalWrite(I2CExp, i, !onpump);
   }
-  for(int i = 0; i <= 7; i++ ){
-    ioDeviceDigitalWrite(ioExp, i, !onpump);
+  for(int i = 0; i <= PUMPCOUNT-1; i++ ){
+    scaleCal[i]=10;
   }
-  ioDeviceSync(ioExp);
+  ioDeviceSync(I2CExp);
+}
+
+bool   i2cPumps::pourVol (uint16_t volume, uint8_t num){
+  bool result = false;
+      // Serial.print(num);
+      // Serial.print(" ");
+      // Serial.print(volume);
+      // Serial.print(" "); 
+      // Serial.println(scaleCal[num-1]);
+
+  if(num >= 1 && num <= PUMPCOUNT){
+    result = ioDeviceDigitalWriteS(I2CExp, num-1, onpump);
+    delay (volume*scaleCal[num-1]);
+    result = ioDeviceDigitalWriteS(I2CExp, num-1, !onpump);
+  }
+  return result;
 }
 
 void i2cPumps::pourCalVol (uint16_t volume, uint8_t num) {
-  CalVol[num] = volume;
+  CalVol[num-1] = volume;
+  // Serial.println("CalVol[num-1] = volume");
+
   if(num>0 && num<=PUMPCOUNT){
-    ioDeviceDigitalWriteS(ioExp, num-1, onpump);
-    delay (CalVol[num]*kCal[num]);
-    ioDeviceDigitalWriteS(ioExp, num-1, !onpump);
+    ioDeviceDigitalWriteS(I2CExp, num-1, onpump);
+      // Serial.print(num-1);
+      // Serial.print(" ");
+      // Serial.print(CalVol[num-1]);
+      // Serial.print(" "); 
+      // Serial.print(scaleCal[num-1]);
+    delay (CalVol[num-1]*scaleCal[num-1]);
+      // Serial.println(" end++");
+
+    ioDeviceDigitalWriteS(I2CExp, num-1, !onpump);
   }
 }
 
-void i2cPumps::returnCalVol (uint16_t volume, uint8_t num) {
-
-
+float i2cPumps::returnScaleCalVol (uint16_t volume, uint8_t num) {
+  if(num >= 1) {
+    if(scaleCal[num-1]<=0) scaleCal[num - 1] = 1;
+    scaleCal[num - 1] = (float)(scaleCal[num - 1] * CalVol[num - 1] / volume);
+  // Serial.print("returnScaleCalVol (");
+  // Serial.print(volume);
+  // Serial.print(" ");
+  // Serial.print(num);
+  // Serial.println(") ");
+  // Serial.print("scaleCal[");
+  // Serial.print(num);
+  // Serial.print("]new = ");
+  // Serial.print(scaleCal[num-1]);
+  // Serial.print(" CalVol[");
+  // Serial.print(num);
+  // Serial.print("] = ");
+  // Serial.print(CalVol[num - 1]);
+  // Serial.print(" volume =");
+  // Serial.println(volume);
+  }
+  return scaleCal[num - 1];
 }
 
-void i2cPumps::setPumpScale  (float koef, uint8_t num){
-  kCal[num] = koef;
+void i2cPumps::putPumpScale  (float value, uint8_t num){
+  scaleCal[num] = value;
 }
 
 float i2cPumps::getPumpScale (uint8_t num){
-  return kCal[num];
+  return scaleCal[num];
 }
 
 uint8_t i2cPumps::getPumpCount(){
@@ -43,7 +85,7 @@ uint8_t i2cPumps::getPumpCount(){
 
 
 // private:
-//   float    kCal[PUMPCOUNT];
+//   float    scaleCal[PUMPCOUNT];
 //   uint16_t CalVol[PUMPCOUNT];
 
 // void timerMinim::reset() {

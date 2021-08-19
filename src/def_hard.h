@@ -2,8 +2,7 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA2      // Флаг, показывающий, что EEPROM инициализирована корректными данными 
-//#define EEPROM_MAX    1024       // Максимальный размер EEPROM доступный для использования
+#define EEPROM_OK     0xA1      // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
@@ -177,7 +176,6 @@ I2C address 0x49 TDS
 4 - tds elec. 1 зел
 5 - tds elec. 2 жел
 
-
 */
 
 #ifndef PHTDSCONTROL
@@ -186,13 +184,14 @@ I2C address 0x49 TDS
 
 #define DEV_ID 0
 
+
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 #define HOST_NAME   F("PhTDSCtrl")
 #define DEFAULT_MQTT_PREFIX "ghTest"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 #define mqttClient "GHTest_PhTDSCtrl_cli1"
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
 
-#define REFRESHTIME 5000
+#define REFRESHTIME 10000
 #define MEMFLAG 10
 
 
@@ -275,13 +274,18 @@ extern HTU21D myHumidity;
 #endif                                           // Если нет ограничений на частоту отправки сообщений - поставьте здесь 0
 
 #ifdef PHTDSCONTROL
-//extern i2cPumps pumps;
+
+#define ICCSCAN 0
+
+extern i2cPumps pumps;
 
 #define PHREGADR   0x2C //  PH reg. AD5282 address in 7bit format
 #define TDSREGADR  0x2E // TDS reg. AD5282 address in 7bit format
 #define PHADDRESS  0x48 //  PH ADC MCP3221 address in 7bit format
 #define TDSADDRESS 0x49 // TDS ADC MCP3221 address in 7bit format
 
-extern IoAbstractionRef ioExp, ioExp2, ioExpInp; //классы плат I2C расширителей
+#define PUMPSCALEADR 400 // start pumps scale address 
+#define PUMPCALVOLADR 350
+extern IoAbstractionRef ioExp2, ioExpInp, I2CExp; //классы плат I2C расширителей
 
 #endif

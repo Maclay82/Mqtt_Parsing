@@ -63,6 +63,7 @@ void loadSettings() {
   
   //**275 - не используется
   //  ...
+  //  400-... //PumpScale коэффициенты нвсосов
   //**499 - не используется
 
   // Сначала инициализируем имя сети/точки доступа, пароли и имя NTP-сервера значениями по умолчанию.
@@ -141,6 +142,12 @@ void loadSettings() {
     rawPhCalP2 = getRawPhCalP2();
     rawTDSCalP1 = getRawTDSCalP1();
     rawTDSCalP2 = getRawTDSCalP2();
+
+    for(int i = 0; i < PUMPCOUNT; i++ ){
+//  Serial.print(F("pumps.putPumpScale("));
+      pumps.putPumpScale(getPumpScl(i+1),uint8_t(i));
+//  Serial.println(F(")"));
+    }
 #endif
 
   } 
@@ -189,6 +196,10 @@ void saveDefaults() {
   putRawTDSCalP1(220); 
   putTDSCalP2   (1930);
   putRawTDSCalP2(1924);
+  for(int i = 0; i < PUMPCOUNT; i++ ){
+    pumps.putPumpScale (512.82, uint8_t(i));
+    putPumpScl(512.82, uint8_t(i));
+  }
 #endif
 
   putUseNtp(useNtp);
@@ -400,6 +411,40 @@ void putTDSCalP2 (uint16_t value){ //Загрузка 2ой калибровоч
 uint16_t getTDSCalP2 (){ //Выгрузка 2ой калибровочной точки (сырые данные)
   return EEPROM_int_read(42);
 }
+
+float getPumpScl(int numpump){
+  // Serial.print("getPumpScl( ");
+  // Serial.print(numpump);
+  // Serial.print("-");
+  // Serial.print("EEPROMReadFloat(");
+  // Serial.print(PUMPSCALEADR + ((numpump-1) * 4));
+  // Serial.print(")=");
+  // Serial.print(EEPROMReadFloat(PUMPSCALEADR + ((numpump-1) * 4)));
+  // Serial.println(" ");
+
+  return EEPROMReadFloat(PUMPSCALEADR + ((numpump-1) * 4));
+}
+void putPumpScl(float value, int numpump){
+  // Serial.print("putPumpScl value-");
+  // Serial.print(value);
+  // Serial.print(" numpump-");
+  // Serial.print(numpump);
+  // Serial.println(")");
+  // Serial.print("+EEPROMWriteFloat(");
+  // Serial.print(PUMPSCALEADR + ((numpump-1) * 4));
+  // Serial.println(")");
+
+  if (value != getPumpScl(numpump)){
+    EEPROMWriteFloat((PUMPSCALEADR + ((numpump-1) * 4)), value);
+    EEPROM.commit();
+  } 
+}
+uint16_t getPumpCalVol(int numpump){
+  return EEPROM_int_read(PUMPCALVOLADR + ((numpump - 1) * 2));
+}
+void putPumpCalVol (uint16_t value, int numpump){
+  if (value != getTDSKa ()) EEPROM_int_write((PUMPCALVOLADR + ((numpump - 1) * 2)), value);
+} 
 
 #endif
 
@@ -621,6 +666,8 @@ void EEPROM_int_write(uint16_t addr, uint16_t num) {
   byte raw[2];
   (uint16_t&)raw = num;
   for (byte i = 0; i < 2; i++) EEPROMwrite(addr+i, raw[i]);
+  eepromModified = true;
+  saveSettingsTimer.reset();
 }
 
 // чтение uint32_t
@@ -636,12 +683,15 @@ void EEPROM_long_write(uint16_t addr, uint32_t num) {
   byte raw[4];
   (uint32_t&)raw = num;
   for (byte i = 0; i < 4; i++) EEPROMwrite(addr+i, raw[i]);
+  eepromModified = true;
+  saveSettingsTimer.reset();
 }
 
 void EEPROMWriteFloat(uint16_t addr, float val) // запись в ЕЕПРОМ
 {
   byte *x = (byte *)&val;
   for(byte i = 0; i < 4; i++) EEPROM.write(i+addr, x[i]);
+  eepromModified = true;
   saveSettingsTimer.reset();
 }
 

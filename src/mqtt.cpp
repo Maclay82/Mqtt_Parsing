@@ -169,7 +169,7 @@ void checkMqttConnection() {
     mqtt_topic_subscribed = false;
     mqtt_conn_last = millis();
 
-    String topic = mqtt_topic(TOPIC_PWR);
+    String topic = mqtt_topic(TOPIC_STT);
 
 
 
