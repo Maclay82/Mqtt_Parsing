@@ -155,6 +155,7 @@ void process() {
     #ifdef USE_LOG
     Serial.print("Time:");
     Serial.print(millis());
+    Serial.print(" sensor_scan >> ");
     #endif  
     char s[8];   //строка mqtt сообщения
     String Str;
