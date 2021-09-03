@@ -6,7 +6,7 @@ extern i2cPumps pumps;
 eSources cmdSource; // Источник команды; NONE - нет значения; BOTH - любой, UDP-клиент, MQTT-клиент
 eModes parseMode; // Текущий режим парсера
 
-unsigned long timing, timing1, per;
+unsigned long timing, timing1, timing2, per, regDelay; // Таймеры опросов, длительность
 
 #ifdef HUMCONTROL
 HTU21D myHumidity;
@@ -16,9 +16,8 @@ float minhum, maxhum; // = minhumDEF // = maxhumDEF;
 #endif
 
 #ifdef PHTDSCONTROL
-
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
-OneWire oneWire(D5);
+OneWire oneWire(D5); //Активация датчика температуры
 // Pass our oneWire reference to Dallas Temperature. 
 DallasTemperature TempSensors(&oneWire);
 
@@ -39,7 +38,7 @@ int rawPh = 0, rawTDS = 0;
 boolean RAWMode = true;  // RAW read mode
 
 float phmin, phmax, phk=1, PhMP=0, tdsk=1, TdsMP=0,
-PhCalP1 = 4.0, PhCalP2 = 7.0;
+PhCalP1 = 4.0, PhCalP2 = 7.0, phVol;
 
 int  tdsmin, tdsmax, 
 TDSCalP1 = 206, TDSCalP2 = 1930,
@@ -60,9 +59,7 @@ int32_t    intData[PARSE_AMOUNT];           // массив численных �
                                             // период синхронизации м.б больше 255 мин - нужен тип int32_t
 char       incomeBuffer[BUF_MAX_SIZE];      // Буфер для приема строки команды из wifi udp сокета; также используется для загрузки строк из EEPROM
 char       replyBuffer[8];                  // ответ клиенту - подтверждения получения команды: "ack;/r/n/0"
-
 byte       ackCounter = 0;                  // счетчик отправляемых ответов для создания уникальности номера ответа
-
 
 // --------------- ВРЕМЕННЫЕ ПЕРЕМЕННЫЕ ПАРСЕРА ------------------
 
@@ -82,8 +79,8 @@ int16_t    packetSize = 0;
 #ifdef PHTDSCONTROL
 float phrl, tdsrl;
 long average;                 // перем. среднего
-int  PhvalArray[NUM_AVER];    // массив
-int  TDSvalArray[NUM_AVER];   // массив
+int  PhvalArray[NUM_AVER];    // массив зачений Ph
+int  TDSvalArray[NUM_AVER];   // массив зачений TDS
 byte idx = 0;                 // индекс
 
 //Заполнение массива
@@ -124,7 +121,10 @@ void process() {
   parsing();
 
 #ifdef PHTDSCONTROL
-  if (millis() - timing1 >=  OPROSDELAY){  // opros datchikov Ph i TDS
+
+
+  if (millis() - timing1 >=  OPROSDELAY)  // opros datchikov Ph i TDS
+  {
     uint16_t result = 0;
     Wire.requestFrom(PHADDRESS, 2);        //requests 2 bytes
     if (Wire.available()) {
@@ -147,6 +147,35 @@ void process() {
     ArrayFill(rawTDS, TDSvalArray);
     ++idx;
     timing1 = millis();
+  }
+
+  if (millis() - timing2 >  (1000 * 60 * regDelay))//REGDELAY))  // Решение на регулеровку Ph i TDS
+  {
+    phrl = phk * middleArifm(PhvalArray) - PhMP;
+    DynamicJsonDocument doc(256);
+    String out;
+    if ( phrl < 0 ) phrl = 0;
+    if ( rawPh == -1 ) phrl = -1;
+
+  	if (phrl > -1 && phrl < phmin){
+      pumps.pourVol(phVol, PHUP);
+      doc["PhUp"] = phVol;
+      serializeJson(doc, out);      
+      SendMQTT(out, TOPIC_STT);
+	  }
+
+  	if (phrl > phmin && phrl < phmax){
+  	}
+
+  	if (phrl > phmax){
+      pumps.pourVol(phVol, PHDOWN);
+      doc["PhDown"] = phVol;
+      serializeJson(doc, out);      
+      SendMQTT(out, TOPIC_STT);
+	  }
+
+    
+    timing2 = millis();
   }
 #endif
     
@@ -319,7 +348,7 @@ Serial.print("TDS=");
       #ifdef USE_LOG
       Serial.print("Avg TDS RAW:");
       Serial.print(middleArifm(TDSvalArray));
-      Serial.println("; ");
+      Serial.print("; ");
 //      Serial.print(" TDS RAW:");
 //      Serial.print(rawTDS);
 //      Serial.print("; ");
@@ -354,7 +383,7 @@ Serial.print("TDS=");
 #ifdef USE_LOG
     Serial.print("\n");
 #endif
-    timing = timing1 = millis();
+    timing = millis();
   }
 
   if (!parseStarted) 
@@ -517,8 +546,22 @@ void parsing() {
   /*
       ----------------------------------------------------
     1 - калибровка насосов
-        0 X N - налить калибровочный обьем X насосом N
-        1 X N - сообщить какой обьём жидкости X налил насос N  
+        $1 0 X N - налить калибровочный обьем X насосом N
+        $1 1 X N - сообщить какой обьём жидкости X налил насос N  
+
+    2 - налив насосом
+        $2 X N - налить калибровочный обьем X насосом N
+        $2 X N - сообщить какой обьём жидкости X налил насос N  
+
+    3 - Вывести профиль
+        $3 1 - profpub
+        $3 2 - сообщить какой обьём жидкости X налил насос N  
+
+    4 - Редактирование профиля регулировки
+        $4 0 Х - Задать время регулирования X минут
+        $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph  
+        $4 2 Х - Задать Ph max
+        $4 3 Х - Задать Ph min  
 
     Протокол связи, посылка начинается с режима. Режимы:
     6 - текст $6 N|some text, где N - назначение текста;
@@ -528,11 +571,12 @@ void parsing() {
         3 - пароль для подключения к сети 
         4 - имя точки доступа
         5 - пароль к точке доступа
-        6 - настройки будильников
+        //6 - настройки будильников
         7 - строка запрашиваемых параметров для процедуры getStateString(), например - "CE|CC|CO|CK|NC|SC|C1|DC|DD|DI|NP|NT|NZ|NS|DW|OF"
         8 - имя сервера MQTT
         9 - имя пользователя MQTT
        10 - пароль к MQTT-серверу
+       11 - Получать DHCP IP
 
        13 - префикс топика сообщения к MQTT-серверу
 
@@ -599,25 +643,88 @@ void parsing() {
               // for(int i = 0; i < PUMPCOUNT; i++ ){
               //   Serial.println(pumps.getPumpScale((int)i));
               // }
-
             }
           break;
         }
+      break;
       // ----------------------------------------------------
       // 2 - налить обьем X насосом N
       // $2 X N - налить обьем X насосом N
       // ----------------------------------------------------
-
       case 2:
           // Serial.print("$2 ");
           // Serial.print(intData[1]);
           // Serial.print(" ");
           // Serial.println(intData[2]);
-          if (intData[1] > 0 && intData[2] >= 1 && intData[2] <= PUMPCOUNT){          
-//            Serial.println(pumps.pourVol((uint16_t)(intData[1]), uint8_t(intData[2])));
-            pumps.pourVol((uint16_t)(intData[1]), uint8_t(intData[2]));
-          }
-        break;
+        if (intData[1] > 0 && intData[2] >= 1 && intData[2] <= PUMPCOUNT){          
+//           Serial.println(pumps.pourVol((uint16_t)(intData[1]), uint8_t(intData[2])));
+           pumps.pourVol((uint16_t)(intData[1]), uint8_t(intData[2]));
+        }
+      break;
+
+      // $3 - Вывести профиль
+      //   $3 1 - profpub
+      //   $3 2 -   
+      case 3:
+        switch (intData[1]) { 
+          case 1:
+            // Serial.print("$3 ");
+            // Serial.print(intData[1]);
+            profpub();
+          break;
+          case 2:
+            // Serial.print("$3 ");
+            // Serial.print(intData[1]);
+            CalprofPub();
+            //void CalprofPub
+          break;
+        }
+      break;
+
+
+      // ----------------------------------------------------
+      // 4 - Редактирование профиля регулировки
+      //     $4 0 Х - Задать время регулирования X минут
+      //     $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph  
+      //     $4 2 Х - Задать обьём Ph max
+      //     $4 3 Х - Задать обьём Ph min  
+      case 4:
+        switch (intData[1]) { 
+          // $4 0 Х - Задать время регулирования X минут
+          case 0:
+            if (intData[2] > 0){
+              putRegDelay(intData[2]);
+              regDelay = intData[2];
+            }
+          break;
+          // $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph  
+          case 1:  
+            if (intData[2] > 0){
+              putPhVol(intData[2]);
+              phVol = intData[2];
+            }
+          break;
+          // $4 2 Х - Задать обьём Ph max
+          case 2:  
+            if (intData[2] > 0){
+              putPhmax(intData[2]);
+              phmax = intData[2];
+            }
+          break;
+          // $4 3 Х - Задать обьём Ph min
+          case 3:  
+            if (intData[2] > 0){
+              putPhmin(intData[2]);
+              phmin = intData[2];
+            }
+          break;
+        }
+      break;
+
+
+
+
+
 
       // ----------------------------------------------------
       // 6 - прием строки: строка принимается в формате N|text, где N:
@@ -673,7 +780,7 @@ void parsing() {
               // После получения пароля - перезапустить создание точки доступа
               if (useSoftAP) startSoftAP();
               break;
-              
+
             case 7:
               // Запрос значений параметров, требуемых приложением вида str="CE|CC|CO|CK|NC|SC|C1|DC|DD|DI|NP|NT|NZ|NS|DW|OF"
               // Каждый запрашиваемый приложением параметр - для заполнения соответствующего поля в приложении 
@@ -717,7 +824,6 @@ void parsing() {
               set_MqttPrefix(str);
               break;
             #endif
-
            }
         }
 
@@ -790,7 +896,7 @@ void parsing() {
              mqtt.disconnect();
              // Если подключаемся к серверу с другим именем и/или на другом порту - 
              // простой вызов 
-              mqtt.setServer(mqtt_server, mqtt_port);
+            mqtt.setServer(mqtt_server, mqtt_port);
              // не срабатывает - соединяемся к прежнему серверу, который был обозначен при старте программы
              // Единственный вариант - программно перезагрузить контроллер. После этого новый сервер подхватывается
              if (last_mqtt_server != String(mqtt_server) || last_mqtt_port != mqtt_port) {              
@@ -873,6 +979,7 @@ void parsing() {
       //   $21 0 0 - не использовать точку доступа $21 0 1 - использовать точку доступа
       //   $21 1 IP1 IP2 IP3 IP4 - установить статический IP адрес подключения к локальной WiFi сети, пример: $21 1 192 168 0 106
       //   $21 2; Выполнить переподключение к сети WiFi
+      //   $21 3 X; - Получать адрес DHCP IP; 0 - не получать; 1 - получать
       // ----------------------------------------------------
 
       case 21:
@@ -892,7 +999,7 @@ void parsing() {
             }      
             break;
           case 1:  
-            // $21 1 IP1 IP2 IP3 IP4 - установить статический IP адрес подключения к локальной WiFi сети, пример: $21 1 192 168 0 106
+            // $21 1 IP1 IP2 IP3 IP4 - установить статический IP адрес подключения к WiFi сети, пример: $21 1 192 168 0 106
             // Локальная сеть - 10.х.х.х или 172.16.х.х - 172.31.х.х или 192.168.х.х
             // Если задан адрес не локальной сети - сбросить его в 0.0.0.0, что означает получение динамического адреса 
             if (!(intData[2] == 10 || (intData[2] == 172 && intData[3] >= 16 && intData[3] <= 31) || (intData[2] == 192 && intData[3] == 168))) {
@@ -907,6 +1014,12 @@ void parsing() {
             startWiFi(5000);     // Время ожидания подключения 5 сек
             // showCurrentIP(true);
             break;
+          case 3:               // $21 3 X; - Получать адрес DHCP IP; 0 - не получать; 1 - получать
+            set_useDHCP(intData[2] == 1);
+            Serial.print("\nuseDHCP - ");
+            Serial.println(useDHCP);
+            break;
+
           default:
             err = true;
             #if (USE_MQTT == 1)
@@ -1001,8 +1114,8 @@ void parsing() {
       packetSize = command.length();
       memcpy(incomeBuffer, command.c_str(), packetSize);
 
-      Serial.print(F("MQTT пакeт размером "));
-      Serial.println(packetSize);
+      // Serial.print(F("MQTT пакeт размером "));
+      // Serial.println(packetSize);
     }
   }
   #endif

@@ -42,6 +42,11 @@ uint16_t getTDSCalP1 ();                //Выгрузка 1ой калибро�
 void putTDSCalP2 (uint16_t value);      //Загрузка 2ой калибровочной точки TDS       //  42 - TDSCalP2
 uint16_t getTDSCalP2 ();                //Выгрузка 2ой калибровочной точки
 
+void putRegDelay (uint16_t value); // 64 - RegDelay
+uint16_t getRegDelay ();
+void putPhVol (float value);  // 60 - phVol
+float getPhVol();
+
 void putPhmin (float value);  // 66 - phmin
 float getPhmin();
 void putPhmax (float value);  // 70 - phmax
@@ -64,6 +69,8 @@ void putNtpSyncTime(uint16_t value);
 uint16_t getNtpSyncTime();
 void putTimeZone(int8_t value);
 int8_t getTimeZone();
+bool getUseDHCP();
+void putUseDHCP(bool flag);
 bool getUseSoftAP();
 void putUseSoftAP(boolean use);
 String getSoftAPName();

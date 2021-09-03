@@ -17,6 +17,7 @@ void parseNTP();
 void getNTP();
 
 void profpub();
+void CalprofPub();
 void startWiFi(unsigned long waitTime);
 void startSoftAP();
 void connectToNetwork();

@@ -2,7 +2,7 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA1      // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA6      // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
@@ -12,36 +12,6 @@
 
 enum  eModes   {NORMAL};
 enum  eSources {NONE, BOTH, UDP, MQTT};
-
-// *************************** ПОДКЛЮЧЕНИЕ К СЕТИ **************************
-
-// Внимание!!! Если вы меняете эти значения ПОСЛЕ того, как прошивка уже хотя бы раз была загружена в плату и выполнялась,
-// чтобы изменения вступили в силу нужно также изменить значение константы EEPROM_OK в первой строке в файле eeprom.ino 
-
-#ifndef DEFAULT_NTP_SERVER
-#define DEFAULT_NTP_SERVER "ru.pool.ntp.org" // NTP сервер по умолчанию "time.nist.gov"
-#endif
-
-#ifndef DEFAULT_AP_NAME
-#define DEFAULT_AP_NAME "StartAP"           // Имя точки доступа по умолчанию 
-#endif
-
-#ifndef DEFAULT_AP_PASS
-#define DEFAULT_AP_PASS "12341111"          // Пароль точки доступа по умолчанию
-#endif
-
-#ifndef NETWORK_SSID
-#define NETWORK_SSID "yougrow"                     // Имя WiFi сети
-#endif
-
-#ifndef NETWORK_PASS
-#define NETWORK_PASS "00007777"                     // Пароль для подключения к WiFi сети
-#endif
-
-#ifndef DEFAULT_IP
-#define DEFAULT_IP {192, 168, 1, 101}       // Сетевой адрес устройства по умолчанию
-#endif
-
 
 // ****************** ПРОФИЛИ УСТРОЙСТВ *******************
 
@@ -98,7 +68,6 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #endif
 #define DEV_ID 0
 #define REFRESHTIME 10000
-#define MEMFLAG 0
 
 #define HOST_NAME   F("humCtrlTest")
 
@@ -107,7 +76,6 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
                               // 0 - Настройки MQTT и API KEY OpenWeatherMap в скетче в def_soft.h в строках: (пароли и ключи доступа определены в тексте скетча)
                               // Файл a_def_pass.h в комплект не входит, нужно создать, скопировать туда указанные строки
-#define mqttClient "GHTest"
 
 #define HUMPWR D6
 
@@ -124,13 +92,11 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #endif
 #define DEV_ID 0
 #define REFRESHTIME 5000
-#define MEMFLAG 0
 
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 #define HOST_NAME   F("humCtrl")
 #define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
-#define mqttClient "GH1_Hum_cli1"
 
 #define HUMPWR D7
 
@@ -149,11 +115,9 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #define HOST_NAME   F("humCtrl")
 #define DEFAULT_MQTT_PREFIX "gh2"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
-#define mqttClient "GH2_Hum_cli1"
 
 #define HUMPWR D7
 #define REFRESHTIME 5000
-#define MEMFLAG 0
 
 #define minhumDEF 69
 #define maxhumDEF 74
@@ -184,17 +148,17 @@ I2C address 0x49 TDS
 
 #define DEV_ID 0
 
-
-#define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
-#define HOST_NAME   F("PhTDSCtrl")
+#define USE_MQTT            1             // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
+#define HOST_NAME           "PhTDSCtrl"
 #define DEFAULT_MQTT_PREFIX "ghTest"      // Префикс топика сообщения или пустая строка, если префикс не требуется
-#define mqttClient "GHTest_PhTDSCtrl_cli1"
-#define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
+#define A_DEF_PASS          0             // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
 
 #define REFRESHTIME 10000
-#define MEMFLAG 10
 
+#define USEDHCP 0
+#define DEFAULT_IP {192, 168, 1, 111}       // Сетевой адрес устройства по умолчанию
 
+#define ICCSCAN 0
 
 #endif
 
@@ -208,16 +172,52 @@ I2C address 0x49 TDS
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 #define HOST_NAME   F("PhTDSCtrl")
 #define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
-#define mqttClient "GH1_PhTDSCtrl_cli1"
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
 
-#define REFRESHTIME 5000
-#define MEMFLAG 10
+#define REFRESHTIME 15000
+#define USEDHCP 0
+#define DEFAULT_IP {192, 168, 1, 112}       // Сетевой адрес устройства по умолчанию
+
+#define ICCSCAN 0
 
 
 #endif
 
 // =======================================================
+
+
+// *************************** ПОДКЛЮЧЕНИЕ К СЕТИ **************************
+
+// Внимание!!! Если вы меняете эти значения ПОСЛЕ того, как прошивка уже хотя бы раз была загружена в плату и выполнялась,
+// чтобы изменения вступили в силу нужно также изменить значение константы EEPROM_OK в первой строке в файле eeprom.ino 
+
+#ifndef DEFAULT_NTP_SERVER
+#define DEFAULT_NTP_SERVER "ru.pool.ntp.org"  // NTP сервер по умолчанию "time.nist.gov"
+#endif
+
+#ifndef DEFAULT_AP_NAME
+#define DEFAULT_AP_NAME "StartAP"             // Имя точки доступа по умолчанию 
+#endif
+
+#ifndef DEFAULT_AP_PASS
+#define DEFAULT_AP_PASS "12341111"            // Пароль точки доступа по умолчанию
+#endif
+
+#ifndef NETWORK_SSID
+#define NETWORK_SSID "yougrow"                // Имя WiFi сети
+#endif
+
+#ifndef NETWORK_PASS
+#define NETWORK_PASS "00007777"               // Пароль для подключения к WiFi сети
+#endif
+
+#ifndef DEFAULT_IP
+#define DEFAULT_IP {192, 168, 1, 121}         // Сетевой адрес устройства по умолчанию
+#endif
+
+#ifndef USEDHCP
+#define USEDHCP 1
+#endif
 
 // ************** ИСПОЛЬЗУЕМЫЕ БИБЛИОТЕКИ ****************
 #include <Wire.h>
@@ -275,9 +275,9 @@ extern HTU21D myHumidity;
 
 #ifdef PHTDSCONTROL
 
-#define ICCSCAN 0
-
 extern i2cPumps pumps;
+#define PHUP        1 //  PH up pump
+#define PHDOWN      2 //  PH down pump
 
 #define PHREGADR   0x2C //  PH reg. AD5282 address in 7bit format
 #define TDSREGADR  0x2E // TDS reg. AD5282 address in 7bit format
@@ -288,4 +288,8 @@ extern i2cPumps pumps;
 #define PUMPCALVOLADR 350
 extern IoAbstractionRef ioExp2, ioExpInp, I2CExp; //классы плат I2C расширителей
 
+#endif
+
+#ifndef ICCSCAN
+#define ICCSCAN 0
 #endif

@@ -3,24 +3,21 @@
 
 #define FIRMWARE_VER F("WiFiMQTTNode-0.1")
 
-
-
-
-
-uint16_t AUTO_MODE_PERIOD = 10;      // Период активации автоматического режима в минутах по умолчанию
+uint16_t AUTO_MODE_PERIOD = 10;    // Период активации автоматического режима в минутах по умолчанию
 bool     auto_mode = true;         // Флаг автоматического режима
 
 // *************************** ПОДКЛЮЧЕНИЕ К СЕТИ **************************
 
 WiFiUDP udp;                                // Объект транспорта сетевых пакетов
 
-String  host_name;                       // Имя для регистрации в сети, а так же как имя клиента та сервере MQTT
+String  host_name;                          // Имя для регистрации в сети, а так же как имя клиента та сервере MQTT
 
 char   apName[11] = DEFAULT_AP_NAME;        // Имя сети в режиме точки доступа
 char   apPass[17] = DEFAULT_AP_PASS;        // Пароль подключения к точке доступа
 char   ssid[25]   = NETWORK_SSID;           // SSID (имя) вашего роутера (конфигурируется подключением через точку доступа и сохранением в EEPROM)
 char   pass[17]   = NETWORK_PASS;           // пароль роутера
 byte   IP_STA[]   = DEFAULT_IP;             // Статический адрес в локальной сети WiFi по умолчанию при первом запуске. Потом - загружается из настроек, сохраненных в EEPROM
+bool   useDHCP    = USEDHCP;                // получать динамический IP
 unsigned int loCalPort = 2390;              // локальный порт на котором слушаются входящие команды управления от приложения на смартфоне, передаваемые через локальную сеть
 // --------------------Режимы работы Wifi соединения-----------------------
 
@@ -80,14 +77,18 @@ timerMinim AutoModeTimer (1000 * 60 * AUTO_MODE_PERIOD);  // Таймер акт
 void callback(char* topic, byte* payload, unsigned int length) {
   if (stopMQTT) return;
   // проверяем из нужного ли нам топика пришли данные
+#ifdef USE_LOG
   Serial.print("MQTT << topic='" + String(topic) + "'");
+#endif
   if (strcmp(topic, mqtt_topic(TOPIC_CMD).c_str()) == 0) {
     memset(incomeMqttBuffer, 0, BUF_MAX_SIZE);
     memcpy(incomeMqttBuffer, payload, length);
     
+#ifdef USE_LOG
     Serial.print(F("; cmd='"));
     Serial.print(incomeMqttBuffer);
     Serial.print("'");
+#endif
     
     // В одном сообщении может быть несколько команд. Каждая команда начинается с '$' и заканчивается ';'/ Пробелы между ';' и '$' НЕ допускаются.
     String command = String(incomeMqttBuffer);    
@@ -115,18 +116,18 @@ void callback(char* topic, byte* payload, unsigned int length) {
       }
     }    
   }
-  Serial.println();
 
-
-  Serial.print("Command from MQTT broker is : ");
-  
   char temp[length];
   strncpy(temp, (char*)payload, length);
-  //p = atoi(temp);
+
+#ifdef USE_LOG
+  Serial.println();
+  Serial.print("Command from MQTT broker is : ");
   Serial.print("topic ");
   Serial.print(topic);
   Serial.print(" payload ");
   Serial.println(temp);
+#endif
 
 #ifdef HUMCONTROL
   if ((String)topic == (String)mqtt_topic(TOPIC_MAXHUM).c_str())
@@ -185,20 +186,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
     putPhKb  (phKb);
     profpub();
   }
-  if ((String)topic == (String)TOPIC_phKb){
-    phKb = atoi(temp);
-    Wire.beginTransmission(PHREGADR); // transmit to device
-    Wire.write(byte(0x02));            // sends instruction byte  
-    Wire.write(phKb);             // sends potentiometer value byte  
-    Wire.endTransmission();     // stop transmitting
-
-    Serial.print(" phKb:");
-    Serial.print(phKb);
-    Serial.println();
-    putPhKb  (phKb);
-    profpub();
-  }
-
   if ((String)topic == (String)TOPIC_tdsKa){
     tdsKa = atoi(temp);
     Wire.beginTransmission(TDSREGADR); // transmit to device
@@ -212,7 +199,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
     putTDSKa (tdsKa);  // усиление
     profpub();
   }
-
   if ((String)topic == (String)TOPIC_tdsKb){
     tdsKb = atoi(temp);
     Wire.beginTransmission(TDSREGADR); // transmit to device
@@ -258,15 +244,11 @@ void setup() {
   Serial.begin(115200);
   delay(300);
 
-
-  host_name = String(HOST_NAME) + "-" + String(DEV_ID);
-
-
+  host_name = String(HOST_NAME) + //"-" + 
+  String(DEV_ID);
   Serial.println();
   Serial.println(FIRMWARE_VER);
   Serial.println("Host: '" + host_name + "'");//String(HOST_NAME) + "'");
-  //Serial.println();
-
 
 //-------------------------Инициализация файловой системы--------------------
 
@@ -331,7 +313,7 @@ void setup() {
   // ArduinoOTA.setPort(8266);
 
   // Hostname defaults to esp8266-[ChipID]
-  ArduinoOTA.setHostname(mqttClient);
+  ArduinoOTA.setHostname(HOST_NAME);
 
   // No authentication by default
   // ArduinoOTA.setPassword("admin");
@@ -378,6 +360,8 @@ void setup() {
   profpub();
 
   timing = millis() + REFRESHTIME;
+  timing1 = millis() + OPROSDELAY;
+  timing2 = millis() + REGDELAY;
 
 #ifdef HUMCONTROL
   pinMode(HUMPWR, OUTPUT);
@@ -395,7 +379,7 @@ void setup() {
   Wire.write(byte(0x01));            // sends instruction byte  
   Wire.write(phKa);             // sends potentiometer value byte  
   // Wire.endTransmission();     // stop transmitting
-  // delay(200);
+  // delay(20);
   // Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
   Wire.write(byte(0x02));            // sends instruction byte  
   Wire.write(phKb);             // sends potentiometer value byte  
@@ -407,7 +391,7 @@ void setup() {
   Wire.write(byte(0x01));            // sends instruction byte  
   Wire.write(tdsKa);             // sends potentiometer value byte  
   // Wire.endTransmission();     // stop transmitting
-  // delay(200);
+  // delay(20);
   // Wire.beginTransmission(TDSREGADR); // transmit to device #44 (0x2c)
   Wire.write(byte(0x02));            // sends instruction byte  
   Wire.write(tdsKb);             // sends potentiometer value byte  
@@ -429,9 +413,10 @@ void loop() {
   }
   process();
 
-  if(AutoModeTimer.isReady()){
+  if(AutoModeTimer.isReady()){ //Активация автоматического режима
     auto_mode = true;
     profpub();
   }
+
   mqtt.loop();
 }

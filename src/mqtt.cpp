@@ -154,8 +154,9 @@ void checkMqttConnection() {
   // Если связь с MQTT сервером не установлена - выполнить переподключение к серверу
   // Слишком частая проверка мешает приложению на смартфоне общаться с программой - запрос блокирующий и при неответе MQTT сервера
   // слишком частые попытки подключения к MQTT серверу не дают передаваться данным из / в приложение - приложение "отваливается"
-  if (!stopMQTT && !mqtt.connected() && (mqtt_conn_last == 0 || (millis() - mqtt_conn_last > 2500))) {
-    String clientId = String(HOST_NAME);
+  if (!stopMQTT && !mqtt.connected() && (mqtt_conn_last == 0 || (millis() - mqtt_conn_last > 3500))) {
+    String clientId = String(host_name);
+    clientId += String("-");
     clientId += String(random(0xffff), HEX);
     if (!mqtt_connecting) {
       Serial.print(F("\nПодключаемся к MQTT-серверу '"));
@@ -169,12 +170,9 @@ void checkMqttConnection() {
     mqtt_topic_subscribed = false;
     mqtt_conn_last = millis();
 
-    String topic = mqtt_topic(TOPIC_STT);
+    String topic = mqtt_topic(TOPIC_MQTTSTT);
 
-
-
-//    if (mqtt.connect(clientId.c_str(), mqtt_user, mqtt_pass, topic.c_str(), 0, true, "offline")) {
-    if (mqtt.connect(clientId.c_str(), mqtt_user, mqtt_pass)){//, topic.c_str(), 0, true, "offline")) {
+    if (mqtt.connect(clientId.c_str(), mqtt_user, mqtt_pass, topic.c_str(), 0, true, "offline")) {
       Serial.println(F("\nПодключение к MQTT-серверу выполнено."));
       if (outQueueLength > 0) {
         Serial.print(F("Сообщений в очереди отправки: "));  
@@ -299,10 +297,10 @@ void mqttSendStartState() {
   // Для отправи этих длинных строк используется тот же json-документ, который позже используется для отправки и хранения свойств состояния
   // поэтому отправка этих списков выполняется один раз при старте программы (с флагом retain), далее json-документ используется по назначению
   // Список эффектов
-  //SendCurrentState("LE", TOPIC_STT, false);    // false - т.к. хотя и один параметр, но обязательно требуется большой буфер пакета 
+  SendCurrentState("LE", TOPIC_STT, false);    // false - т.к. хотя и один параметр, но обязательно требуется большой буфер пакета 
 
   // Отправить список строк
-  //SendCurrentState("LT", TOPIC_STT, false);    // false - т.к. хотя и один параметр, но обязательно требуется большой буфер пакета
+  SendCurrentState("LT", TOPIC_STT, false);    // false - т.к. хотя и один параметр, но обязательно требуется большой буфер пакета
 
   // Список параметров подлежащих отправке на сервер
   SendCurrentState(STATE_KEYS, TOPIC_STT, !mqtt_state_packet);  
@@ -323,14 +321,14 @@ void processOutQueue() {
     String message = outQueue[outQueueReadIdx];
     bool   retain = rtnQueue[outQueueReadIdx];
     // Пытаемся отправить. Если инициализация отправки не удалась - возвращается false; Если удалась - true
-      Serial.print(F("Пытаемся отправить.")); 
-      Serial.print(F("topic - ")); 
-      Serial.print(topic); 
-      Serial.print(F(" >> ")); 
-      Serial.print(message);
+      // Serial.print(F("Пытаемся отправить.")); 
+      // Serial.print(F("topic - ")); 
+      // Serial.print(topic); 
+      // Serial.print(F(" >> ")); 
+      // Serial.print(message);
     bool ok = mqtt.beginPublish(topic.c_str(), message.length(), retain);
     if (ok) {
-      Serial.print(F("успешно")); 
+//      Serial.print(F("успешно")); 
       // Если инициация отправки была успешной - заполняем буфер отправки передаваемой строкой сообщения
       mqtt.print(message.c_str());
       // Завершаем отправку. Если пакет был отправлен - возвращается 1, если ошибка отправки - возвращается 0

@@ -18,7 +18,7 @@ void loadSettings() {
   //   5 - использовать синхронизацию времени через NTP                                                     // getUseNtp()                   // putUseNtp(useNtp)
   // 6,7 - период синхронизации NTP (int16_t - 2 байта) в минутах                                           // getNtpSyncTime()              // putNtpSyncTime(SYNC_TIME_PERIOD)
   //   8 - time zone UTC+X                                                                                  // getTimeZone();                // putTimeZone(timeZoneOffset)
-
+  //   9 - Получать Динамический IP                                                                         // getUseDHCP()                  // putUseDHCP()
   //  10 - IP[0]                                                                                            // getStaticIP()                 // putStaticIP(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3])
   //  11 - IP[1]                                                                                            // - " -                         // - " -
   //  12 - IP[2]                                                                                            // - " -                         // - " -
@@ -39,7 +39,8 @@ void loadSettings() {
   //  40 - TDSCalP1
   //  42 - TDSCalP2
   
-  
+  // 60 - PhVol
+  // 64 - regDelay
   // 66 - phmin
   // 70 - phmax
   // 74 - tdsmin
@@ -96,7 +97,7 @@ void loadSettings() {
     getSsid().toCharArray(ssid, 25);                //  80-103  - имя сети  WiFi       (24 байта макс) + 1 байт '\0'
     getPass().toCharArray(pass, 17);                //  104-119 - пароль сети  WiFi    (16 байт макс) + 1 байт '\0'
     getNtpServer().toCharArray(ntpServerName, 31);  //  120-149 - имя NTP сервера      (30 байт макс) + 1 байт '\0'
-    
+    useDHCP = getUseDHCP();
     if (strlen(apName) == 0) strcpy(apName, DEFAULT_AP_NAME);
     if (strlen(apPass) == 0) strcpy(apPass, DEFAULT_AP_PASS);
     if (strlen(ntpServerName) == 0) strcpy(ntpServerName, DEFAULT_NTP_SERVER);
@@ -130,6 +131,8 @@ void loadSettings() {
     phKb  = getPhKb(); //getPhKb средняя точка
     tdsKa = getTDSKa(); //getTDSKa усиление
     tdsKb = getTDSKb(); //getTDSKb средняя точка
+    phVol = getPhVol();
+    regDelay = getRegDelay();
     phmin = getPhmin();
     phmax = getPhmax();
     tdsmin = getTDSmin();
@@ -184,6 +187,9 @@ void saveDefaults() {
   putPhKb  (125);  // ст
   putTDSKa (60);  // усиление
   putTDSKb (110); //средняя точка
+  putPhVol (1);
+  putRegDelay(5);
+
   putPhmin (6.0); //нижняя граница Ph
   putPhmax (6.8); //верхняя граница Ph
   putTDSmin (700); //нижняя граница TDS
@@ -196,9 +202,13 @@ void saveDefaults() {
   putRawTDSCalP1(220); 
   putTDSCalP2   (1930);
   putRawTDSCalP2(1924);
-  for(int i = 0; i < PUMPCOUNT; i++ ){
-    pumps.putPumpScale (512.82, uint8_t(i));
-    putPumpScl(512.82, uint8_t(i));
+  for(int i = 0; i < PUMPCOUNT; i++ )
+  {
+    if(getPumpScl(i+1) <= 0)
+    {
+      pumps.putPumpScale (512.82, uint8_t(i));
+      putPumpScl(512.82, uint8_t(i+1));
+    }
   }
 #endif
 
@@ -212,7 +222,7 @@ void saveDefaults() {
   strcpy(apPass, DEFAULT_AP_PASS);
   strcpy(ssid, NETWORK_SSID);
   strcpy(pass, NETWORK_PASS);
-
+  useDHCP = USEDHCP;
   #if (USE_MQTT == 1)
   strcpy(mqtt_server, DEFAULT_MQTT_SERVER);
   strcpy(mqtt_user, DEFAULT_MQTT_USER);
@@ -223,7 +233,7 @@ void saveDefaults() {
   putSoftAPPass(String(apPass));
   putSsid(String(ssid));
   putPass(String(pass));
-
+  putUseDHCP(useDHCP);
   #if (USE_MQTT == 1)
   putMqttServer(String(mqtt_server));
   putMqttUser(String(mqtt_user));
@@ -325,24 +335,51 @@ void putTDSKb (uint16_t value){ //средняя точка TDS
 uint16_t getTDSKb (){ //средняя точка TDS
   return EEPROM_int_read(22);
 }
+
+uint16_t getRegDelay (){
+  return EEPROM_int_read(64);
+}
+
+void putRegDelay (uint16_t value){  // 64 - RegDelay
+  if (value != getRegDelay () && value > 0 ) EEPROM_int_write(64, value);
+}
+
+float getPhVol() {
+  return EEPROMReadFloat(60);
+}
+
+void putPhVol (float value)         // 60 - phVol
+{
+  if (value != getPhVol() && value >= 0 ) {
+    EEPROMWriteFloat(60, value);
+    EEPROM.commit();
+  }
+
+}
+
+float getPhmin() {
+  return EEPROMReadFloat(66);
+}
+
 void putPhmin (float value) {  // 66 - phmin
   if (value != getPhmin()) {
     EEPROMWriteFloat(66, value);
     EEPROM.commit();
   }
 }
-float getPhmin() {
-  return EEPROMReadFloat(66);
+
+float getPhmax() {
+  return EEPROMReadFloat(70);
 }
-void putPhmax (float value) {  // 70 - phmax
+
+void putPhmax (float value)  // 70 - phmax
+{
   if (value != getPhmax() ) {
     EEPROMWriteFloat(70, value);
     EEPROM.commit();
   }
 }
-float getPhmax() {
-  return EEPROMReadFloat(70);
-}
+
 void putTDSmin (uint16_t value){ // 74 - tdsmin
   if (value != getTDSmin ()) EEPROM_int_write(74, value);
 }
@@ -439,6 +476,7 @@ void putPumpScl(float value, int numpump){
     EEPROM.commit();
   } 
 }
+
 uint16_t getPumpCalVol(int numpump){
   return EEPROM_int_read(PUMPCALVOLADR + ((numpump - 1) * 2));
 }
@@ -480,6 +518,17 @@ void putTimeZone(int8_t value) {
 int8_t getTimeZone() {
   return (int8_t)EEPROMread(8);
 }
+
+bool getUseDHCP() {
+  return EEPROMread(9) == 1;
+}
+
+void putUseDHCP(bool flag) {
+  if (flag != getUseDHCP()) {
+    EEPROMwrite(9, flag ? 1 : 0);
+  }  
+}
+
 
 bool getUseSoftAP() {
   return EEPROMread(14) == 1;

@@ -12,6 +12,8 @@
 // Добавление ключа (параметра) в список изменившихся параметров, чьи новые значения необходимо отправить на сервер
 void addKeyToChanged(String key);
 
+// DI useDHCP
+void set_useDHCP(bool value);
 // NP useNtp
 void set_useNtp(bool value);
 // NT SYNC_TIME_PERIOD

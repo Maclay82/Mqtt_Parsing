@@ -67,6 +67,7 @@ void set_isAlarmStopped(bool value) {
 // BE thisMode
 // SS thisMode
 // SQ thisMode
+
 void set_thisMode(int8_t value) {
   if (thisMode == value) return;
   
@@ -77,24 +78,20 @@ void set_thisMode(int8_t value) {
 
   String keySE = "SE", keyBE = "BE", keyUT = "UT", keyUC = "UC", old_SQ, old_SS, old_SE, old_BE, old_UT, old_UC;
 
-  if (valid) {
-  //  old_UT = getStateValue(keyUT, thisMode);
-  //  old_UC = getStateValue(keyUC, thisMode);
-  //  old_SE = getStateValue(keySE, thisMode);
-  //  old_BE = getStateValue(keyBE, thisMode);
-  }
-
   thisMode = value;
 
   addKeyToChanged("EF");
   addKeyToChanged("EN");
-
-  //if (value < 0 || (valid && old_UT != getStateValue(keyUT, value)))  addKeyToChanged("UT");
-  //if (value < 0 || (valid && old_UC != getStateValue(keyUC, value)))  addKeyToChanged("UC");
-  //if (value < 0 || (valid && old_SE != getStateValue(keySE, value)))  addKeyToChanged("SE");
-  //if (value < 0 || (valid && old_BE != getStateValue(keyBE, value)))  addKeyToChanged("BE");
 }
 */
+
+// DI useDHCP
+void set_useDHCP(bool value) {
+  if (useDHCP == value) return;
+  putUseDHCP(value);
+  useDHCP = getUseDHCP();
+  addKeyToChanged("DI");
+}
 
 // NP useNtp
 void set_useNtp(bool value) {

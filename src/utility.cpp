@@ -214,6 +214,7 @@ void profpub() {
   if (mqtt.connected()) {
     DynamicJsonDocument doc(256);
     String out;
+
 #ifdef HUMCONTROL
     doc["minhum"] = minhum;
     doc["maxhum"] = maxhum;
@@ -221,7 +222,15 @@ void profpub() {
 #endif
 
 #ifdef PHTDSCONTROL
-
+    doc["RAWMode"] = RAWMode;
+    doc["tdsmax"] = tdsmax;
+    doc["tdsmin"] = tdsmin;
+    doc["phmax"] = phmax;
+    doc["phmin"] = phmin;
+    doc["tdsKb"] = tdsKb; //getTDSKb средняя точка
+    doc["tdsKa"] = tdsKa; //getTDSKa усиление
+    doc["phKb"] = phKb; //getPhKb средняя точка
+    doc["phKa"] = phKa; //getPhKa усиление
 #endif
 
     if(auto_mode){
@@ -238,6 +247,38 @@ void profpub() {
   }
 
 }
+void CalprofPub() {
+  if (mqtt.connected()) {
+    DynamicJsonDocument doc(256);
+    String out;
+#ifdef HUMCONTROL
+#endif
+
+#ifdef PHTDSCONTROL
+    doc["PhCalP1"] = PhCalP1;
+    doc["rawPhCalP1"] = rawPhCalP1;
+    doc["PhCalP2"] = PhCalP2;
+    doc["rawPhCalP2"] = rawPhCalP2;
+    doc["TDSCalP1"] = TDSCalP1;
+    doc["rawTDSCalP1"] = rawTDSCalP1;        
+    doc["TDSCalP2"] = TDSCalP2;        
+    doc["rawTDSCalP2"] = rawTDSCalP2;
+    doc["PumpScl1"] = getPumpScl(1);
+    doc["PumpScl2"] = getPumpScl(2);
+    doc["PumpScl3"] = getPumpScl(3);
+    doc["PumpScl4"] = getPumpScl(4);
+    doc["PumpScl5"] = getPumpScl(5);
+    doc["PumpScl6"] = getPumpScl(6);
+    doc["PumpScl7"] = getPumpScl(7);
+    doc["PumpScl8"] = getPumpScl(8);
+#endif
+
+    serializeJson(doc, out);      
+    SendMQTT(out, TOPIC_STT);
+    // Запоминаем время отправки. Бесплатный сервер не позволяет отправлять сообщения чаще чем одно сообщение в секунду
+    mqtt_send_last = millis();
+  }
+}
 
 
 void startWiFi(unsigned long waitTime) { 
@@ -251,18 +292,17 @@ void startWiFi(unsigned long waitTime) {
   
   delay(10);               // Иначе получаем Core 1 panic'ed (Cache disabled but cached memory region accessed)
   WiFi.mode(WIFI_STA);
-
   // Пытаемся соединиться с роутером в сети
   if (strlen(ssid) > 0) {
     Serial.print(F("\nПодключение к "));
     Serial.print(ssid);
 
-    if (IP_STA[0] + IP_STA[1] + IP_STA[2] + IP_STA[3] > 0) {
-      WiFi.config(IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3]),  // 192.168.0.106
-                  IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], 1),          // 192.168.0.1
-                  IPAddress(255, 255, 255, 0),                            // Mask
-                  IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], 1),          // DNS1 192.168.0.1
-                  IPAddress(8, 8, 8, 8));                                 // DNS2 8.8.8.8                  
+    if (IP_STA[0] + IP_STA[1] + IP_STA[2] + IP_STA[3] > 0 && useDHCP == false) {
+      WiFi.config(IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3]), // 192.168.0.106 
+                 IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], 1),          // 192.168.0.1
+                 IPAddress(255, 255, 255, 0),                            // Mask
+                 IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], 1),          // DNS1 192.168.0.1
+                 IPAddress(8, 8, 8, 8));                                 // DNS2 8.8.8.8    
       Serial.print(F(" -> "));
       Serial.print(IP_STA[0]);
       Serial.print(".");
@@ -271,7 +311,19 @@ void startWiFi(unsigned long waitTime) {
       Serial.print(IP_STA[2]);
       Serial.print(".");
       Serial.print(IP_STA[3]);                  
-    }              
+    }
+    // Serial.print("\nhost_name = ");
+    // Serial.println(host_name);
+   
+    WiFi.setHostname (host_name.c_str());             
+
+    // Serial.print(F("\nWiFi.begin(ssid, pass) = "));
+    // Serial.print(ssid);
+    // Serial.print(" ");
+    // Serial.print(pass);
+    // Serial.print(" ");
+    // Serial.println(WiFi.begin(ssid, pass));
+
     WiFi.begin(ssid, pass);
 
     // Проверка соединения (таймаут 180 секунд, прерывается при необходимости нажатием кнопки)
@@ -286,18 +338,18 @@ void startWiFi(unsigned long waitTime) {
       delay(0);
       if (millis() - last_wifi_check > 250) {
         last_wifi_check = millis();
-        //set_wifi_connected(WiFi.status() == WL_CONNECTED); 
+        set_wifi_connected(WiFi.status() == WL_CONNECTED); 
         if (WiFi.status() == WL_CONNECTED) wifi_connected = true;
         
-
         if (wifi_connected) {
           // Подключение установлено
-          Serial.println();
-          Serial.print(F("WiFi подключен. IP адрес: "));
-          Serial.println(WiFi.localIP());
+          Serial.print(F("\nWiFi подключен. IP адрес: "));
+          Serial.print(WiFi.localIP());
+          Serial.print(F(" MAC адрес: "));
+          Serial.println(WiFi.macAddress());
           break;
         }
-        if (cnt % 50 == 0) {
+        if (cnt % 80 == 0) {
           Serial.println();
         }
         Serial.print(".");
@@ -305,6 +357,7 @@ void startWiFi(unsigned long waitTime) {
       }
       if (millis() - start_wifi_check > waitTime) {
         // Время ожидания подключения к сети вышло
+        Serial.print("\nВремя ожидания подключения к сети вышло");
         break;
       }
       delay(0);
@@ -332,6 +385,21 @@ void startSoftAP() {
 
   Serial.print(F("Создание точки доступа "));
   Serial.print(apName);
+  if (IP_STA[0] + IP_STA[1] + IP_STA[2] + IP_STA[3] > 0 && useDHCP == false) {
+    WiFi.config(IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3]),  // 192.168.0.106
+                IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], 1),          // 192.168.0.1
+                IPAddress(255, 255, 255, 0),                            // Mask
+                IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], 1),          // DNS1 192.168.0.1
+                IPAddress(8, 8, 8, 8));                                 // DNS2 8.8.8.8                  
+    Serial.print(F(" -> "));
+    Serial.print(IP_STA[0]);
+    Serial.print(".");
+    Serial.print(IP_STA[1]);
+    Serial.print(".");
+    Serial.print(IP_STA[2]);
+    Serial.print(".");
+    Serial.print(IP_STA[3]);                  
+  }              
   
   ap_connected = WiFi.softAP(apName, apPass);
 
@@ -367,7 +435,7 @@ void startSoftAP() {
 }
 
 void connectToNetwork() {  // Подключиться к WiFi сети, ожидать подключения 180 сек пока, например, после отключения электричества роутер загрузится и поднимет сеть
-  startWiFi(180000);
+  startWiFi(300000);
 
   // Если режим точки доступа не используется и к WiFi сети подключиться не удалось - создать точку доступа
   if (!wifi_connected){
