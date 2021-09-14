@@ -5,7 +5,7 @@
 #define USE_LOG
 // Определения программных констант и переменных
 
-extern unsigned long timing, timing1, timing2, per, regDelay; // Таймеры опросов
+extern unsigned long timing, timing1, timing2, timing3, per, PhregDelay, TDSregDelay; // Таймеры опросов
 
 #ifdef HUMCONTROL
 extern float minhum, maxhum;
@@ -75,6 +75,7 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 #define  TOPIC_TME      "tme"                    // Топик - отправка клиенту сообщений о событиях времени
 #define  TOPIC_PWR      "pwr"                    // Топик - отправка клиенту сообщений о включении/выключении устройства
 #define  TOPIC_STT      "stt"                    // Топик - отправка клиенту сообщений о текущем статусе параметров устройства - основной набор параеметров (пакет)
+#define  TOPIC_REG      "reg"                    // Топик - отправка клиенту сообщений о совершеном воздействии устройства на стреду
 #define  TOPIC_MQTTSTT  "mqttstt"                // Топик - отправка клиенту сообщений о текущем статусе mqtt соединения
 
 #ifdef HUMCONTROL
@@ -111,10 +112,10 @@ extern  boolean Phcalib;  //  Ph Calibration complete
 extern  int rawPh, rawTDS;
 extern  boolean RAWMode;  // RAW read mode
 
-extern  float phmin, phmax, phVol, 
+extern  float phmin, phmax, 
               phk, PhMP, tdsk, TdsMP, PhCalP1, PhCalP2;
 
-extern  int 
+extern  uint16_t phVol, tdsAVol, tdsBVol, tdsCVol,
 tdsmin, tdsmax, 
 rawPhCalP1, rawPhCalP2, 
 rawTDSCalP1, rawTDSCalP2,

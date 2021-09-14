@@ -10,7 +10,7 @@
 
 // *************************************************************************
 
-enum  eModes   {NORMAL};
+enum  eModes   {NORMAL, FRACTION, TEXT};
 enum  eSources {NONE, BOTH, UDP, MQTT};
 
 // ****************** ПРОФИЛИ УСТРОЙСТВ *******************
@@ -153,7 +153,7 @@ I2C address 0x49 TDS
 #define DEFAULT_MQTT_PREFIX "ghTest"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 #define A_DEF_PASS          0             // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
 
-#define REFRESHTIME 10000
+#define REFRESHTIME 10000                 // Время обновления показаний прибора для MQTT
 
 #define USEDHCP 0
 #define DEFAULT_IP {192, 168, 1, 111}       // Сетевой адрес устройства по умолчанию
@@ -278,6 +278,9 @@ extern HTU21D myHumidity;
 extern i2cPumps pumps;
 #define PHUP        1 //  PH up pump
 #define PHDOWN      2 //  PH down pump
+#define TDSA        3 //  TDS A pump
+#define TDSB        4 //  TDS B pump
+#define TDSC        5 //  TDS C pump
 
 #define PHREGADR   0x2C //  PH reg. AD5282 address in 7bit format
 #define TDSREGADR  0x2E // TDS reg. AD5282 address in 7bit format

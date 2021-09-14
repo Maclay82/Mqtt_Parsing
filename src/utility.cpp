@@ -231,6 +231,12 @@ void profpub() {
     doc["tdsKa"] = tdsKa; //getTDSKa усиление
     doc["phKb"] = phKb; //getPhKb средняя точка
     doc["phKa"] = phKa; //getPhKa усиление
+    doc["PhregDelay"] = PhregDelay / 60000;
+    doc["phVol"] = phVol;
+    doc["TDSregDelay"] = TDSregDelay / 60000;
+    doc["tdsAVol"] = tdsAVol;
+    doc["tdsBVol"] = tdsBVol;
+    doc["tdsCVol"] = tdsCVol;
 #endif
 
     if(auto_mode){
@@ -238,6 +244,7 @@ void profpub() {
     } else{
       doc["auto_mode"] = 0;
     }
+
 
     serializeJson(doc, out);      
     SendMQTT(out, TOPIC_STT);
@@ -279,7 +286,6 @@ void CalprofPub() {
     mqtt_send_last = millis();
   }
 }
-
 
 void startWiFi(unsigned long waitTime) { 
   #if defined(ESP8266)

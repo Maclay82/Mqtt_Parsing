@@ -42,10 +42,19 @@ uint16_t getTDSCalP1 ();                //Выгрузка 1ой калибро�
 void putTDSCalP2 (uint16_t value);      //Загрузка 2ой калибровочной точки TDS       //  42 - TDSCalP2
 uint16_t getTDSCalP2 ();                //Выгрузка 2ой калибровочной точки
 
-void putRegDelay (uint16_t value); // 64 - RegDelay
-uint16_t getRegDelay ();
-void putPhVol (float value);  // 60 - phVol
-float getPhVol();
+uint16_t getTdsAVol();
+void putTdsAVol (uint16_t value);         //  44 - tdsAVol
+uint16_t getTdsBVol();
+void putTdsBVol (uint16_t value);           //  46 - tdsBVol
+uint16_t getTdsCVol();
+void putTdsCVol (uint16_t value);         //  48 - tdsCVol
+uint16_t getTDSRegDelay ();
+void putTDSRegDelay (uint16_t value);  //  50 - TDSregDelay
+
+void putPhRegDelay (uint16_t value); // 64 - RegDelay
+uint16_t getPhRegDelay ();
+void putPhVol (uint16_t value);  // 60 - phVol
+uint16_t getPhVol();
 
 void putPhmin (float value);  // 66 - phmin
 float getPhmin();

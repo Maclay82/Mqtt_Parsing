@@ -154,7 +154,8 @@ void checkMqttConnection() {
   // Если связь с MQTT сервером не установлена - выполнить переподключение к серверу
   // Слишком частая проверка мешает приложению на смартфоне общаться с программой - запрос блокирующий и при неответе MQTT сервера
   // слишком частые попытки подключения к MQTT серверу не дают передаваться данным из / в приложение - приложение "отваливается"
-  if (!stopMQTT && !mqtt.connected() && (mqtt_conn_last == 0 || (millis() - mqtt_conn_last > 3500))) {
+  if (!stopMQTT && !mqtt.connected() && (mqtt_conn_last == 0 || (millis() - mqtt_conn_last > 3500))) 
+  {
     String clientId = String(host_name);
     clientId += String("-");
     clientId += String(random(0xffff), HEX);
@@ -172,7 +173,7 @@ void checkMqttConnection() {
 
     String topic = mqtt_topic(TOPIC_MQTTSTT);
 
-    if (mqtt.connect(clientId.c_str(), mqtt_user, mqtt_pass, topic.c_str(), 0, true, "offline")) {
+    if (mqtt.connect(clientId.c_str(), mqtt_user, mqtt_pass)){//, topic.c_str(), 0, true, "online")) {
       Serial.println(F("\nПодключение к MQTT-серверу выполнено."));
       if (outQueueLength > 0) {
         Serial.print(F("Сообщений в очереди отправки: "));  
@@ -192,7 +193,8 @@ void checkMqttConnection() {
   }
 
   // Проверить необходимость отправки сообщения об изменении состояния клиенту MQTT
-  if (!stopMQTT && mqtt.connected() && changed_keys.length() > 1) {
+  if (!stopMQTT && mqtt.connected() && changed_keys.length() > 1) 
+  {
     // Если пакетная отправка - нужно отправлять весь пакет, т.к сообщение статуса имеет флаг retain v всегда должно содержать полный набор параметров.
     // Если отправлять только изменившиеся - они заместят топик и он не будет содержать весь набор
     // Однако, если запрос оттправки состоит только из одного параметра - "UP" - отправлять только его, а не все ключи пакетом

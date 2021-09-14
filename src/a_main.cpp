@@ -6,7 +6,7 @@ extern i2cPumps pumps;
 eSources cmdSource; // Источник команды; NONE - нет значения; BOTH - любой, UDP-клиент, MQTT-клиент
 eModes parseMode; // Текущий режим парсера
 
-unsigned long timing, timing1, timing2, per, regDelay; // Таймеры опросов, длительность
+unsigned long timing, timing1, timing2, timing3, per, PhregDelay, TDSregDelay; // Таймеры опросов, длительность в миллисекундах
 
 #ifdef HUMCONTROL
 HTU21D myHumidity;
@@ -38,17 +38,16 @@ int rawPh = 0, rawTDS = 0;
 boolean RAWMode = true;  // RAW read mode
 
 float phmin, phmax, phk=1, PhMP=0, tdsk=1, TdsMP=0,
-PhCalP1 = 4.0, PhCalP2 = 7.0, phVol;
+PhCalP1 = 4.0, PhCalP2 = 7.0; 
 
-int  tdsmin, tdsmax, 
+uint16_t phVol, tdsAVol, tdsBVol, tdsCVol, tdsmin, tdsmax, 
 TDSCalP1 = 206, TDSCalP2 = 1930,
 rawPhCalP1=802, rawPhCalP2=1750, 
 rawTDSCalP1=220, rawTDSCalP2=1924,
-
 phKa = 150,  // усиление
-phKb = 125,  // ст
-tdsKa = 60, // усиление
-tdsKb = 110; //средняя точка
+phKb = 125,  // средняя точка
+tdsKa = 60,  // усиление
+tdsKb = 110; // средняя точка
 
 #endif
 
@@ -57,6 +56,7 @@ tdsKb = 110; //средняя точка
  
 int32_t    intData[PARSE_AMOUNT];           // массив численных значений после парсинга - для WiFi часы время синхр м.б отрицательным + 
                                             // период синхронизации м.б больше 255 мин - нужен тип int32_t
+float      floatData[2];                    // массив дробных численных значений после парсинга
 char       incomeBuffer[BUF_MAX_SIZE];      // Буфер для приема строки команды из wifi udp сокета; также используется для загрузки строк из EEPROM
 char       replyBuffer[8];                  // ответ клиенту - подтверждения получения команды: "ack;/r/n/0"
 byte       ackCounter = 0;                  // счетчик отправляемых ответов для создания уникальности номера ответа
@@ -149,7 +149,7 @@ void process() {
     timing1 = millis();
   }
 
-  if (millis() - timing2 >  (1000 * 60 * regDelay))//REGDELAY))  // Решение на регулеровку Ph i TDS
+  if (millis() - timing2 >  PhregDelay)  // Решение на регулеровку Ph
   {
     phrl = phk * middleArifm(PhvalArray) - PhMP;
     DynamicJsonDocument doc(256);
@@ -161,7 +161,7 @@ void process() {
       pumps.pourVol(phVol, PHUP);
       doc["PhUp"] = phVol;
       serializeJson(doc, out);      
-      SendMQTT(out, TOPIC_STT);
+      SendMQTT(out, TOPIC_REG);
 	  }
 
   	if (phrl > phmin && phrl < phmax){
@@ -171,12 +171,57 @@ void process() {
       pumps.pourVol(phVol, PHDOWN);
       doc["PhDown"] = phVol;
       serializeJson(doc, out);      
-      SendMQTT(out, TOPIC_STT);
+      SendMQTT(out, TOPIC_REG);
 	  }
-
-    
     timing2 = millis();
   }
+
+  if (millis() - timing3 >  TDSregDelay)  // Решение на регулеровку TDS
+  {
+    tdsrl = tdsk * middleArifm(TDSvalArray) - TdsMP;
+    DynamicJsonDocument doc(256);
+    String out;
+    if ( tdsrl < 0 ) tdsrl = 0;
+    if ( rawTDS == -1 ) tdsrl = -1;
+
+  	if (tdsrl > 0 && tdsrl < tdsmin){
+      if(tdsAVol > 0)
+      {
+        pumps.pourVol(tdsAVol, TDSA);
+        doc["TdsA"] = tdsAVol;
+      }
+      if(tdsBVol > 0)
+      {
+        pumps.pourVol(tdsBVol, TDSB);
+        doc["TdsB"] = tdsBVol;
+      }
+      if(tdsCVol > 0)
+      {
+        pumps.pourVol(tdsCVol, TDSC);
+        doc["TdsC"] = tdsCVol;
+      }
+      if (tdsAVol > 0 || tdsBVol > 0 || tdsCVol > 0)
+      {
+        serializeJson(doc, out);      
+        SendMQTT(out, TOPIC_REG);
+      }
+	  }
+
+  	if (tdsrl > tdsmin && tdsrl < tdsmax){
+  	}
+
+  	if (tdsrl > tdsmax){
+      // pumps.pourVol(phVol, PHDOWN);
+      // doc["PhDown"] = phVol;
+      // serializeJson(doc, out);      
+      // SendMQTT(out, TOPIC_REG);
+	  }
+    
+    timing3 = millis();
+    if ((timing3 + TDSregDelay - timing2 - PhregDelay) < 60000) timing3 = timing2 + PhregDelay + 60001 - TDSregDelay;
+  }
+
+
 #endif
     
   if (millis() - timing >= REFRESHTIME){
@@ -231,16 +276,10 @@ void process() {
     }
 #endif
 
-#ifdef PHTDSCONTROL
-  #ifdef USE_LOG
 // I2C Scan
   #if (ICCSCAN== 1)
     byte error, address;
     int nDevices;
-
- //   #define ICCSCAN 1
-
-
     Serial.println("Scanning...");
     nDevices = 0;
     for(address = 1; address < 127; address++ ) 
@@ -251,11 +290,9 @@ void process() {
       {
         Serial.print("I2C device found at address 0x");
         if (address<16) 
-        #ifdef USE_LOG
         Serial.print("0");
         Serial.print(address,HEX);
         Serial.println("  !");
-        #endif
         nDevices++;
       }
       else if (error==4) 
@@ -270,9 +307,10 @@ void process() {
     else
       Serial.println("done\n");
   #endif
-
 // ***************I2C Scan end
-#endif
+
+#ifdef PHTDSCONTROL
+
   ioDeviceSync(ioExpInp);
   for(int i = 0; i <= 7; i++ ){
     ioDeviceDigitalWrite(ioExp2, i, ioDeviceDigitalRead(ioExpInp, i));
@@ -325,33 +363,39 @@ Serial.print("TDS=");
     Serial.print("; ");
 #endif
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
-      #ifdef USE_LOG
+#ifdef USE_LOG
       Serial.print(" Water temp:");
       Serial.print(Wtemp, 3);
       Serial.print(" C; ");
     }
     else {
       Serial.print("Error");
-      # endif    
+# endif    
     }
     if (rawPh != -1){
       #ifdef USE_LOG
-      Serial.print("Avg Ph RAW:");
-      Serial.print(middleArifm(PhvalArray));
-      Serial.print("; ");
+      if(RAWMode == true)
+      {
+        Serial.print("Avg Ph RAW:");
+        Serial.print(middleArifm(PhvalArray));
+        Serial.print("; ");
 //      Serial.print(" Ph RAW:");
 //      Serial.print(rawPh);
 //      Serial.print("; ");
+      }
       #endif
     }
     if (rawTDS != -1){  
       #ifdef USE_LOG
-      Serial.print("Avg TDS RAW:");
-      Serial.print(middleArifm(TDSvalArray));
-      Serial.print("; ");
+      if(RAWMode == true)
+      {
+        Serial.print("Avg TDS RAW:");
+        Serial.print(middleArifm(TDSvalArray));
+        Serial.print("; ");
 //      Serial.print(" TDS RAW:");
 //      Serial.print(rawTDS);
 //      Serial.print("; ");
+      }
       #endif
     }
 
@@ -362,17 +406,23 @@ Serial.print("TDS=");
         SendMQTT(Str, TOPIC_Wtemp);    
       }
       if (rawPh != -1){
-        dtostrf(middleArifm(PhvalArray), 2, 0, s);
-        Str = s;
-        SendMQTT(Str, TOPIC_rawPh);    
+        if(RAWMode == true)
+        {
+          dtostrf(middleArifm(PhvalArray), 2, 0, s);
+          Str = s;
+          SendMQTT(Str, TOPIC_rawPh);
+        }    
         dtostrf(phrl, 2, 3, s);
         Str = s;
         SendMQTT(Str, TOPIC_ph);    
       }
-      if (rawTDS != -1){  
-        dtostrf(middleArifm(TDSvalArray), 2, 0, s);
-        Str = s;
-        SendMQTT(Str, (TOPIC_rawTDS));    
+      if (rawTDS != -1){
+        if(RAWMode == true)
+        {
+          dtostrf(middleArifm(TDSvalArray), 2, 0, s);
+          Str = s;
+          SendMQTT(Str, (TOPIC_rawTDS));
+        }    
         dtostrf(tdsrl, 2, 0, s);
         Str = s;
         SendMQTT(Str, TOPIC_tds);    
@@ -558,10 +608,22 @@ void parsing() {
         $3 2 - сообщить какой обьём жидкости X налил насос N  
 
     4 - Редактирование профиля регулировки
-        $4 0 Х - Задать время регулирования X минут
+        $4 0 Х - Задать время регулирования Ph X минут
         $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph  
         $4 2 Х - Задать Ph max
-        $4 3 Х - Задать Ph min  
+        $4 3 Х - Задать Ph min
+
+        $4 4 Х - Задать время регулирования TDS X минут
+        $4 5 Х - Задать объём компонента A X мл. для регулировки TDS
+        $4 6 Х - Задать объём компонента B X мл. для регулировки TDS
+        $4 7 Х - Задать объём компонента C X мл. для регулировки TDS
+        $4 8 X - Задать TDS max
+        $4 9 X - Задать TDS min
+        $4 10 X - Значение калибровочного раствора Ph
+        $4 11 X - Значение калибровочного раствора TDS
+
+    5 - Калибровка датчиков
+        $5 0 Х - Включить - 1, выключить - 0 отображение сырых данных Ph и TDS
 
     Протокол связи, посылка начинается с режима. Режимы:
     6 - текст $6 N|some text, где N - назначение текста;
@@ -652,10 +714,6 @@ void parsing() {
       // $2 X N - налить обьем X насосом N
       // ----------------------------------------------------
       case 2:
-          // Serial.print("$2 ");
-          // Serial.print(intData[1]);
-          // Serial.print(" ");
-          // Serial.println(intData[2]);
         if (intData[1] > 0 && intData[2] >= 1 && intData[2] <= PUMPCOUNT){          
 //           Serial.println(pumps.pourVol((uint16_t)(intData[1]), uint8_t(intData[2])));
            pumps.pourVol((uint16_t)(intData[1]), uint8_t(intData[2]));
@@ -664,19 +722,14 @@ void parsing() {
 
       // $3 - Вывести профиль
       //   $3 1 - profpub
-      //   $3 2 -   
+      //   $3 2 - калибровочные точки  
       case 3:
         switch (intData[1]) { 
           case 1:
-            // Serial.print("$3 ");
-            // Serial.print(intData[1]);
             profpub();
           break;
           case 2:
-            // Serial.print("$3 ");
-            // Serial.print(intData[1]);
             CalprofPub();
-            //void CalprofPub
           break;
         }
       break;
@@ -686,43 +739,135 @@ void parsing() {
       // 4 - Редактирование профиля регулировки
       //     $4 0 Х - Задать время регулирования X минут
       //     $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph  
-      //     $4 2 Х - Задать обьём Ph max
-      //     $4 3 Х - Задать обьём Ph min  
+      //     $4 2 Х - Задать Ph max
+      //     $4 3 Х - Задать Ph min  
+      //     $4 4 Х - Задать время регулирования TDS X минут
+      //     $4 5 Х - Задать объём компонента A X мл. для регулировки TDS
+      //     $4 6 Х - Задать объём компонента B X мл. для регулировки TDS
+      //     $4 7 Х - Задать объём компонента C X мл. для регулировки TDS
+      //     $4 8 X - Задать TDS max
+      //     $4 9 X - Задать TDS min
+      //     $4 10 X - Значение калибровочного раствора Ph
+      //     $4 11 X - Значение калибровочного раствора TDS
       case 4:
         switch (intData[1]) { 
           // $4 0 Х - Задать время регулирования X минут
           case 0:
-            if (intData[2] > 0){
-              putRegDelay(intData[2]);
-              regDelay = intData[2];
+            if (floatData[0] > 0){
+              putPhRegDelay((int)floatData[0]);
+              PhregDelay = (int)floatData[0] * 1000 * 60;
+              profpub();
             }
           break;
           // $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph  
           case 1:  
-            if (intData[2] > 0){
-              putPhVol(intData[2]);
-              phVol = intData[2];
+            if (floatData[0] > 0){
+              putPhVol((int)floatData[0]);
+              phVol = floatData[0];
+              profpub();
             }
           break;
-          // $4 2 Х - Задать обьём Ph max
+          // $4 2 Х - Задать Ph max
           case 2:  
-            if (intData[2] > 0){
-              putPhmax(intData[2]);
-              phmax = intData[2];
+            if (floatData[0] > 0 && floatData[0] < 14){
+              putPhmax(floatData[0]);
+              phmax = floatData[0];
+              profpub();
             }
           break;
-          // $4 3 Х - Задать обьём Ph min
+          // $4 3 Х - Задать Ph min
           case 3:  
-            if (intData[2] > 0){
-              putPhmin(intData[2]);
-              phmin = intData[2];
+            if (floatData[0] > 0 && floatData[0] < 14){
+              putPhmin(floatData[0]);
+              phmin = floatData[0];
+              profpub();
+            }
+          break;
+          // $4 4 Х - Задать время регулирования TDS X минут
+          case 4:  
+            if (floatData[0] > 0){
+              putTDSRegDelay((int)floatData[0]);
+              TDSregDelay = (int)floatData[0] * 1000 * 60;
+              profpub();
+            }
+          break;
+          // $4 5 Х - Объём компонента A X мл. для регулировки TDS
+          case 5:  
+            if (floatData[0] >= 0){
+              putTdsAVol((int)floatData[0]);
+              tdsAVol = floatData[0];
+              profpub();
+            }
+          break;
+          // $4 6 Х - Объём компонента B X мл. для регулировки TDS
+          case 6:  
+            if (floatData[0] >= 0){
+              putTdsBVol((int)floatData[0]);
+              tdsBVol = floatData[0];
+              profpub();
+            }
+          break;
+          // $4 7 Х - Объём компонента C X мл. для регулировки TDS
+          case 7:  
+            if (floatData[0] >= 0){
+              putTdsCVol((int)floatData[0]);
+              tdsCVol = floatData[0];
+              profpub();
+            }
+          break;
+          // $4 8 X - Задать TDS max
+          case 8:  
+            if (floatData[0] > 0){
+              putTDSmax((int)floatData[0]);
+              tdsmax = floatData[0];
+              profpub();
+            }
+          break;
+          // $4 9 X - Задать TDS min
+          case 9:  
+            if (floatData[0] > 0){
+              putTDSmin((int)floatData[0]);
+              tdsmin = floatData[0];
+              profpub();
+            }
+          break;
+
+          // $4 10 X - Значение калибровочного раствора Ph
+          case 10:  
+            if (floatData[0] > 0){
+
+
+              CalprofPub();
+            }
+          break;
+          // $4 11 X - Значение калибровочного раствора TDS
+          case 11:  
+            if (floatData[0] > 0){
+
+
+              CalprofPub();
             }
           break;
         }
       break;
 
 
-
+      // ----------------------------------------------------
+      // 5 - Калибровка датчиков
+      //     $5 0 Х - Включить - 1, выключить - 0 отображение сырых данных(RAW) Ph и TDS
+      case 5:
+        switch (intData[1]) { 
+          case 0:
+            Serial.print("$5 0 Х ->");
+            Serial.println(intData[2]);
+            
+            if(intData[2] == 1) putRAWMode(true);
+            else putRAWMode(false);
+            RAWMode = getRAWMode();
+            profpub();
+          break;
+        }
+      break;
 
 
 
@@ -1107,15 +1252,11 @@ void parsing() {
       String command = cmdQueue[queueReadIdx++];
       if (queueReadIdx >= QSIZE_IN) queueReadIdx = 0;
       queueLength--;
-      
       cmdSource = MQTT;
       haveIncomeData = true;
       bufIdx = 0;
       packetSize = command.length();
       memcpy(incomeBuffer, command.c_str(), packetSize);
-
-      // Serial.print(F("MQTT пакeт размером "));
-      // Serial.println(packetSize);
     }
   }
   #endif
@@ -1165,65 +1306,67 @@ void parsing() {
   }
 
   if (haveIncomeData) {         
-
     // Из-за ошибки в компоненте UdpSender в Thunkable - теряются половина отправленных 
     // символов, если их кодировка - двухбайтовый UTF8, т.к. оно вычисляет длину строки без учета двухбайтовости
     // Чтобы символы не терялись - при отправке строки из андроид-программы, она добивается с конца пробелами
     // Здесь эти конечные пробелы нужно предварительно удалить
     while (packetSize > 0 && incomeBuffer[packetSize-1] == ' ') packetSize--;
     incomeBuffer[packetSize] = 0;
-/*
-    if (parseMode == TEXT) {                         // если нужно принять строку - принимаем всю
 
+    if (parseMode == TEXT) {                         // если нужно принять строку - принимаем всю
       // Оставшийся буфер преобразуем с строку
       if (intData[0] == 6) {  // текст
         receiveText = String(&incomeBuffer[bufIdx]);
         receiveText.trim();
-      }
-                
+      }                
       incomingByte = ending;                       // сразу завершаем парс
       parseMode = NORMAL;
       bufIdx = 0; 
       packetSize = 0;                              // все байты из входящего пакета обработаны
     } 
-    else 
-*/    
+
+    else     
     {
       incomingByte = incomeBuffer[bufIdx++];       // обязательно ЧИТАЕМ входящий символ
     } 
   }       
     
   if (haveIncomeData) {
-
-    if (parseStarted) {                                             // если приняли начальный символ (парсинг разрешён)
-      if (incomingByte != divider && incomingByte != ending) {      // если это не пробел И не конец
-        string_convert += incomingByte;                             // складываем в строку
+    if (parseStarted)                                             // если приняли начальный символ (парсинг разрешён)
+    {  
+      if (incomingByte != divider && incomingByte != ending)      // если это не пробел И не конец 
+      {
+        string_convert += incomingByte;                           // складываем в строку
       } 
-      else 
-      {                                                      // если это пробел или ; конец пакета
+
+      else // если это пробел или ; конец пакета
+      {                                                              
         if (parse_index == 0) {
           byte cmdMode = string_convert.toInt();
           intData[0] = cmdMode;
-//          if (cmdMode == 6) {
-//            parseMode = TEXT;
-//          }
-//          else 
-          parseMode = NORMAL;
+          if (cmdMode == 6) {
+            parseMode = TEXT;
+          }
+          if (cmdMode == 4) {
+            parseMode = FRACTION;
+          }
+          else 
+           parseMode = NORMAL;
         }
-
         if (parse_index == 1) {       // для второго (с нуля) символа в посылке
           if (parseMode == NORMAL) intData[parse_index] = string_convert.toInt();           // преобразуем строку в int и кладём в массив}
-//          if (parseMode == COLOR) {                                                         // преобразуем строку HEX в цифру
-//             set_globalColor((uint32_t)HEXtoInt(string_convert));
-//            if (intData[0] == 0) {
-//              incomingByte = ending;
-//              parseStarted = false;
-//            } else {
-//              parseMode = NORMAL;
-//            }
-//          }
-        } 
-        else {
+          if (parseMode == FRACTION) intData[parse_index] = string_convert.toInt();  
+        }        
+        if (parse_index == 2) {       // для третьего (с нуля) символа в посылке
+          if (parseMode == NORMAL) intData[parse_index] = string_convert.toInt();  
+          if (parseMode == FRACTION) 
+          {
+            floatData[0] = string_convert.toFloat();
+            parseMode = NORMAL;
+          }
+        }
+        else 
+        {
           intData[parse_index] = string_convert.toInt();  // преобразуем строку в int и кладём в массив
         }
         string_convert = "";                        // очищаем строку

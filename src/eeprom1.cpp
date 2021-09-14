@@ -38,9 +38,17 @@ void loadSettings() {
   //  36 - PhCalP2
   //  40 - TDSCalP1
   //  42 - TDSCalP2
-  
-  // 60 - PhVol
-  // 64 - regDelay
+
+  //  44 - tdsAVol
+  //  46 - tdsBVol
+  //  48 - tdsCVol
+  //  50 - TDSregDelay
+  //  52 -
+
+
+
+  // 62 - PhVol
+  // 64 - PhregDelay
   // 66 - phmin
   // 70 - phmax
   // 74 - tdsmin
@@ -132,7 +140,11 @@ void loadSettings() {
     tdsKa = getTDSKa(); //getTDSKa усиление
     tdsKb = getTDSKb(); //getTDSKb средняя точка
     phVol = getPhVol();
-    regDelay = getRegDelay();
+    tdsAVol = getTdsAVol();
+    tdsBVol = getTdsBVol();
+    tdsCVol = getTdsCVol();
+    PhregDelay = getPhRegDelay() * 1000 * 60;
+    TDSregDelay = getTDSRegDelay() * 1000 * 60;
     phmin = getPhmin();
     phmax = getPhmax();
     tdsmin = getTDSmin();
@@ -182,13 +194,17 @@ void saveDefaults() {
 #endif
 
 #ifdef PHTDSCONTROL
-  putRAWMode (true);
+  putRAWMode (false);
   putPhKa  (150);  // усиление
   putPhKb  (125);  // ст
   putTDSKa (60);  // усиление
   putTDSKb (110); //средняя точка
   putPhVol (1);
-  putRegDelay(5);
+  putTdsAVol(1);
+  putTdsBVol(1);
+  putTdsCVol(0);
+  putPhRegDelay(5);
+  putTDSRegDelay(3);
 
   putPhmin (6.0); //нижняя граница Ph
   putPhmax (6.8); //верхняя граница Ph
@@ -336,25 +352,71 @@ uint16_t getTDSKb (){ //средняя точка TDS
   return EEPROM_int_read(22);
 }
 
-uint16_t getRegDelay (){
-  return EEPROM_int_read(64);
+uint16_t getTdsAVol() {
+  return EEPROM_int_read(44);
 }
 
-void putRegDelay (uint16_t value){  // 64 - RegDelay
-  if (value != getRegDelay () && value > 0 ) EEPROM_int_write(64, value);
-}
-
-float getPhVol() {
-  return EEPROMReadFloat(60);
-}
-
-void putPhVol (float value)         // 60 - phVol
+void putTdsAVol (uint16_t value)         //  44 - tdsAVol
 {
-  if (value != getPhVol() && value >= 0 ) {
-    EEPROMWriteFloat(60, value);
+  if (value != getTdsAVol() && value >= 0 ) {
+    EEPROM_int_write(44, value);
+    EEPROM.commit();
+  }
+}
+
+uint16_t getTdsBVol() {
+  return EEPROM_int_read(46);
+}
+
+void putTdsBVol (uint16_t value)           //  46 - tdsBVol
+{
+  if (value != getTdsBVol() && value >= 0 ) {
+    EEPROM_int_write(46, value);
     EEPROM.commit();
   }
 
+}
+
+uint16_t getTdsCVol() {
+  return EEPROM_int_read(48);
+}
+
+void putTdsCVol (uint16_t value)         //  48 - tdsCVol
+{
+  if (value != getTdsCVol() && value >= 0 ) {
+    EEPROM_int_write(48, value);
+    EEPROM.commit();
+  }
+}
+
+
+uint16_t getTDSRegDelay (){
+  return EEPROM_int_read(50);
+}
+
+void putTDSRegDelay (uint16_t value){  //  50 - TDSregDelay
+  if (value != getTDSRegDelay () && value > 0 ) EEPROM_int_write(50, value);
+}
+
+uint16_t getPhVol() {
+  return EEPROM_int_read(62);
+}
+
+void putPhVol (uint16_t value)         // 62 - phVol
+{
+  if (value != getPhVol() && value >= 0 ) {
+    EEPROM_int_write(62, value);
+    EEPROM.commit();
+  }
+
+}
+
+uint16_t getPhRegDelay (){
+  return EEPROM_int_read(64);
+}
+
+void putPhRegDelay (uint16_t value){  // 64 - PhregDelay
+  if (value != getPhRegDelay () && value > 0 ) EEPROM_int_write(64, value);
 }
 
 float getPhmin() {

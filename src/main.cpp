@@ -306,7 +306,7 @@ void setup() {
   mqtt.setCallback(callback);
   checkMqttConnection();    
   String msg = F("START");
-  SendMQTT(msg, TOPIC_STA);
+  SendMQTT(msg, TOPIC_MQTTSTT);
   #endif
 
   // Port defaults to 8266
@@ -359,9 +359,7 @@ void setup() {
 //  reconnect();
   profpub();
 
-  timing = millis() + REFRESHTIME;
-  timing1 = millis() + OPROSDELAY;
-  timing2 = millis() + REGDELAY;
+  timing = timing1 = timing2 = timing3 = millis();
 
 #ifdef HUMCONTROL
   pinMode(HUMPWR, OUTPUT);
@@ -378,9 +376,6 @@ void setup() {
   Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
   Wire.write(byte(0x01));            // sends instruction byte  
   Wire.write(phKa);             // sends potentiometer value byte  
-  // Wire.endTransmission();     // stop transmitting
-  // delay(20);
-  // Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
   Wire.write(byte(0x02));            // sends instruction byte  
   Wire.write(phKb);             // sends potentiometer value byte  
   Wire.endTransmission();     // stop transmitting
@@ -390,9 +385,6 @@ void setup() {
   Wire.beginTransmission(TDSREGADR); // transmit to device #44 (0x2c)
   Wire.write(byte(0x01));            // sends instruction byte  
   Wire.write(tdsKa);             // sends potentiometer value byte  
-  // Wire.endTransmission();     // stop transmitting
-  // delay(20);
-  // Wire.beginTransmission(TDSREGADR); // transmit to device #44 (0x2c)
   Wire.write(byte(0x02));            // sends instruction byte  
   Wire.write(tdsKb);             // sends potentiometer value byte  
   Wire.endTransmission();     // stop transmitting
