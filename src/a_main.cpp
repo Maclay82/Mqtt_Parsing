@@ -6,7 +6,7 @@ extern i2cPumps pumps;
 eSources cmdSource; // Источник команды; NONE - нет значения; BOTH - любой, UDP-клиент, MQTT-клиент
 eModes parseMode; // Текущий режим парсера
 
-unsigned long timing, timing1, timing2, timing3, per, PhregDelay, TDSregDelay; // Таймеры опросов, длительность в миллисекундах
+unsigned long timing, timing1, timing2, timing3, per, regDelay; // Таймеры опросов, длительность в миллисекундах
 
 #ifdef HUMCONTROL
 HTU21D myHumidity;
@@ -32,7 +32,8 @@ IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
 float realPh = 0, realTDS = 0, Wtemp = 0;
 
 boolean TDScalib = false;  // TDS Calibration complete 
-boolean Phcalib = false;  //  Ph Calibration complete
+boolean Phcalib = false;   //  Ph Calibration complete
+boolean PhOk = false;      //  Ph Correction complete
 
 int rawPh = 0, rawTDS = 0;
 boolean RAWMode = true;  // RAW read mode
@@ -149,42 +150,69 @@ void process() {
     timing1 = millis();
   }
 
-  if (millis() - timing2 >  PhregDelay)  // Решение на регулеровку Ph
+  if (millis() - timing2 >  regDelay)  // Решение на регулеровку Ph
   {
     phrl = phk * middleArifm(PhvalArray) - PhMP;
     DynamicJsonDocument doc(256);
     String out;
     if ( phrl < 0 ) phrl = 0;
     if ( rawPh == -1 ) phrl = -1;
+      // Serial.print("millis() - timing2=");
+      // Serial.print(millis() - timing2);
+      // Serial.print(" millis() - timing3=");
+      // Serial.print((int)(millis() - timing3));
+      // Serial.print(" regDelay=");
+      // Serial.print(regDelay);
+      // Serial.print(" phrl=");
+      // Serial.println(phrl);
 
-  	if (phrl > -1 && phrl < phmin){
+  	if (phrl > -1 && phrl <= phmin){
       pumps.pourVol(phVol, PHUP);
       doc["PhUp"] = phVol;
       serializeJson(doc, out);      
       SendMQTT(out, TOPIC_REG);
+      PhOk = false;
 	  }
 
   	if (phrl > phmin && phrl < phmax){
+      PhOk = true;
   	}
 
-  	if (phrl > phmax){
+  	if (phrl >= phmax){
       pumps.pourVol(phVol, PHDOWN);
       doc["PhDown"] = phVol;
       serializeJson(doc, out);      
       SendMQTT(out, TOPIC_REG);
+      PhOk = false;
 	  }
+    timing3 = timing2 + ( regDelay / 2 );
+
     timing2 = millis();
   }
 
-  if (millis() - timing3 >  TDSregDelay)  // Решение на регулеровку TDS
+  if ( millis() - timing3  >  regDelay && (int)(millis() - timing3) > 0 )  // Решение на регулеровку TDS
   {
     tdsrl = tdsk * middleArifm(TDSvalArray) - TdsMP;
+
+    // Serial.print("millis() - timing2=");
+    // Serial.print(millis() - timing2);
+    // Serial.print(" millis() - timing3=");
+    // Serial.print((int)(millis() - timing3));
+    // Serial.print(" regDelay=");
+    // Serial.print(regDelay);
+    // Serial.print(" tdsrl=");
+    // Serial.print(tdsrl);
+
+    // Serial.print(" PhOk = ");
+    // Serial.println(PhOk);
+
     DynamicJsonDocument doc(256);
     String out;
     if ( tdsrl < 0 ) tdsrl = 0;
     if ( rawTDS == -1 ) tdsrl = -1;
 
-  	if (tdsrl > 0 && tdsrl < tdsmin){
+  	if (tdsrl > 0 && tdsrl < tdsmin && PhOk == true)
+    {
       if(tdsAVol > 0)
       {
         pumps.pourVol(tdsAVol, TDSA);
@@ -207,21 +235,16 @@ void process() {
       }
 	  }
 
-  	if (tdsrl > tdsmin && tdsrl < tdsmax){
+  	if (tdsrl > tdsmin && tdsrl < tdsmax && PhOk == true){
   	}
 
-  	if (tdsrl > tdsmax){
-      // pumps.pourVol(phVol, PHDOWN);
-      // doc["PhDown"] = phVol;
+  	if (tdsrl > tdsmax && PhOk == true){
+      // doc["TDSDown"] = phVol;
       // serializeJson(doc, out);      
       // SendMQTT(out, TOPIC_REG);
 	  }
-    
     timing3 = millis();
-    if ((timing3 + TDSregDelay - timing2 - PhregDelay) < 60000) timing3 = timing2 + PhregDelay + 60001 - TDSregDelay;
   }
-
-
 #endif
     
   if (millis() - timing >= REFRESHTIME){
@@ -277,7 +300,7 @@ void process() {
 #endif
 
 // I2C Scan
-  #if (ICCSCAN== 1)
+#if (ICCSCAN== 1)
     byte error, address;
     int nDevices;
     Serial.println("Scanning...");
@@ -306,8 +329,7 @@ void process() {
       Serial.println("No I2C devices found\n");
     else
       Serial.println("done\n");
-  #endif
-// ***************I2C Scan end
+#endif
 
 #ifdef PHTDSCONTROL
 
@@ -327,18 +349,6 @@ void process() {
 #endif
   ioDeviceSync(ioExp2);
 
-//    Serial.print(t);
-// //   ioDeviceDigitalWriteS(ioExp, t, true);  
-//    ioDeviceDigitalWriteS(ioExp2, t, true);  
-//    Serial.print(" on");
-//    delay(2000);
-// //   ioDeviceDigitalWriteS(ioExp, t, !true);
-//    ioDeviceDigitalWriteS(ioExp2, t, !true);
-//    Serial.print(" off");
-//   delay(1000);
-//   Serial.print("\n");
-//   t++;
-
 
     TempSensors.requestTemperatures(); // Send the command to get temperatures
     
@@ -357,7 +367,7 @@ void process() {
     tdsrl = tdsk * middleArifm(TDSvalArray) - TdsMP;
     if ( tdsrl < 0 ) tdsrl = 0;
 #ifdef USE_LOG
-Serial.print("TDS=");
+    Serial.print("TDS=");
     if (rawTDS == -1) Serial.print("null");
     else Serial.print(tdsrl);
     Serial.print("; ");
@@ -438,7 +448,6 @@ Serial.print("TDS=");
 
   if (!parseStarted) 
   {
-
     // Раз в час выполнять пересканирование текстов бегущих строк на наличие события непрерывного отслеживания.
     // При сканировании события с нечеткими датами (со звездочками) просматриваются не далее чем на сутки вперед
     // События с более поздним сроком не попадут в отслеживание. Поэтому требуется периодическое перестроение списка.
@@ -565,6 +574,7 @@ Serial.print("TDS=");
     }
   }
 }
+
 /*
 void processButtonStep() {
   if (brightDirection) {
@@ -612,15 +622,13 @@ void parsing() {
         $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph  
         $4 2 Х - Задать Ph max
         $4 3 Х - Задать Ph min
-
-        $4 4 Х - Задать время регулирования TDS X минут
-        $4 5 Х - Задать объём компонента A X мл. для регулировки TDS
-        $4 6 Х - Задать объём компонента B X мл. для регулировки TDS
-        $4 7 Х - Задать объём компонента C X мл. для регулировки TDS
-        $4 8 X - Задать TDS max
-        $4 9 X - Задать TDS min
-        $4 10 X - Значение калибровочного раствора Ph
-        $4 11 X - Значение калибровочного раствора TDS
+        $4 4 Х - Задать объём компонента A X мл. для регулировки TDS
+        $4 5 Х - Задать объём компонента B X мл. для регулировки TDS
+        $4 6 Х - Задать объём компонента C X мл. для регулировки TDS
+        $4 7 X - Задать TDS max
+        $4 8 X - Задать TDS min
+        $4 9 X - Значение калибровочного раствора Ph
+        $4 10 X - Значение калибровочного раствора TDS
 
     5 - Калибровка датчиков
         $5 0 Х - Включить - 1, выключить - 0 отображение сырых данных Ph и TDS
@@ -741,21 +749,20 @@ void parsing() {
       //     $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph  
       //     $4 2 Х - Задать Ph max
       //     $4 3 Х - Задать Ph min  
-      //     $4 4 Х - Задать время регулирования TDS X минут
-      //     $4 5 Х - Задать объём компонента A X мл. для регулировки TDS
-      //     $4 6 Х - Задать объём компонента B X мл. для регулировки TDS
-      //     $4 7 Х - Задать объём компонента C X мл. для регулировки TDS
-      //     $4 8 X - Задать TDS max
-      //     $4 9 X - Задать TDS min
-      //     $4 10 X - Значение калибровочного раствора Ph
-      //     $4 11 X - Значение калибровочного раствора TDS
+      //     $4 4 Х - Задать объём компонента A X мл. для регулировки TDS
+      //     $4 5 Х - Задать объём компонента B X мл. для регулировки TDS
+      //     $4 6 Х - Задать объём компонента C X мл. для регулировки TDS
+      //     $4 7 X - Задать TDS max
+      //     $4 8 X - Задать TDS min
+      //     $4 9 X - Значение калибровочного раствора Ph
+      //     $4 10 X - Значение калибровочного раствора TDS
       case 4:
         switch (intData[1]) { 
           // $4 0 Х - Задать время регулирования X минут
           case 0:
             if (floatData[0] > 0){
-              putPhRegDelay((int)floatData[0]);
-              PhregDelay = (int)floatData[0] * 1000 * 60;
+              putregDelay((int)floatData[0]);
+              regDelay = (int)floatData[0] * 1000 * 60;
               profpub();
             }
           break;
@@ -783,48 +790,40 @@ void parsing() {
               profpub();
             }
           break;
-          // $4 4 Х - Задать время регулирования TDS X минут
+          // $4 4 Х - Объём компонента A X мл. для регулировки TDS
           case 4:  
-            if (floatData[0] > 0){
-              putTDSRegDelay((int)floatData[0]);
-              TDSregDelay = (int)floatData[0] * 1000 * 60;
-              profpub();
-            }
-          break;
-          // $4 5 Х - Объём компонента A X мл. для регулировки TDS
-          case 5:  
             if (floatData[0] >= 0){
               putTdsAVol((int)floatData[0]);
               tdsAVol = floatData[0];
               profpub();
             }
           break;
-          // $4 6 Х - Объём компонента B X мл. для регулировки TDS
-          case 6:  
+          // $4 5 Х - Объём компонента B X мл. для регулировки TDS
+          case 5:  
             if (floatData[0] >= 0){
               putTdsBVol((int)floatData[0]);
               tdsBVol = floatData[0];
               profpub();
             }
           break;
-          // $4 7 Х - Объём компонента C X мл. для регулировки TDS
-          case 7:  
+          // $4 6 Х - Объём компонента C X мл. для регулировки TDS
+          case 6:  
             if (floatData[0] >= 0){
               putTdsCVol((int)floatData[0]);
               tdsCVol = floatData[0];
               profpub();
             }
           break;
-          // $4 8 X - Задать TDS max
-          case 8:  
+          // $4 7 X - Задать TDS max
+          case 7:  
             if (floatData[0] > 0){
               putTDSmax((int)floatData[0]);
               tdsmax = floatData[0];
               profpub();
             }
           break;
-          // $4 9 X - Задать TDS min
-          case 9:  
+          // $4 8 X - Задать TDS min
+          case 8:  
             if (floatData[0] > 0){
               putTDSmin((int)floatData[0]);
               tdsmin = floatData[0];
@@ -832,16 +831,16 @@ void parsing() {
             }
           break;
 
-          // $4 10 X - Значение калибровочного раствора Ph
-          case 10:  
+          // $4 9 X - Значение калибровочного раствора Ph
+          case 9:  
             if (floatData[0] > 0){
 
 
               CalprofPub();
             }
           break;
-          // $4 11 X - Значение калибровочного раствора TDS
-          case 11:  
+          // $4 10 X - Значение калибровочного раствора TDS
+          case 10:  
             if (floatData[0] > 0){
 
 

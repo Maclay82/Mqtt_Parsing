@@ -48,11 +48,9 @@ uint16_t getTdsBVol();
 void putTdsBVol (uint16_t value);           //  46 - tdsBVol
 uint16_t getTdsCVol();
 void putTdsCVol (uint16_t value);         //  48 - tdsCVol
-uint16_t getTDSRegDelay ();
-void putTDSRegDelay (uint16_t value);  //  50 - TDSregDelay
 
-void putPhRegDelay (uint16_t value); // 64 - RegDelay
-uint16_t getPhRegDelay ();
+void putregDelay (uint16_t value); // 64 - RegDelay
+uint16_t getregDelay ();
 void putPhVol (uint16_t value);  // 60 - phVol
 uint16_t getPhVol();
 

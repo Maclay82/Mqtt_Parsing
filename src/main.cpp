@@ -359,7 +359,8 @@ void setup() {
 //  reconnect();
   profpub();
 
-  timing = timing1 = timing2 = timing3 = millis();
+  timing = timing1 = timing2 = millis();
+  timing3 = timing2 + ( regDelay / 2 );
 
 #ifdef HUMCONTROL
   pinMode(HUMPWR, OUTPUT);

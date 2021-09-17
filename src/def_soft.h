@@ -5,7 +5,7 @@
 #define USE_LOG
 // Определения программных констант и переменных
 
-extern unsigned long timing, timing1, timing2, timing3, per, PhregDelay, TDSregDelay; // Таймеры опросов
+extern unsigned long timing, timing1, timing2, timing3, per, regDelay; // Таймеры опросов
 
 #ifdef HUMCONTROL
 extern float minhum, maxhum;

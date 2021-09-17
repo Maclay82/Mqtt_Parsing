@@ -231,9 +231,8 @@ void profpub() {
     doc["tdsKa"] = tdsKa; //getTDSKa усиление
     doc["phKb"] = phKb; //getPhKb средняя точка
     doc["phKa"] = phKa; //getPhKa усиление
-    doc["PhregDelay"] = PhregDelay / 60000;
+    doc["regDelay"] = regDelay / 60000;
     doc["phVol"] = phVol;
-    doc["TDSregDelay"] = TDSregDelay / 60000;
     doc["tdsAVol"] = tdsAVol;
     doc["tdsBVol"] = tdsBVol;
     doc["tdsCVol"] = tdsCVol;
