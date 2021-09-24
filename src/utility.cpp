@@ -342,8 +342,6 @@ bool statusPub()    //Публикация состояния параметро
     DynamicJsonDocument doc(256);
     String out;
     char s[8];   //строка mqtt сообщения
-    String Str;
-    Str = "";
 
 #ifdef HUMCONTROL
 
@@ -351,32 +349,29 @@ bool statusPub()    //Публикация состояния параметро
 #ifdef PHTDSCONTROL   
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
       dtostrf(Wtemp, 2, 2, s);
-      Str = s;
       switch (thisMode){ 
-        case 0: doc["tempClWt"] = Str; break;
-        case 1: doc["tempSoil1"] = Str; break;
-        case 2: doc["tempClWt"] = Str; break;
+        case 0: doc["tempClWt"]  = s; break;
+        case 1: doc["tempSoil1"] = s; break;
+        case 2: doc["tempClWt"]  = s; break;
       }
     }
     if (realPh != -1){
       dtostrf(realPh, 2, 3, s);
-      Str = s;
       switch (thisMode) 
       { 
-        case 0: doc["phClWt"] = Str; break;
-        case 1: doc["phSoil1"] = Str; break;
-        case 2: doc["phClWt"] = Str; break;
+        case 0: doc["phClWt"]  = s; break;
+        case 1: doc["phSoil1"] = s; break;
+        case 2: doc["phClWt"]  = s; break;
       }
 
     }
     if (realTDS != -1){
       dtostrf(realTDS, 2, 0, s);
-      Str = s;
       switch (thisMode) 
       { 
-        case 0: doc["tdsClWt"] = Str; break;
-        case 1: doc["tdsSoil1"] = Str; break;
-        case 2: doc["tdsClWt"] = Str; break;
+        case 0: doc["tdsClWt"]  = s; break;
+        case 1: doc["tdsSoil1"] = s; break;
+        case 2: doc["tdsClWt"]  = s; break;
       }
     } 
     doc["PhOk"] = PhOk;
