@@ -15,6 +15,7 @@ void loadSettings() {
   // Адреса в EEPROM:
   //   0 - если EEPROM_OK - EEPROM инициализировано, если другое значение - нет                             // EEPROMread(0)                 // EEPROMWrite(0, EEPROM_OK)
 
+  //   4 - Текущий режим работы (0-бак подготовки воды, 1-бак расствора)
   //   5 - использовать синхронизацию времени через NTP                                                     // getUseNtp()                   // putUseNtp(useNtp)
   // 6,7 - период синхронизации NTP (int16_t - 2 байта) в минутах                                           // getNtpSyncTime()              // putNtpSyncTime(SYNC_TIME_PERIOD)
   //   8 - time zone UTC+X                                                                                  // getTimeZone();                // putTimeZone(timeZoneOffset)
@@ -23,8 +24,7 @@ void loadSettings() {
   //  11 - IP[1]                                                                                            // - " -                         // - " -
   //  12 - IP[2]                                                                                            // - " -                         // - " -
   //  13 - IP[3]                                                                                            // - " -                         // - " -
-  //  14 - Использовать режим точки доступа                                                                 // getUseSoftAP()                // putUseSoftAP(useSoftAP)
-  
+  //  14 - Использовать режим точки доступа                                                                 // getUseSoftAP()                // putUseSoftAP(useSoftAP) 
   //  15 - RAWMode              //getRAWMode, putRAWMode режим чтения "сырых" данных с Ph TDS
   //  16 - PhKa                 //getPhKa, putPhKa усиление аппаратное
   //  18 - PhKb                 //getPhKb, putPhKb средняя точка аппаратная
@@ -38,7 +38,6 @@ void loadSettings() {
   //  36 - PhCalP2
   //  40 - TDSCalP1
   //  42 - TDSCalP2
-
   //  44 - tdsAVol
   //  46 - tdsBVol
   //  48 - tdsCVol
@@ -135,6 +134,7 @@ void loadSettings() {
 
 #ifdef PHTDSCONTROL
     RAWMode = getRAWMode(); // режим чтения "сырых" данных с Ph TDS
+    thisMode = getCurrentMode();
     phKa  = getPhKa(); //getPhKa усиление
     phKb  = getPhKb(); //getPhKb средняя точка
     tdsKa = getTDSKa(); //getTDSKa усиление
@@ -194,6 +194,7 @@ void saveDefaults() {
 
 #ifdef PHTDSCONTROL
   putRAWMode (false);
+  putCurrentMode (1);
   putPhKa  (150);  // усиление
   putPhKb  (125);  // ст
   putTDSKa (60);  // усиление
@@ -318,6 +319,16 @@ void putMinHum(float value) {
 #endif
 
 #ifdef PHTDSCONTROL
+
+int8_t getCurrentMode() {
+  return (int8_t)EEPROMread(4);
+}
+
+void putCurrentMode(int8_t mode) {
+  if (mode != getCurrentMode()) {
+    EEPROMwrite(4, (byte)mode);
+  }
+}
 
 void putRAWMode (boolean value){
   if (value != getRAWMode()) EEPROMwrite(15, value);

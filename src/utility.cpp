@@ -222,20 +222,16 @@ void profpub() {
 #endif
 
 #ifdef PHTDSCONTROL
-    doc["RAWMode"] = RAWMode;
-    doc["tdsmax"] = tdsmax;
-    doc["tdsmin"] = tdsmin;
+    doc["regDelay"] = regDelay / 60000;
     doc["phmax"] = phmax;
     doc["phmin"] = phmin;
-    doc["tdsKb"] = tdsKb; //getTDSKb средняя точка
-    doc["tdsKa"] = tdsKa; //getTDSKa усиление
-    doc["phKb"] = phKb; //getPhKb средняя точка
-    doc["phKa"] = phKa; //getPhKa усиление
-    doc["regDelay"] = regDelay / 60000;
+    doc["tdsmax"] = tdsmax;
+    doc["tdsmin"] = tdsmin;
     doc["phVol"] = phVol;
     doc["tdsAVol"] = tdsAVol;
     doc["tdsBVol"] = tdsBVol;
     doc["tdsCVol"] = tdsCVol;
+    doc["mode"] = thisMode;
 #endif
 
     if(auto_mode){
@@ -244,9 +240,8 @@ void profpub() {
       doc["auto_mode"] = 0;
     }
 
-
     serializeJson(doc, out);      
-    SendMQTT(out, TOPIC_STT);
+    SendMQTT(out, TOPIC_PROF);
 
     // Запоминаем время отправки. Бесплатный сервер не позволяет отправлять сообщения чаще чем одно сообщение в секунду
     mqtt_send_last = millis();
@@ -261,29 +256,139 @@ void CalprofPub() {
 #endif
 
 #ifdef PHTDSCONTROL
-    doc["PhCalP1"] = PhCalP1;
-    doc["rawPhCalP1"] = rawPhCalP1;
-    doc["PhCalP2"] = PhCalP2;
-    doc["rawPhCalP2"] = rawPhCalP2;
-    doc["TDSCalP1"] = TDSCalP1;
-    doc["rawTDSCalP1"] = rawTDSCalP1;        
-    doc["TDSCalP2"] = TDSCalP2;        
-    doc["rawTDSCalP2"] = rawTDSCalP2;
-    doc["PumpScl1"] = getPumpScl(1);
-    doc["PumpScl2"] = getPumpScl(2);
-    doc["PumpScl3"] = getPumpScl(3);
-    doc["PumpScl4"] = getPumpScl(4);
-    doc["PumpScl5"] = getPumpScl(5);
-    doc["PumpScl6"] = getPumpScl(6);
-    doc["PumpScl7"] = getPumpScl(7);
-    doc["PumpScl8"] = getPumpScl(8);
+    doc["PhCP1"] = PhCalP1;
+    doc["rPhCP1"] = rawPhCalP1;
+    doc["PhCP2"] = PhCalP2;
+    doc["rPhCP2"] = rawPhCalP2;
+    doc["TDSCP1"] = TDSCalP1;
+    doc["rDSCP1"] = rawTDSCalP1;        
+    doc["TDSCP2"] = TDSCalP2;        
+    doc["rTDSCP2"] = rawTDSCalP2;
+    doc["P1Sc"] = getPumpScl(1);
+    doc["P2Sc"] = getPumpScl(2);
+    doc["P3Sc"] = getPumpScl(3);
+    doc["P4Sc"] = getPumpScl(4);
+    doc["P5Sc"] = getPumpScl(5);
+    doc["P6Sc"] = getPumpScl(6);
+    doc["P7Sc"] = getPumpScl(7);
+    doc["P8Sc"] = getPumpScl(8);
 #endif
-
     serializeJson(doc, out);      
-    SendMQTT(out, TOPIC_STT);
+    SendMQTT(out, TOPIC_CAL);
     // Запоминаем время отправки. Бесплатный сервер не позволяет отправлять сообщения чаще чем одно сообщение в секунду
     mqtt_send_last = millis();
   }
+}
+
+void HWprofPub() {
+  if (mqtt.connected()) {
+    DynamicJsonDocument doc(256);
+    String out;
+#ifdef HUMCONTROL
+
+#endif
+#ifdef PHTDSCONTROL
+    doc["RAWMode"] = RAWMode; //getTDSKb средняя точка
+    doc["tKb"] = tdsKb; //getTDSKb средняя точка
+    doc["tKa"] = tdsKa; //getTDSKa усиление
+    doc["pKb"] = phKb; //getPhKb средняя точка
+    doc["pKa"] = phKa; //getPhKa усиление
+#endif
+    serializeJson(doc, out);      
+    SendMQTT(out, TOPIC_HWSET);
+    // Запоминаем время отправки. Бесплатный сервер не позволяет отправлять сообщения чаще чем одно сообщение в секунду
+    mqtt_send_last = millis();
+  }
+}
+
+bool setCollector() //Приведение конфигурации коллектора в силу
+{
+#ifdef HUMCONTROL
+
+#endif
+#ifdef PHTDSCONTROL
+  if(ioDeviceSync(ioExp2) == true)
+  {
+    switch (thisMode) 
+    { 
+      case 0:
+        ioDeviceDigitalWrite(ioExp2, ClWaterIn, HIGH);
+        ioDeviceDigitalWrite(ioExp2, ClWaterOut, HIGH);
+        ioDeviceDigitalWrite(ioExp2, SolWaterIn_1, LOW);
+        ioDeviceDigitalWrite(ioExp2, SolWaterOut_1, LOW);
+      break;
+      case 1:
+        ioDeviceDigitalWrite(ioExp2, ClWaterIn, LOW);
+        ioDeviceDigitalWrite(ioExp2, ClWaterOut, LOW);
+        ioDeviceDigitalWrite(ioExp2, SolWaterIn_1, HIGH);
+        ioDeviceDigitalWrite(ioExp2, SolWaterOut_1, HIGH);
+      break;
+      case 2:
+        ioDeviceDigitalWrite(ioExp2, ClWaterIn, HIGH);
+        ioDeviceDigitalWrite(ioExp2, ClWaterOut, LOW);
+        ioDeviceDigitalWrite(ioExp2, SolWaterIn_1, LOW);
+        ioDeviceDigitalWrite(ioExp2, SolWaterOut_1, HIGH);
+      break;
+    }
+  }          
+  return ioDeviceSync(ioExp2);
+#endif
+}
+
+bool statusPub()    //Публикация состояния параметров системы
+{
+  if (mqtt.connected()) 
+  {
+    DynamicJsonDocument doc(256);
+    String out;
+    char s[8];   //строка mqtt сообщения
+    String Str;
+    Str = "";
+
+#ifdef HUMCONTROL
+
+#endif
+#ifdef PHTDSCONTROL   
+    if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
+      dtostrf(Wtemp, 2, 2, s);
+      Str = s;
+      switch (thisMode){ 
+        case 0: doc["tempClWt"] = Str; break;
+        case 1: doc["tempSoil1"] = Str; break;
+        case 2: doc["tempClWt"] = Str; break;
+      }
+    }
+    if (realPh != -1){
+      dtostrf(realPh, 2, 3, s);
+      Str = s;
+      switch (thisMode) 
+      { 
+        case 0: doc["phClWt"] = Str; break;
+        case 1: doc["phSoil1"] = Str; break;
+        case 2: doc["phClWt"] = Str; break;
+      }
+
+    }
+    if (realTDS != -1){
+      dtostrf(realTDS, 2, 0, s);
+      Str = s;
+      switch (thisMode) 
+      { 
+        case 0: doc["tdsClWt"] = Str; break;
+        case 1: doc["tdsSoil1"] = Str; break;
+        case 2: doc["tdsClWt"] = Str; break;
+      }
+    } 
+    doc["PhOk"] = PhOk;
+    doc["mode"] = thisMode;
+#endif
+    serializeJson(doc, out);      
+    SendMQTT(out, TOPIC_HWSTAT);
+    // Запоминаем время отправки. Бесплатный сервер не позволяет отправлять сообщения чаще чем одно сообщение в секунду
+    mqtt_send_last = millis();
+    return(true);
+  }
+  return(false);
 }
 
 void startWiFi(unsigned long waitTime) { 

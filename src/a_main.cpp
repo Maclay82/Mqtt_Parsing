@@ -23,15 +23,14 @@ DallasTemperature TempSensors(&oneWire);
 
 //Инициализация плат I2C расширителей
 //Экзэмпляры классов
-i2cPumps pumps(0x20, true);
-
+i2cPumps pumps(0x20, true);                       //Pumps
 IoAbstractionRef ioExp2   = ioFrom8574(0x24);     //Leds
 IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
 
 
-float realPh = 0, realTDS = 0, Wtemp = 0;
+float realPh = -1, realTDS = -1, Wtemp = -1;
 
-boolean TDScalib = false;  // TDS Calibration complete 
+boolean TDScalib = false;  //  TDS Calibration complete 
 boolean Phcalib = false;   //  Ph Calibration complete
 boolean PhOk = false;      //  Ph Correction complete
 
@@ -78,7 +77,6 @@ int16_t    packetSize = 0;
 //*************************************************************************8
 
 #ifdef PHTDSCONTROL
-float phrl, tdsrl;
 long average;                 // перем. среднего
 int  PhvalArray[NUM_AVER];    // массив зачений Ph
 int  TDSvalArray[NUM_AVER];   // массив зачений TDS
@@ -152,33 +150,25 @@ void process() {
 
   if (millis() - timing2 >  regDelay)  // Решение на регулеровку Ph
   {
-    phrl = phk * middleArifm(PhvalArray) - PhMP;
+    realPh = phk * middleArifm(PhvalArray) - PhMP;
     DynamicJsonDocument doc(256);
     String out;
-    if ( phrl < 0 ) phrl = 0;
-    if ( rawPh == -1 ) phrl = -1;
-      // Serial.print("millis() - timing2=");
-      // Serial.print(millis() - timing2);
-      // Serial.print(" millis() - timing3=");
-      // Serial.print((int)(millis() - timing3));
-      // Serial.print(" regDelay=");
-      // Serial.print(regDelay);
-      // Serial.print(" phrl=");
-      // Serial.println(phrl);
-
-  	if (phrl > -1 && phrl <= phmin){
+    if ( realPh < 0 ) realPh = 0;
+    if ( rawPh == -1 ) realPh = -1;
+  	if (realPh > -1 && realPh <= phmin)
+    {
       pumps.pourVol(phVol, PHUP);
       doc["PhUp"] = phVol;
       serializeJson(doc, out);      
       SendMQTT(out, TOPIC_REG);
       PhOk = false;
 	  }
-
-  	if (phrl > phmin && phrl < phmax){
+  	if (realPh > phmin && realPh < phmax)
+    {
       PhOk = true;
   	}
-
-  	if (phrl >= phmax){
+  	if (realPh >= phmax)
+    {
       pumps.pourVol(phVol, PHDOWN);
       doc["PhDown"] = phVol;
       serializeJson(doc, out);      
@@ -192,26 +182,15 @@ void process() {
 
   if ( millis() - timing3  >  regDelay && (int)(millis() - timing3) > 0 )  // Решение на регулеровку TDS
   {
-    tdsrl = tdsk * middleArifm(TDSvalArray) - TdsMP;
-
-    // Serial.print("millis() - timing2=");
-    // Serial.print(millis() - timing2);
-    // Serial.print(" millis() - timing3=");
-    // Serial.print((int)(millis() - timing3));
-    // Serial.print(" regDelay=");
-    // Serial.print(regDelay);
-    // Serial.print(" tdsrl=");
-    // Serial.print(tdsrl);
-
-    // Serial.print(" PhOk = ");
-    // Serial.println(PhOk);
+    realTDS = tdsk * middleArifm(TDSvalArray) - TdsMP;
 
     DynamicJsonDocument doc(256);
     String out;
-    if ( tdsrl < 0 ) tdsrl = 0;
-    if ( rawTDS == -1 ) tdsrl = -1;
 
-  	if (tdsrl > 0 && tdsrl < tdsmin && PhOk == true)
+    if ( realTDS < 0 ) realTDS = 0;
+    if ( rawTDS == -1 ) realTDS = -1;
+
+  	if (realTDS > 0 && realTDS < tdsmin && PhOk == true)
     {
       if(tdsAVol > 0)
       {
@@ -235,10 +214,10 @@ void process() {
       }
 	  }
 
-  	if (tdsrl > tdsmin && tdsrl < tdsmax && PhOk == true){
+  	if (realTDS > tdsmin && realTDS < tdsmax && PhOk == true){
   	}
 
-  	if (tdsrl > tdsmax && PhOk == true){
+  	if (realTDS > tdsmax && PhOk == true){
       // doc["TDSDown"] = phVol;
       // serializeJson(doc, out);      
       // SendMQTT(out, TOPIC_REG);
@@ -251,13 +230,12 @@ void process() {
 
     #ifdef USE_LOG
     Serial.print("Time:");
-    Serial.print(millis());
-    Serial.print(" sensor_scan >> ");
+    Serial.print((float)millis()/60000.0);
+    Serial.print(" | sensor_scan >> ");
     #endif  
     char s[8];   //строка mqtt сообщения
     String Str;
     Str = "";
-
 
 #ifdef HUMCONTROL
     humd = myHumidity.readHumidity() + humcorr;
@@ -333,43 +311,41 @@ void process() {
 
 #ifdef PHTDSCONTROL
 
-  ioDeviceSync(ioExpInp);
-  for(int i = 0; i <= 7; i++ ){
-    ioDeviceDigitalWrite(ioExp2, i, ioDeviceDigitalRead(ioExpInp, i));
+    ioDeviceSync(ioExpInp);
+    for(int i = 0; i <= 3; i++ ){
+      ioDeviceDigitalWrite(ioExp2, i, ioDeviceDigitalRead(ioExpInp, i));
 #ifdef USE_LOG
-    Serial.print(i);
-    Serial.print("-");
-    Serial.print(ioDeviceDigitalRead(ioExpInp, i));
-    Serial.print(" ");
+      Serial.print(i);
+      Serial.print("-");
+      Serial.print(ioDeviceDigitalRead(ioExpInp, i));
+      Serial.print(" ");
 #endif
-  }
-
+    }
 #ifdef USE_LOG
-  Serial.print("\n");
+    Serial.print("\n");
 #endif
-  ioDeviceSync(ioExp2);
-
+    ioDeviceSync(ioExp2);
 
     TempSensors.requestTemperatures(); // Send the command to get temperatures
     
     Wtemp = TempSensors.getTempCByIndex(0);
     
 
-    phrl = phk * middleArifm(PhvalArray) - PhMP;
-    if ( phrl < 0 ) phrl = 0;
+    realPh = phk * middleArifm(PhvalArray) - PhMP;
+    if ( realPh < 0 ) realPh = 0;
 #ifdef USE_LOG
     Serial.print("Ph=");
     if (rawPh == -1) Serial.print("null");
-    else Serial.print(phrl);
+    else Serial.print(realPh);
         Serial.print("; ");
 #endif
 
-    tdsrl = tdsk * middleArifm(TDSvalArray) - TdsMP;
-    if ( tdsrl < 0 ) tdsrl = 0;
+    realTDS = tdsk * middleArifm(TDSvalArray) - TdsMP;
+    if ( realTDS < 0 ) realTDS = 0;
 #ifdef USE_LOG
     Serial.print("TDS=");
     if (rawTDS == -1) Serial.print("null");
-    else Serial.print(tdsrl);
+    else Serial.print(realTDS);
     Serial.print("; ");
 #endif
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
@@ -410,6 +386,8 @@ void process() {
     }
 
     if (mqtt.connected()){
+      statusPub();    //Публикация состояния параметров системы
+
       if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
         dtostrf(Wtemp, 2, 2, s);
         Str = s;
@@ -422,7 +400,7 @@ void process() {
           Str = s;
           SendMQTT(Str, TOPIC_rawPh);
         }    
-        dtostrf(phrl, 2, 3, s);
+        dtostrf(realPh, 2, 3, s);
         Str = s;
         SendMQTT(Str, TOPIC_ph);    
       }
@@ -433,7 +411,7 @@ void process() {
           Str = s;
           SendMQTT(Str, (TOPIC_rawTDS));
         }    
-        dtostrf(tdsrl, 2, 0, s);
+        dtostrf(realTDS, 2, 0, s);
         Str = s;
         SendMQTT(Str, TOPIC_tds);    
       } 
@@ -592,6 +570,7 @@ void processButtonStep() {
   }
 }
 */
+
 // ********************* ПРИНИМАЕМ ДАННЫЕ **********************
 
 void parsing() {
@@ -607,18 +586,18 @@ void parsing() {
       ----------------------------------------------------
     1 - калибровка насосов
         $1 0 X N - налить калибровочный обьем X насосом N
-        $1 1 X N - сообщить какой обьём жидкости X налил насос N  
+        $1 1 X N - сообщить какой обьём жидкости X налил насос N действительно (измерить мензуркой)  
 
-    2 - налив насосом
-        $2 X N - налить калибровочный обьем X насосом N
-        $2 X N - сообщить какой обьём жидкости X налил насос N  
+    2 - налить обьем X насосом N
+        $2 X N - налить обьем X насосом N
 
     3 - Вывести профиль
-        $3 1 - profpub
-        $3 2 - сообщить какой обьём жидкости X налил насос N  
+        $3 1 - profpub профиль выращивания
+        $3 2 - CalprofPub калибровочные точки  
+        $3 3 - HWprofPub аппаратные настройки
 
     4 - Редактирование профиля регулировки
-        $4 0 Х - Задать время регулирования Ph X минут
+        $4 0 Х - Задать время регулирования Ph X минут 
         $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph  
         $4 2 Х - Задать Ph max
         $4 3 Х - Задать Ph min
@@ -633,7 +612,7 @@ void parsing() {
     5 - Калибровка датчиков
         $5 0 Х - Включить - 1, выключить - 0 отображение сырых данных Ph и TDS
 
-    Протокол связи, посылка начинается с режима. Режимы:
+        Протокол связи, посылка начинается с режима. Режимы:
     6 - текст $6 N|some text, где N - назначение текста;
 
         1 - имя сервера NTP
@@ -650,6 +629,9 @@ void parsing() {
 
        13 - префикс топика сообщения к MQTT-серверу
 
+    7 - Управление смесителем
+        $7 0 Х - переключение режима работы коллектора 0-емкость подготовки 1-бак расствора 2-подлив воды в бак расствора
+
     11 - Настройки MQTT-канала (см. также $6 для N=8,9,10)
       - $11 1 X;   - использовать управление через MQTT сервер X; 0 - не использовать; 1 - использовать
       - $11 2 D;   - порт MQTT
@@ -658,6 +640,7 @@ void parsing() {
       - $11 5;     - Разорвать подключение к MQTT серверу, чтобы он иог переподключиться с новыми параметрами
       - $11 6 X;   - Флаг - отправка состояний 0 - индивидуально 1 - пакетом
       - $11 7 D;   - интервал отправки uptime на MQTT сервер в секундах или 0, если отключено
+
     19 - работа с настройками часов
       - $19 2 X; - Использовать синхронизацию часов NTP  X: 0 - нет, 1 - да
       - $19 3 N Z; - Период синхронизации часов NTP и Часовой пояс
@@ -684,7 +667,7 @@ void parsing() {
       // ----------------------------------------------------
       // 1 - калибровка насосов
       //   0 X N - налить калибровочный обьем X насосом N
-      //   1 X N - сообщить какой обьём жидкости X налил насос N  
+      //   1 X N - сообщить какой обьём жидкости X налил насос N действительно (измерить мензуркой)  
       // ----------------------------------------------------
 
       case 1:
@@ -729,8 +712,10 @@ void parsing() {
       break;
 
       // $3 - Вывести профиль
-      //   $3 1 - profpub
-      //   $3 2 - калибровочные точки  
+      //   $3 1 - profpub профиль выращивания
+      //   $3 2 - CalprofPub калибровочные точки
+      //   $3 3 - HWprofPub аппаратные настройки
+
       case 3:
         switch (intData[1]) { 
           case 1:
@@ -739,9 +724,11 @@ void parsing() {
           case 2:
             CalprofPub();
           break;
+          case 3:
+            HWprofPub();
+          break;
         }
       break;
-
 
       // ----------------------------------------------------
       // 4 - Редактирование профиля регулировки
@@ -758,7 +745,7 @@ void parsing() {
       //     $4 10 X - Значение калибровочного раствора TDS
       case 4:
         switch (intData[1]) { 
-          // $4 0 Х - Задать время регулирования X минут
+          // $4 0 Х - Задать время регулирования X минут целое число
           case 0:
             if (floatData[0] > 0){
               putregDelay((int)floatData[0]);
@@ -824,7 +811,7 @@ void parsing() {
           break;
           // $4 8 X - Задать TDS min
           case 8:  
-            if (floatData[0] > 0){
+            if (floatData[0] >= 0){
               putTDSmin((int)floatData[0]);
               tdsmin = floatData[0];
               profpub();
@@ -857,8 +844,8 @@ void parsing() {
       case 5:
         switch (intData[1]) { 
           case 0:
-            Serial.print("$5 0 Х ->");
-            Serial.println(intData[2]);
+            // Serial.print("$5 0 Х ->");
+            // Serial.println(intData[2]);
             
             if(intData[2] == 1) putRAWMode(true);
             else putRAWMode(false);
@@ -988,7 +975,7 @@ void parsing() {
           // Для команд, пришедших от UDP отправлять при необходимости другие данные, например - состояние элементов управления на странице от которой пришла команда 
           if (cmdSource == UDP) {
             switch (b_tmp) {
-              case 7: 
+//              case 7: 
               default:
                 sendAcknowledge(cmdSource);
                 break;
@@ -1009,6 +996,21 @@ void parsing() {
           #endif
         }        
         break;
+
+      // $7 - Управление смесителем
+      //   $7 0 Х - переключение режима работы коллектора 0-емкость подготовки 1-бак расствора 2-подлив воды в бак расствора
+ 
+      case 7:
+        switch (intData[1]) 
+        { 
+          case 0:
+            if (intData[2] >= 0 && intData[2] <= MAX_EFFECT)
+            {
+              set_thisMode(intData[2]);
+            }          
+          break;
+        }
+      break;
 
       // ----------------------------------------------------
       // 11 - Настройки MQTT-канала

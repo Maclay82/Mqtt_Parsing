@@ -90,8 +90,12 @@ String getPass();
 void putPass(String Pass);
 String getNtpServer();
 void putNtpServer(String server);
+int8_t getCurrentMode() ;
+void putCurrentMode(int8_t mode);
 void getStaticIP();
 void putStaticIP(byte p1, byte p2, byte p3, byte p4);
+
+
 
 #if (USE_MQTT == 1)
 

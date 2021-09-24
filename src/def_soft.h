@@ -5,6 +5,13 @@
 #define USE_LOG
 // Определения программных констант и переменных
 
+// #if (USE_SD == 1)
+// #define MAX_EFFECT              45         // количество эффектов, определенных в прошивке
+// #else
+#define MAX_EFFECT              4         // количество режимов работы прибора определенных в прошивке
+// #endif
+
+
 extern unsigned long timing, timing1, timing2, timing3, per, regDelay; // Таймеры опросов
 
 #ifdef HUMCONTROL
@@ -12,9 +19,10 @@ extern float minhum, maxhum;
 #endif
 
 #ifdef PHTDSCONTROL
-#define OPROSDELAY 150        // время цикла регулировки в миллисекундах
+#define OPROSDELAY 150        // время опроса Ph TDS в миллисекундах
 #define REGDELAY 1            // время цикла регулировки в минутах
 #define NUM_AVER 20           // выборка (из скольки усредняем)
+extern bool     count_mode;         // Флаг автоматического режима
 #endif
 
 extern uint16_t AUTO_MODE_PERIOD;  // Период активации автоматического режима в минутах по умолчанию
@@ -75,7 +83,11 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 #define  TOPIC_TME      "tme"                    // Топик - отправка клиенту сообщений о событиях времени
 #define  TOPIC_PWR      "pwr"                    // Топик - отправка клиенту сообщений о включении/выключении устройства
 #define  TOPIC_STT      "stt"                    // Топик - отправка клиенту сообщений о текущем статусе параметров устройства - основной набор параеметров (пакет)
+#define  TOPIC_PROF     "prof"                   // Топик - отправка клиенту сообщений о профиле выращивания устройства
+#define  TOPIC_CAL      "cal"                    // Топик - отправка клиенту сообщений при калибровке датчиков устройства
 #define  TOPIC_REG      "reg"                    // Топик - отправка клиенту сообщений о совершеном воздействии устройства на стреду
+#define  TOPIC_HWSET    "hwset"                  // Топик - отправка клиенту сообщений о сосостоянии аппаратных настроек
+#define  TOPIC_HWSTAT   "hwstat"                 // Топик - отправка клиенту сообщений текущих показаниях
 #define  TOPIC_MQTTSTT  "mqttstt"                // Топик - отправка клиенту сообщений о текущем статусе mqtt соединения
 
 #ifdef HUMCONTROL
@@ -103,11 +115,11 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 #define  TOPIC_tdsCP1   "tdsCP1"               // MQTT Topic
 #define  TOPIC_tdsCP2   "tdsCP2"               // MQTT Topic
 
-extern  float realPh, realTDS,
-Wtemp;
+extern  float realPh, realTDS, Wtemp;
 
 extern  boolean TDScalib;  // TDS Calibration complete 
 extern  boolean Phcalib;  //  Ph Calibration complete
+extern  boolean PhOk;      //  Ph Correction complete
 
 extern  int rawPh, rawTDS;
 extern  boolean RAWMode;  // RAW read mode

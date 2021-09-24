@@ -67,23 +67,28 @@ void set_isAlarmStopped(bool value) {
 // BE thisMode
 // SS thisMode
 // SQ thisMode
-
+*/
 void set_thisMode(int8_t value) {
   if (thisMode == value) return;
   
-  bool valid = (value == -1) || (value >= 0 && value < MAX_EFFECT);
-  if (!valid) return;
+  // bool valid = (value == -1) || (value >= 0 && value < MAX_EFFECT);
+  // if (!valid) return;
 
-  valid = (value >= 0 && value < MAX_EFFECT);
+  // valid = (value >= 0 && value < MAX_EFFECT);
 
-  String keySE = "SE", keyBE = "BE", keyUT = "UT", keyUC = "UC", old_SQ, old_SS, old_SE, old_BE, old_UT, old_UC;
+  // String keySE = "SE", keyBE = "BE", keyUT = "UT", keyUC = "UC", old_SQ, old_SS, old_SE, old_BE, old_UT, old_UC;
 
   thisMode = value;
+  putCurrentMode(thisMode);
+  setCollector(); //Приведение конфигурации коллектора в силу
+  profpub();
+  if(thisMode%2 == 0 && thisMode != 0) count_mode = true;
+  else count_mode = false;
 
-  addKeyToChanged("EF");
-  addKeyToChanged("EN");
+  // addKeyToChanged("EF");
+  // addKeyToChanged("EN");
 }
-*/
+
 
 // DI useDHCP
 void set_useDHCP(bool value) {

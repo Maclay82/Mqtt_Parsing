@@ -18,6 +18,9 @@ void getNTP();
 
 void profpub();
 void CalprofPub();
+void HWprofPub();
+bool statusPub();    //Публикация состояния параметров системы
+bool setCollector(); //Приведение конфигурации коллектора в силу
 void startWiFi(unsigned long waitTime);
 void startSoftAP();
 void connectToNetwork();

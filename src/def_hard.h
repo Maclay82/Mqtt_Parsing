@@ -276,11 +276,19 @@ extern HTU21D myHumidity;
 #ifdef PHTDSCONTROL
 
 extern i2cPumps pumps;
+extern float realTDS, realPh, Wtemp;
+
 #define PHUP        1 //  PH up pump
 #define PHDOWN      2 //  PH down pump
 #define TDSA        3 //  TDS A pump
 #define TDSB        4 //  TDS B pump
 #define TDSC        5 //  TDS C pump
+
+#define ClWaterIn        7 //  Вход чистой воды
+#define ClWaterOut       6 //  Выход чистой воды  
+#define SolWaterIn_1     5 //  Вход бака расствора 1
+#define SolWaterOut_1    4 //  Выход бака расствора 1  
+
 
 #define PHREGADR   0x2C //  PH reg. AD5282 address in 7bit format
 #define TDSREGADR  0x2E // TDS reg. AD5282 address in 7bit format
