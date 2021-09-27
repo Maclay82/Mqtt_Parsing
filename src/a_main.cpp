@@ -597,15 +597,15 @@ void parsing() {
         $3 3 - HWprofPub аппаратные настройки
 
     4 - Редактирование профиля регулировки
-        $4 0 Х - Задать время регулирования Ph X минут 
-        $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph  
+        $4 0 Х - Задать время регулирования Ph X минут (целое число) 
+        $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph (целое число)  
         $4 2 Х - Задать Ph max
         $4 3 Х - Задать Ph min
-        $4 4 Х - Задать объём компонента A X мл. для регулировки TDS
-        $4 5 Х - Задать объём компонента B X мл. для регулировки TDS
-        $4 6 Х - Задать объём компонента C X мл. для регулировки TDS
-        $4 7 X - Задать TDS max
-        $4 8 X - Задать TDS min
+        $4 4 Х - Задать объём компонента A X мл. для регулировки TDS (целое число)
+        $4 5 Х - Задать объём компонента B X мл. для регулировки TDS (целое число)
+        $4 6 Х - Задать объём компонента C X мл. для регулировки TDS (целое число)
+        $4 7 X - Задать TDS max (целое число)
+        $4 8 X - Задать TDS min (целое число)
         $4 9 X - Значение калибровочного раствора Ph
         $4 10 X - Значение калибровочного раствора TDS
 
@@ -620,7 +620,7 @@ void parsing() {
         3 - пароль для подключения к сети 
         4 - имя точки доступа
         5 - пароль к точке доступа
-        //6 - настройки будильников
+
         7 - строка запрашиваемых параметров для процедуры getStateString(), например - "CE|CC|CO|CK|NC|SC|C1|DC|DD|DI|NP|NT|NZ|NS|DW|OF"
         8 - имя сервера MQTT
         9 - имя пользователя MQTT
@@ -653,8 +653,8 @@ void parsing() {
       - $21 1 IP1 IP2 IP3 IP4 - установить статический IP адрес подключения к локальной WiFi сети, пример: $21 1 192 168 0 106
       - $21 2; Выполнить переподключение к сети WiFi
     23 - прочие настройки
-       - $23 1 ST   - Сохранить EEPROM в файл    ST = 0 - внутр. файл. систему; 1 - на SD-карту
-       - $23 2 ST   - Загрузить EEPROM из файла  ST = 0 - внутр. файл. системы; 1 - на SD-карты
+      - $23 1 ST   - Сохранить EEPROM в файл    ST = 0 - внутр. файл. систему; 1 - на SD-карту
+      - $23 2 ST   - Загрузить EEPROM из файла  ST = 0 - внутр. файл. системы; 1 - на SD-карты
   */  
 
   // Если прием данных завершен и управляющая команда в intData[0] распознана
@@ -663,13 +663,10 @@ void parsing() {
     recievedFlag = false;
 
     switch (intData[0]) {
-
       // ----------------------------------------------------
       // 1 - калибровка насосов
-      //   0 X N - налить калибровочный обьем X насосом N
-      //   1 X N - сообщить какой обьём жидкости X налил насос N действительно (измерить мензуркой)  
-      // ----------------------------------------------------
-
+      //   $1 0 X N - налить калибровочный обьем X насосом N
+      //   $1 1 X N - сообщить какой обьём жидкости X налил насос N действительно (измерить мензуркой)  
       case 1:
             // Serial.print("$1 ");
             // Serial.print(intData[1]);
@@ -687,15 +684,7 @@ void parsing() {
           // $1 1 X N - сообщить какой обьём жидкости X налил насос N 
           case 1:  
             if (intData[2] > 0 && intData[3] >= 1 && intData[3] <= PUMPCOUNT){
-              // Serial.print("scale ");
-              // Serial.println(pumps.getPumpScale((uint8_t)intData[3]-1));
-              // Serial.println((int)intData[3]);
               putPumpScl(pumps.returnScaleCalVol(uint16_t(intData[2]), uint8_t(intData[3])), (int)(intData[3]) );
-              // Serial.print("scale new ");
-              // Serial.println(pumps.getPumpScale((int)(intData[3]-1)));    
-              // for(int i = 0; i < PUMPCOUNT; i++ ){
-              //   Serial.println(pumps.getPumpScale((int)i));
-              // }
             }
           break;
         }
@@ -703,10 +692,8 @@ void parsing() {
       // ----------------------------------------------------
       // 2 - налить обьем X насосом N
       // $2 X N - налить обьем X насосом N
-      // ----------------------------------------------------
       case 2:
         if (intData[1] > 0 && intData[2] >= 1 && intData[2] <= PUMPCOUNT){          
-//           Serial.println(pumps.pourVol((uint16_t)(intData[1]), uint8_t(intData[2])));
            pumps.pourVol((uint16_t)(intData[1]), uint8_t(intData[2]));
         }
       break;
@@ -715,7 +702,6 @@ void parsing() {
       //   $3 1 - profpub профиль выращивания
       //   $3 2 - CalprofPub калибровочные точки
       //   $3 3 - HWprofPub аппаратные настройки
-
       case 3:
         switch (intData[1]) { 
           case 1:
@@ -732,20 +718,20 @@ void parsing() {
 
       // ----------------------------------------------------
       // 4 - Редактирование профиля регулировки
-      //     $4 0 Х - Задать время регулирования X минут
-      //     $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph  
-      //     $4 2 Х - Задать Ph max
-      //     $4 3 Х - Задать Ph min  
-      //     $4 4 Х - Задать объём компонента A X мл. для регулировки TDS
-      //     $4 5 Х - Задать объём компонента B X мл. для регулировки TDS
-      //     $4 6 Х - Задать объём компонента C X мл. для регулировки TDS
-      //     $4 7 X - Задать TDS max
-      //     $4 8 X - Задать TDS min
-      //     $4 9 X - Значение калибровочного раствора Ph
-      //     $4 10 X - Значение калибровочного раствора TDS
+      //   $4 0 Х - Задать время регулирования X минут (целое число)
+      //   $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph (целое число)  
+      //   $4 2 Х - Задать Ph max
+      //   $4 3 Х - Задать Ph min  
+      //   $4 4 Х - Задать объём компонента A X мл. для регулировки TDS (целое число)
+      //   $4 5 Х - Задать объём компонента B X мл. для регулировки TDS (целое число)
+      //   $4 6 Х - Задать объём компонента C X мл. для регулировки TDS (целое число)
+      //   $4 7 X - Задать TDS max (целое число)
+      //   $4 8 X - Задать TDS min (целое число)
+      //   $4 9 X - Значение калибровочного раствора Ph
+      //   $4 10 X - Значение калибровочного раствора TDS
       case 4:
         switch (intData[1]) { 
-          // $4 0 Х - Задать время регулирования X минут целое число
+          // $4 0 Х - Задать время регулирования X минут (целое число)
           case 0:
             if (floatData[0] > 0){
               putregDelay((int)floatData[0]);
@@ -753,7 +739,7 @@ void parsing() {
               profpub();
             }
           break;
-          // $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph  
+          // $4 1 Х - Задать обьём жидкости X мл. для регулировки Ph (целое число)
           case 1:  
             if (floatData[0] > 0){
               putPhVol((int)floatData[0]);
@@ -777,7 +763,7 @@ void parsing() {
               profpub();
             }
           break;
-          // $4 4 Х - Объём компонента A X мл. для регулировки TDS
+          // $4 4 Х - Объём компонента A X мл. для регулировки TDS (целое число)
           case 4:  
             if (floatData[0] >= 0){
               putTdsAVol((int)floatData[0]);
@@ -785,7 +771,7 @@ void parsing() {
               profpub();
             }
           break;
-          // $4 5 Х - Объём компонента B X мл. для регулировки TDS
+          // $4 5 Х - Объём компонента B X мл. для регулировки TDS (целое число)
           case 5:  
             if (floatData[0] >= 0){
               putTdsBVol((int)floatData[0]);
@@ -793,7 +779,7 @@ void parsing() {
               profpub();
             }
           break;
-          // $4 6 Х - Объём компонента C X мл. для регулировки TDS
+          // $4 6 Х - Объём компонента C X мл. для регулировки TDS (целое число)
           case 6:  
             if (floatData[0] >= 0){
               putTdsCVol((int)floatData[0]);
@@ -801,7 +787,7 @@ void parsing() {
               profpub();
             }
           break;
-          // $4 7 X - Задать TDS max
+          // $4 7 X - Задать TDS max (целое число)
           case 7:  
             if (floatData[0] > 0){
               putTDSmax((int)floatData[0]);
@@ -809,7 +795,7 @@ void parsing() {
               profpub();
             }
           break;
-          // $4 8 X - Задать TDS min
+          // $4 8 X - Задать TDS min (целое число)
           case 8:  
             if (floatData[0] >= 0){
               putTDSmin((int)floatData[0]);
@@ -822,7 +808,6 @@ void parsing() {
           case 9:  
             if (floatData[0] > 0){
 
-
               CalprofPub();
             }
           break;
@@ -830,13 +815,11 @@ void parsing() {
           case 10:  
             if (floatData[0] > 0){
 
-
               CalprofPub();
             }
           break;
         }
       break;
-
 
       // ----------------------------------------------------
       // 5 - Калибровка датчиков
@@ -844,9 +827,6 @@ void parsing() {
       case 5:
         switch (intData[1]) { 
           case 0:
-            // Serial.print("$5 0 Х ->");
-            // Serial.println(intData[2]);
-            
             if(intData[2] == 1) putRAWMode(true);
             else putRAWMode(false);
             RAWMode = getRAWMode();
@@ -854,8 +834,6 @@ void parsing() {
           break;
         }
       break;
-
-
 
       // ----------------------------------------------------
       // 6 - прием строки: строка принимается в формате N|text, где N:
@@ -975,15 +953,13 @@ void parsing() {
           // Для команд, пришедших от UDP отправлять при необходимости другие данные, например - состояние элементов управления на странице от которой пришла команда 
           if (cmdSource == UDP) {
             switch (b_tmp) {
-//              case 7: 
+
               default:
                 sendAcknowledge(cmdSource);
                 break;
             }
           } else {
             switch (b_tmp) {
-///              case 11:
-///              case 15:
               default:
                 // Другие команды - отправить подтверждение о выполнении
                 sendAcknowledge(cmdSource);
@@ -1004,8 +980,7 @@ void parsing() {
         switch (intData[1]) 
         { 
           case 0:
-            if (intData[2] >= 0 && intData[2] <= MAX_EFFECT)
-            {
+            if (intData[2] >= 0 && intData[2] <= MAX_EFFECT) {
               set_thisMode(intData[2]);
             }          
           break;
@@ -1017,50 +992,50 @@ void parsing() {
       // - $11 1 X;   - использовать управление через MQTT сервер X; 0 - не использовать; 1 - использовать
       // - $11 2 D;   - Порт MQTT
       // - $11 4 D;   - Задержка между последовательными обращениями к MQTT серверу
-      // - $11 5;     - Разорвать подключение к MQTT серверу, чтобы он иог переподключиться с новыми параметрами
+      // - $11 5;     - Разорвать подключение к MQTT серверу, чтобы он мог переподключиться с новыми параметрами
       // - $11 6 X;   - Флаг - отправка состояний 0 - индивидуально 1 - пакетом
       // - $11 7 D;   - интервал отправки uptime на MQTT сервер в секундах или 0, если отключено
       // ----------------------------------------------------
 
       #if (USE_MQTT == 1)
       case 11:
-         switch (intData[1]) {
-           case 1:               // $11 1 X; - Использовать канал MQTT: 0 - нет; 1 - да
-             set_useMQTT(intData[2] == 1);
-             // Если MQTT канал только что включили - отправить туда все начальные настройки,
-             // т.к. пока канал был отключен - состояние параметров изменялось, но сервер об этом не знает
-             if (useMQTT) mqttSendStartState();
-             break;
-           case 2:               // $11 2 D; - Порт MQTT
-             set_mqtt_port(intData[2]);
-             break;
-           case 4:               // $11 4 D; - Задержка между последовательными обращениями к MQTT серверу
-             set_mqtt_send_delay(intData[2]);
-             break;
-           case 5:               // $11 5;   - Сохранить изменения ипереподключиться к MQTT серверу
-             saveSettings();
-             mqtt.disconnect();
-             // Если подключаемся к серверу с другим именем и/или на другом порту - 
-             // простой вызов 
+        switch (intData[1]) {
+          case 1:               // $11 1 X; - Использовать канал MQTT: 0 - нет; 1 - да
+            set_useMQTT(intData[2] == 1);
+            // Если MQTT канал только что включили - отправить туда все начальные настройки,
+            // т.к. пока канал был отключен - состояние параметров изменялось, но сервер об этом не знает
+            if (useMQTT) mqttSendStartState();
+          break;
+          case 2:   // $11 2 D; - Порт MQTT
+            set_mqtt_port(intData[2]);
+          break;
+          case 4:   // $11 4 D; - Задержка между последовательными обращениями к MQTT серверу
+            set_mqtt_send_delay(intData[2]);
+          break;
+          case 5:   // $11 5;   - Сохранить изменения ипереподключиться к MQTT серверу
+            saveSettings();
+            mqtt.disconnect();
+            // Если подключаемся к серверу с другим именем и/или на другом порту - 
+            // простой вызов 
             mqtt.setServer(mqtt_server, mqtt_port);
-             // не срабатывает - соединяемся к прежнему серверу, который был обозначен при старте программы
-             // Единственный вариант - программно перезагрузить контроллер. После этого новый сервер подхватывается
-             if (last_mqtt_server != String(mqtt_server) || last_mqtt_port != mqtt_port) {              
-               ESP.restart();
-             }
-             // MQTT сервер мог поменять свои настройки, переключились на другой сервер или другой аккаунт - отправить туда все начальные настройки,
-             if (useMQTT) mqttSendStartState();
-             break;
-           case 6:               // $11 6 X; - Отправка параметров состояния в MQTT: 0 - индивидуально; 1 - пакетом
-             set_mqtt_state_packet(intData[2] == 1);
-             break;
-           case 7:               // $11 7 D; - Интервал отправки uptime на сервер MQTT
-             set_upTimeSendInterval(intData[2]);
-             break;
+            // не срабатывает - соединяемся к прежнему серверу, который был обозначен при старте программы
+            // Единственный вариант - программно перезагрузить контроллер. После этого новый сервер подхватывается
+            if (last_mqtt_server != String(mqtt_server) || last_mqtt_port != mqtt_port) {              
+              ESP.restart();
+            }
+            // MQTT сервер мог поменять свои настройки, переключились на другой сервер или другой аккаунт - отправить туда все начальные настройки,
+            if (useMQTT) mqttSendStartState();
+          break;
+          case 6:   // $11 6 X; - Отправка параметров состояния в MQTT: 0 - индивидуально; 1 - пакетом
+            set_mqtt_state_packet(intData[2] == 1);
+          break;
+          case 7:   // $11 7 D; - Интервал отправки uptime на сервер MQTT
+            set_upTimeSendInterval(intData[2]);
+          break;
           default:
             err = true;
             notifyUnknownCommand(incomeBuffer);
-            break;
+          break;
         }
         if (!err) {
           // Для команд, пришедших от MQTT отправлять только ACK;
@@ -1078,32 +1053,32 @@ void parsing() {
       // ----------------------------------------------------
       
       case 19: 
-         switch (intData[1]) {
-           case 2:               // $19 2 X; - Использовать синхронизацию часов NTP  X: 0 - нет, 1 - да
-             set_useNtp(intData[2] == 1);
-             if (wifi_connected) {
-               refresh_time = true; ntp_t = 0; ntp_cnt = 0;
-             }
-             break;
-           case 3:               // $19 3 N Z; - Период синхронизации часов NTP и Часовой пояс
-             set_SYNC_TIME_PERIOD(intData[2]);
-             set_timeZoneOffset((int8_t)intData[3]);
-             ntpSyncTimer.setInterval(1000L * 60 * SYNC_TIME_PERIOD);
-             if (wifi_connected) {
-               refresh_time = true; ntp_t = 0; ntp_cnt = 0;
-             }
-             break;
-           case 8:               // $19 8 YYYY MM DD HH MM; - Установить текущее время YYYY.MM.DD HH:MM
-             setTime(intData[5],intData[6],0,intData[4],intData[3],intData[2]);
-             init_time = true; refresh_time = false; ntp_cnt = 0;
+        switch (intData[1]) {
+          case 2:               // $19 2 X; - Использовать синхронизацию часов NTP  X: 0 - нет, 1 - да
+            set_useNtp(intData[2] == 1);
+            if (wifi_connected) {
+              refresh_time = true; ntp_t = 0; ntp_cnt = 0;
+            }
+          break;
+          case 3:               // $19 3 N Z; - Период синхронизации часов NTP и Часовой пояс
+            set_SYNC_TIME_PERIOD(intData[2]);
+            set_timeZoneOffset((int8_t)intData[3]);
+            ntpSyncTimer.setInterval(1000L * 60 * SYNC_TIME_PERIOD);
+            if (wifi_connected) {
+              refresh_time = true; ntp_t = 0; ntp_cnt = 0;
+            }
+          break;
+          case 8:               // $19 8 YYYY MM DD HH MM; - Установить текущее время YYYY.MM.DD HH:MM
+            setTime(intData[5],intData[6],0,intData[4],intData[3],intData[2]);
+            init_time = true; refresh_time = false; ntp_cnt = 0;
             //  rescanTextEvents();
-             break;
+          break;
           default:
             err = true;
             #if (USE_MQTT == 1)
             notifyUnknownCommand(incomeBuffer);
             #endif
-            break;
+          break;
         }
         if (!err) {
           // Для команд, пришедших от MQTT отправлять только ACK;
@@ -1134,8 +1109,7 @@ void parsing() {
           // $21 0 0 - не использовать точку доступа $21 0 1 - использовать точку доступа
           case 0:  
             set_useSoftAP(intData[2] == 1);
-            if (useSoftAP && !ap_connected) 
-              startSoftAP();
+            if (useSoftAP && !ap_connected)  startSoftAP();
             else if (!useSoftAP && ap_connected) {
               if (wifi_connected) { 
                 ap_connected = false;              
@@ -1143,7 +1117,7 @@ void parsing() {
                 Serial.println(F("Точка доступа отключена."));
               }
             }      
-            break;
+          break;
           case 1:  
             // $21 1 IP1 IP2 IP3 IP4 - установить статический IP адрес подключения к WiFi сети, пример: $21 1 192 168 0 106
             // Локальная сеть - 10.х.х.х или 172.16.х.х - 172.31.х.х или 192.168.х.х
@@ -1152,26 +1126,25 @@ void parsing() {
               set_StaticIP(0, 0, 0, 0);
             }
             set_StaticIP(intData[2], intData[3], intData[4], intData[5]);
-            break;
+          break;
           case 2:  
             // $21 2; Выполнить переподключение к сети WiFi
             saveSettings();
             delay(10);
             startWiFi(5000);     // Время ожидания подключения 5 сек
-            // showCurrentIP(true);
-            break;
+          break;
           case 3:               // $21 3 X; - Получать адрес DHCP IP; 0 - не получать; 1 - получать
             set_useDHCP(intData[2] == 1);
             Serial.print("\nuseDHCP - ");
             Serial.println(useDHCP);
-            break;
+          break;
 
           default:
             err = true;
             #if (USE_MQTT == 1)
             notifyUnknownCommand(incomeBuffer);
             #endif
-            break;
+          break;
         }
         if (!err) {
           // Для команд, пришедших от MQTT отправлять только ACK;
@@ -1190,10 +1163,8 @@ void parsing() {
         }
         break;
 
-
       // ----------------------------------------------------
       // 23 - прочие
-
       case 23:
         // $23 1 ST   - Сохранить EEPROM в файл    ST = 0 - внутр. файл. систему; 1 - на SD-карту
         // $23 2 ST   - Загрузить EEPROM из файла  ST = 0 - внутр. файл. системы; 1 - на SD-карты
@@ -1207,7 +1178,7 @@ void parsing() {
             }
             str += String(eeprom_backup) + ";";
             sendStringData(str, cmdSource);
-            break;
+          break;
           case 2:
             err = !loadEepromFromFile(intData[2] == 1 ? "SD" : "FS");
             if (err) {
@@ -1221,23 +1192,21 @@ void parsing() {
               delay(500);
               ESP.restart();
             }
-            break;
+          break;
           default:
             err = true;
             #if (USE_MQTT == 1)
             notifyUnknownCommand(incomeBuffer);
             #endif
-            break;
+          break;
         }
         break;
-
       // ----------------------------------------------------
       default:
         #if (USE_MQTT == 1)
         notifyUnknownCommand(incomeBuffer);
         #endif
-        break;
-
+      break;
     }
   }
 

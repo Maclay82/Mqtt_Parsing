@@ -346,10 +346,11 @@ bool statusPub()    //Публикация состояния параметро
 #ifdef HUMCONTROL
 
 #endif
+
 #ifdef PHTDSCONTROL   
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
       dtostrf(Wtemp, 2, 2, s);
-      switch (thisMode){ 
+      switch (thisMode) { 
         case 0: doc["tempClWt"]  = s; break;
         case 1: doc["tempSoil1"] = s; break;
         case 2: doc["tempClWt"]  = s; break;
@@ -357,18 +358,15 @@ bool statusPub()    //Публикация состояния параметро
     }
     if (realPh != -1){
       dtostrf(realPh, 2, 3, s);
-      switch (thisMode) 
-      { 
+      switch (thisMode) { 
         case 0: doc["phClWt"]  = s; break;
         case 1: doc["phSoil1"] = s; break;
         case 2: doc["phClWt"]  = s; break;
       }
-
     }
-    if (realTDS != -1){
+    if (realTDS != -1) {
       dtostrf(realTDS, 2, 0, s);
-      switch (thisMode) 
-      { 
+      switch (thisMode) { 
         case 0: doc["tdsClWt"]  = s; break;
         case 1: doc["tdsSoil1"] = s; break;
         case 2: doc["tdsClWt"]  = s; break;
@@ -377,6 +375,7 @@ bool statusPub()    //Публикация состояния параметро
     doc["PhOk"] = PhOk;
     doc["mode"] = thisMode;
 #endif
+
     serializeJson(doc, out);      
     SendMQTT(out, TOPIC_HWSTAT);
     // Запоминаем время отправки. Бесплатный сервер не позволяет отправлять сообщения чаще чем одно сообщение в секунду
@@ -403,11 +402,11 @@ void startWiFi(unsigned long waitTime) {
     Serial.print(ssid);
 
     if (IP_STA[0] + IP_STA[1] + IP_STA[2] + IP_STA[3] > 0 && useDHCP == false) {
-      WiFi.config(IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3]), // 192.168.0.106 
-                 IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], 1),          // 192.168.0.1
-                 IPAddress(255, 255, 255, 0),                            // Mask
-                 IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], 1),          // DNS1 192.168.0.1
-                 IPAddress(8, 8, 8, 8));                                 // DNS2 8.8.8.8    
+      WiFi.config(IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3]),  // 192.168.0.106 
+                  IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], 1),          // 192.168.0.1
+                  IPAddress(255, 255, 255, 0),                            // Mask
+                  IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], 1),          // DNS1 192.168.0.1
+                  IPAddress(8, 8, 8, 8));                                 // DNS2 8.8.8.8    
       Serial.print(F(" -> "));
       Serial.print(IP_STA[0]);
       Serial.print(".");
@@ -417,24 +416,15 @@ void startWiFi(unsigned long waitTime) {
       Serial.print(".");
       Serial.print(IP_STA[3]);                  
     }
-    // Serial.print("\nhost_name = ");
-    // Serial.println(host_name);
    
     WiFi.setHostname (host_name.c_str());             
-
-    // Serial.print(F("\nWiFi.begin(ssid, pass) = "));
-    // Serial.print(ssid);
-    // Serial.print(" ");
-    // Serial.print(pass);
-    // Serial.print(" ");
-    // Serial.println(WiFi.begin(ssid, pass));
 
     WiFi.begin(ssid, pass);
 
     // Проверка соединения (таймаут 180 секунд, прерывается при необходимости нажатием кнопки)
     // Такой таймаут нужен в случае, когда отключают электричество, при последующем включении устройство стартует быстрее
     // чем роутер успеет загрузиться и создать сеть. При коротком таймауте устройство не найдет сеть и создаст точку доступа,
-    // не сможет получить время, погоду и т.д.
+    // не сможет получить время и т.д.
     bool stop_waiting = false;
     unsigned long start_wifi_check = millis();
     unsigned long last_wifi_check = 0;
