@@ -17,7 +17,7 @@ void loadSettings() {
 
   //   4 - Текущий режим работы (0-бак подготовки воды, 1-бак расствора)
   //   5 - использовать синхронизацию времени через NTP                                                     // getUseNtp()                   // putUseNtp(useNtp)
-  // 6,7 - период синхронизации NTP (int16_t - 2 байта) в минутах                                           // getNtpSyncTime()              // putNtpSyncTime(SYNC_TIME_PERIOD)
+  // 6,7 - период синхронизации NTP (int16_t - 2 байта) в минутах                                           // getNtpSyncTime()              // putNtpSyncTime(syncTimePeriod)
   //   8 - time zone UTC+X                                                                                  // getTimeZone();                // putTimeZone(timeZoneOffset)
   //   9 - Получать Динамический IP                                                                         // getUseDHCP()                  // putUseDHCP()
   //  10 - IP[0]                                                                                            // getStaticIP()                 // putStaticIP(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3])
@@ -97,7 +97,7 @@ void loadSettings() {
     useNtp = getUseNtp();
     timeZoneOffset = getTimeZone();
 
-    SYNC_TIME_PERIOD = getNtpSyncTime();
+    syncTimePeriod = getNtpSyncTime();
     useSoftAP = getUseSoftAP();
     getSoftAPName().toCharArray(apName, 10);        //  54-63   - имя точки доступа    ( 9 байт макс) + 1 байт '\0'
     getSoftAPPass().toCharArray(apPass, 17);        //  64-79   - пароль точки доступа (16 байт макс) + 1 байт '\0'
@@ -193,71 +193,69 @@ void saveDefaults() {
 #endif
 
 #ifdef PHTDSCONTROL
-  putRAWMode (false);
-  putCurrentMode (1);
-  putPhKa  (150);  // усиление
-  putPhKb  (125);  // ст
-  putTDSKa (60);  // усиление
-  putTDSKb (110); //средняя точка
-  putPhVol (1);
-  putTdsAVol(1);
-  putTdsBVol(1);
-  putTdsCVol(0);
-  putregDelay(5);
+  putRAWMode      (false);
+  putCurrentMode  (1);
+  putPhKa         (150);  // усиление
+  putPhKb         (125);  // ст
+  putTDSKa        (60);  // усиление
+  putTDSKb        (110); //средняя точка
+  putPhVol        (1);
+  putTdsAVol      (1);
+  putTdsBVol      (1);
+  putTdsCVol      (0);
+  putregDelay     (5);
 
-  putPhmin (6.0); //нижняя граница Ph
-  putPhmax (6.8); //верхняя граница Ph
-  putTDSmin (700); //нижняя граница TDS
-  putTDSmax (1200); //верхняя граница TDS
-  putPhCalP1    (4.0); 
-  putRawPhCalP1 (802); 
-  putPhCalP2    (7.0);
-  putRawPhCalP2 (1750);
-  putTDSCalP1   (206); 
-  putRawTDSCalP1(220); 
-  putTDSCalP2   (1930);
-  putRawTDSCalP2(1924);
-  for(int i = 0; i < PUMPCOUNT; i++ )
-  {
-    if(getPumpScl(i+1) <= 0)
-    {
+  putPhmin        (6.0); //нижняя граница Ph
+  putPhmax        (6.8); //верхняя граница Ph
+  putTDSmin       (700); //нижняя граница TDS
+  putTDSmax       (1200); //верхняя граница TDS
+  putPhCalP1      (4.0); 
+  putRawPhCalP1   (802); 
+  putPhCalP2      (7.0);
+  putRawPhCalP2   (1750);
+  putTDSCalP1     (206); 
+  putRawTDSCalP1  (220); 
+  putTDSCalP2     (1930);
+  putRawTDSCalP2  (1924);
+  for(int i = 0; i < PUMPCOUNT; i++ ) {
+    if(getPumpScl (i+1) <= 0) {
       pumps.putPumpScale (512.82, uint8_t(i));
       putPumpScl(512.82, uint8_t(i+1));
     }
   }
 #endif
 
-  putUseNtp(useNtp);
-  putTimeZone(timeZoneOffset);
-  putNtpSyncTime(SYNC_TIME_PERIOD);
-  
-  putUseSoftAP(useSoftAP);
+  putUseNtp(true);
+  putTimeZone(TIMEZONE);
+  putNtpSyncTime(SYNCTIMEPERIOD);
+
+  putUseSoftAP(false);
 
   strcpy(apName, DEFAULT_AP_NAME);
   strcpy(apPass, DEFAULT_AP_PASS);
-  strcpy(ssid, NETWORK_SSID);
-  strcpy(pass, NETWORK_PASS);
+  strcpy(ssid,   NETWORK_SSID);
+  strcpy(pass,   NETWORK_PASS);
   useDHCP = USEDHCP;
   #if (USE_MQTT == 1)
   strcpy(mqtt_server, DEFAULT_MQTT_SERVER);
-  strcpy(mqtt_user, DEFAULT_MQTT_USER);
-  strcpy(mqtt_pass, DEFAULT_MQTT_PASS);
+  strcpy(mqtt_user,   DEFAULT_MQTT_USER);
+  strcpy(mqtt_pass,   DEFAULT_MQTT_PASS);
   #endif  
 
-  putSoftAPName(String(apName));
-  putSoftAPPass(String(apPass));
-  putSsid(String(ssid));
-  putPass(String(pass));
-  putUseDHCP(useDHCP);
+  putSoftAPName(String(DEFAULT_AP_NAME));
+  putSoftAPPass(String(DEFAULT_AP_PASS));
+  putSsid(String(NETWORK_SSID));
+  putPass(String(NETWORK_PASS));
+  putUseDHCP(USEDHCP);
   #if (USE_MQTT == 1)
-  putMqttServer(String(mqtt_server));
-  putMqttUser(String(mqtt_user));
-  putMqttPass(String(mqtt_pass));
-  putMqttPrefix(String(mqtt_prefix));
-  putMqttPort(mqtt_port);
-  putUseMqtt(useMQTT);
-  putSendStateInPacket(mqtt_state_packet);
-  putMqttSendDelay(mqtt_send_delay);
+  putMqttServer(String(DEFAULT_MQTT_SERVER));
+  putMqttUser(String(DEFAULT_MQTT_USER));
+  putMqttPass(String(DEFAULT_MQTT_PASS));
+  putMqttPrefix(String(DEFAULT_MQTT_PREFIX));
+  putMqttPort(DEFAULT_MQTT_PORT);
+  putUseMqtt(true);
+  putSendStateInPacket(true);
+  putMqttSendDelay(MQTT_SEND_DELAY);
   putUpTimeSendInterval(upTimeSendInterval);
   #endif
 

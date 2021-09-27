@@ -106,11 +106,11 @@ void set_useNtp(bool value) {
   addKeyToChanged("NP");
 }
 
-// NT SYNC_TIME_PERIOD
-void set_SYNC_TIME_PERIOD(uint16_t value) {
-  if (SYNC_TIME_PERIOD == value) return;
+// NT syncTimePeriod
+void set_syncTimePeriod(uint16_t value) {
+  if (syncTimePeriod == value) return;
   putNtpSyncTime(value);
-  SYNC_TIME_PERIOD = getNtpSyncTime();
+  syncTimePeriod = getNtpSyncTime();
   addKeyToChanged("NT");
 }
 

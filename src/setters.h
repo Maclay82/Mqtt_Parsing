@@ -15,8 +15,8 @@ void set_thisMode(int8_t value);
 void set_useDHCP(bool value);
 // NP useNtp
 void set_useNtp(bool value);
-// NT SYNC_TIME_PERIOD
-void set_SYNC_TIME_PERIOD(uint16_t value);
+// NT syncTimePeriod
+void set_syncTimePeriod(uint16_t value);
 // NZ timeZoneOffset
 void set_timeZoneOffset(int16_t value);
 // NS ntpServerName

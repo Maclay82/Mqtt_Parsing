@@ -21,13 +21,6 @@ OneWire oneWire(D5); //Активация датчика температуры
 // Pass our oneWire reference to Dallas Temperature. 
 DallasTemperature TempSensors(&oneWire);
 
-//Инициализация плат I2C расширителей
-//Экзэмпляры классов
-i2cPumps pumps(0x20, true);                       //Pumps
-IoAbstractionRef ioExp2   = ioFrom8574(0x24);     //Leds
-IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
-
-
 float realPh = -1, realTDS = -1, Wtemp = -1;
 
 boolean TDScalib = false;  //  TDS Calibration complete 
@@ -463,6 +456,17 @@ void process() {
         bool timeToSync = ntpSyncTimer.isReady();
         if (timeToSync) { ntp_cnt = 0; refresh_time = true; }
         if (timeToSync || (refresh_time && (ntp_t == 0 || (millis() - ntp_t > 60000)) && (ntp_cnt < 10 || !init_time))) {
+          Serial.print("-> ntp_cnt = ");
+          Serial.print(ntp_cnt);
+          Serial.print(" ntp_t = ");
+          Serial.print(ntp_t);
+          Serial.print(" millis() - ntp_t= ");
+          Serial.print(millis() - ntp_t);
+          Serial.print(" init_time = ");
+          Serial.println(init_time);
+ 
+
+
           ntp_t = millis();
           getNTP();
         }
@@ -1056,20 +1060,16 @@ void parsing() {
         switch (intData[1]) {
           case 2:               // $19 2 X; - Использовать синхронизацию часов NTP  X: 0 - нет, 1 - да
             set_useNtp(intData[2] == 1);
-            if (wifi_connected) {
-              refresh_time = true; ntp_t = 0; ntp_cnt = 0;
-            }
+            if (wifi_connected) {  refresh_time = true; ntp_t = 0; ntp_cnt = 0; }
           break;
-          case 3:               // $19 3 N Z; - Период синхронизации часов NTP и Часовой пояс
-            set_SYNC_TIME_PERIOD(intData[2]);
+          case 3:               // $19 3 N Z; - Период синхронизации часов NTP и Часовой пояс            
+            set_syncTimePeriod(intData[2]);
             set_timeZoneOffset((int8_t)intData[3]);
-            ntpSyncTimer.setInterval(1000L * 60 * SYNC_TIME_PERIOD);
-            if (wifi_connected) {
-              refresh_time = true; ntp_t = 0; ntp_cnt = 0;
-            }
+            ntpSyncTimer.setInterval ( 1000L * 60 * syncTimePeriod );
+            if (wifi_connected) {  refresh_time = true; ntp_t = 0; ntp_cnt = 0;  }
           break;
           case 8:               // $19 8 YYYY MM DD HH MM; - Установить текущее время YYYY.MM.DD HH:MM
-            setTime(intData[5],intData[6],0,intData[4],intData[3],intData[2]);
+            setTime ( intData[5],intData[6],0,intData[4],intData[3],intData[2] );
             init_time = true; refresh_time = false; ntp_cnt = 0;
             //  rescanTextEvents();
           break;
@@ -1084,14 +1084,10 @@ void parsing() {
           // Для команд, пришедших от MQTT отправлять только ACK;
           // Для команд, пришедших от UDP отправлять при необходимости другие данные, например - состояние элементов управления на странице от которой пришла команда 
           if (cmdSource == UDP) {
-            if (intData[1] != 8) {
-              sendPageParams(4, cmdSource);
-            } else {
-              sendAcknowledge(cmdSource);
-            }
-          } else {
-            sendAcknowledge(cmdSource);
-          }
+            if (intData[1] != 8)  sendPageParams(4, cmdSource);
+            else  sendAcknowledge(cmdSource);
+          } 
+          else  sendAcknowledge(cmdSource);
         }
         break;
 
@@ -1253,7 +1249,7 @@ void parsing() {
       Serial.print(":");
       Serial.print(udp.remotePort());
       Serial.print("'");
-      if (udp.remotePort() == loCalPort) {
+      if (udp.remotePort() == localPort) {
         Serial.print(F("; cmd='"));
         Serial.print(incomeBuffer);
         Serial.print("'");
@@ -1508,10 +1504,10 @@ String getStateValue(String &key, int8_t effect, JsonVariant* value) {
   // Период синхронизации NTP в минутах
   if (key == "NT") {
     if (value) {
-      value->set(SYNC_TIME_PERIOD);
-      return String(SYNC_TIME_PERIOD); 
+      value->set(syncTimePeriod);
+      return String(syncTimePeriod); 
     }
-    return str + "NT:" + String(SYNC_TIME_PERIOD); 
+    return str + "NT:" + String(syncTimePeriod); 
   }
 
   // Часовой пояс

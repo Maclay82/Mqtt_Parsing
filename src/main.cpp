@@ -7,21 +7,26 @@ uint16_t AUTO_MODE_PERIOD = 10;    // Период активации автом
 bool     auto_mode = true;         // Флаг автоматического режима
 bool     count_mode = false;       // Флаг включения счетчика воды подлива
 
+#ifdef PHTDSCONTROL
+//Инициализация плат I2C расширителей
+//Экзэмпляры классов
+i2cPumps pumps(0x20, true);                       //Pumps
+IoAbstractionRef ioExp2   = ioFrom8574(0x24);     //Leds
+IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
+#endif
+
 // *************************** ПОДКЛЮЧЕНИЕ К СЕТИ **************************
-
 WiFiUDP udp;                                // Объект транспорта сетевых пакетов
-
 String  host_name;                          // Имя для регистрации в сети, а так же как имя клиента та сервере MQTT
-
 char   apName[11] = DEFAULT_AP_NAME;        // Имя сети в режиме точки доступа
 char   apPass[17] = DEFAULT_AP_PASS;        // Пароль подключения к точке доступа
 char   ssid[25]   = NETWORK_SSID;           // SSID (имя) вашего роутера (конфигурируется подключением через точку доступа и сохранением в EEPROM)
 char   pass[17]   = NETWORK_PASS;           // пароль роутера
 byte   IP_STA[]   = DEFAULT_IP;             // Статический адрес в локальной сети WiFi по умолчанию при первом запуске. Потом - загружается из настроек, сохраненных в EEPROM
 bool   useDHCP    = USEDHCP;                // получать динамический IP
-unsigned int loCalPort = 2390;              // локальный порт на котором слушаются входящие команды управления от приложения на смартфоне, передаваемые через локальную сеть
-// --------------------Режимы работы Wifi соединения-----------------------
+unsigned int localPort = 2390;              // локальный порт на котором слушаются входящие команды управления от приложения на смартфоне, передаваемые через локальную сеть
 
+// --------------------Режимы работы Wifi соединения-----------------------
 bool   useSoftAP = false;                   // использовать режим точки доступа
 bool   wifi_connected = false;              // true - подключение к wifi сети выполнена  
 bool   ap_connected = false;                // true - работаем в режиме точки доступа;
@@ -29,20 +34,19 @@ bool   ap_connected = false;                // true - работаем в реж
 // **************** СИНХРОНИЗАЦИЯ ЧАСОВ ЧЕРЕЗ ИНТЕРНЕТ *******************
 
 IPAddress timeServerIP;
-#define NTP_PACKET_SIZE 48                  // NTP время - в первых 48 байтах сообщения
-uint16_t SYNC_TIME_PERIOD = 60;             // Период синхронизации в минутах по умолчанию
-byte packetBuffer[NTP_PACKET_SIZE];         // буфер для хранения входящих и исходящих пакетов NTP
+uint16_t syncTimePeriod;              // Период синхронизации в минутах по умолчанию
+byte packetBuffer[NTP_PACKET_SIZE];     // буфер для хранения входящих и исходящих пакетов NTP
 
-int8_t timeZoneOffset = 7;                  // смещение часового пояса от UTC
-long   ntp_t = 0;                           // Время, прошедшее с запроса данных с NTP-сервера (таймаут)
-byte   ntp_cnt = 0;                         // Счетчик попыток получить данные от сервера
-bool   init_time = false;                   // Флаг false - время не инициализировано; true - время инициализировано
-bool   refresh_time = true;                 // Флаг true - пришло время выполнить синхронизацию часов с сервером NTP
-bool   useNtp = true;                       // Использовать синхронизацию времени с NTP-сервером
-bool   getNtpInProgress = false;            // Запрос времени с NTP сервера в процессе выполнения
-char   ntpServerName[31] = "";              // Используемый сервер NTP
+int8_t timeZoneOffset;                  // смещение часового пояса от UTC
+long   ntp_t = 0;                       // Время, прошедшее с запроса данных с NTP-сервера (таймаут)
+byte   ntp_cnt = 0;                     // Счетчик попыток получить данные от сервера
+bool   init_time = false;               // Флаг false - время не инициализировано; true - время инициализировано
+bool   refresh_time = true;             // Флаг true - пришло время выполнить синхронизацию часов с сервером NTP
+bool   useNtp;                          // Использовать синхронизацию времени с NTP-сервером
+bool   getNtpInProgress = true;         // Запрос времени с NTP сервера в процессе выполнения
+char   ntpServerName[31] = "";          // Используемый сервер NTP
 
-uint32_t upTime = 0;                        // время работы системы с последней перезагрузки
+uint32_t upTime = 0;                    // время работы системы с последней перезагрузки
 
 #if (USE_MQTT == 1)
 #define    BUF_MQTT_SIZE  1024//384               // максимальный размер выделяемого буфера для входящих сообщений по MQTT каналу
@@ -68,7 +72,7 @@ String   effect_name;                  // текущий режим - назва
 //timerMinim idleTimer(idleTime);             // Таймер бездействия ручного управления для автоперехода в демо-режим 
 
 timerMinim saveSettingsTimer(15000);                      // Таймер отложенного сохранения настроек
-timerMinim ntpSyncTimer  (1000 * 60 * SYNC_TIME_PERIOD);  // Сверяем время с NTP-сервером через SYNC_TIME_PERIOD минут
+timerMinim ntpSyncTimer  (1000 * 60 * syncTimePeriod);  // Сверяем время с NTP-сервером через syncTimePeriod минут
 timerMinim AutoModeTimer (1000 * 60 * AUTO_MODE_PERIOD);  // Таймер активации автоматического режима через AUTO_MODE_PERIOD минут
 
 #if (USE_MQTT == 1)
@@ -225,7 +229,7 @@ void setup() {
   Wire.begin();
 
 #ifdef PHTDSCONTROL
-//  i2cPumps pumps(0x20, true);
+
   for(int i = 0; i <= 7; i++ ){ 
     //ioDevicePinMode(ioExp, i, OUTPUT);
     ioDevicePinMode(ioExp2, i, OUTPUT);
@@ -250,7 +254,7 @@ void setup() {
   Serial.println();
   Serial.println(FIRMWARE_VER);
   Serial.println("Host: '" + host_name + "'");//String(HOST_NAME) + "'");
-
+  
 //-------------------------Инициализация файловой системы--------------------
 
   Serial.println(F("\nИнициализация файловой системы... "));
@@ -297,7 +301,9 @@ void setup() {
   
   // Подключение к сети
   connectToNetwork();
-  
+
+  ntpSyncTimer.setInterval ( 1000L * 60 * syncTimePeriod );
+
   #if (USE_MQTT == 1)
   // Настройка соединения с MQTT сервером
 
@@ -357,7 +363,7 @@ void setup() {
   ArduinoOTA.begin();
   
   // UDP-клиент на указанном порту
-  udp.begin(loCalPort);
+  udp.begin(localPort);
 
 //  reconnect();
   profpub();
