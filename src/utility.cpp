@@ -3,20 +3,11 @@
 //#include "def_hard.h"     // Определение параметров матрицы, пинов подключения и т.п
 #include "def_soft.h"     // Определение параметров эффектов, переменных программы и т.п.
 
-// Заглушка чтения кнопок управления игрой
-// hex string to uint32_t
-
-
 uint32_t HEXtoInt(String hexValue) {
-
   hexValue.toUpperCase();
-  if (hexValue.charAt(0) == '#') {
-    hexValue = hexValue.substring(1);
-  }
+  if (hexValue.charAt(0) == '#') {  hexValue = hexValue.substring(1);  }
 
-  if (hexValue.startsWith("0X")) {
-    hexValue = hexValue.substring(2);
-  }
+  if (hexValue.startsWith("0X")) {  hexValue = hexValue.substring(2);  }
 
   byte tens, ones, number1, number2, number3;
   tens = (hexValue[0] <= '9') ? hexValue[0] - '0' : hexValue[0] - '7';
@@ -234,20 +225,14 @@ void profpub() {
     doc["mode"] = thisMode;
 #endif
 
-    if(auto_mode){
-      doc["auto_mode"] = 1;
-    } else{
-      doc["auto_mode"] = 0;
-    }
-
     serializeJson(doc, out);      
     SendMQTT(out, TOPIC_PROF);
 
     // Запоминаем время отправки. Бесплатный сервер не позволяет отправлять сообщения чаще чем одно сообщение в секунду
     mqtt_send_last = millis();
   }
-
 }
+
 void CalprofPub() {
   if (mqtt.connected()) {
     DynamicJsonDocument doc(256);
@@ -294,11 +279,66 @@ void HWprofPub() {
     doc["pKb"] = phKb; //getPhKb средняя точка
     doc["pKa"] = phKa; //getPhKa усиление
 #endif
+
     serializeJson(doc, out);      
     SendMQTT(out, TOPIC_HWSET);
     // Запоминаем время отправки. Бесплатный сервер не позволяет отправлять сообщения чаще чем одно сообщение в секунду
     mqtt_send_last = millis();
   }
+}
+
+bool statusPub()    //Публикация состояния параметров системы
+{
+  if (mqtt.connected()) 
+  {
+    DynamicJsonDocument doc(256);
+    String out;
+    char s[8];   //строка mqtt сообщения
+
+#ifdef HUMCONTROL
+
+#endif
+
+#ifdef PHTDSCONTROL   
+    if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
+      dtostrf(Wtemp, 2, 2, s);
+      switch (thisMode) { 
+        case 0: doc["tempSoil0"] = s; break;
+        case 1: doc["tempSoil1"] = s; break;
+        case 2: doc["tempSoil0"] = s; break;
+      }
+    }
+    if (realPh != -1){
+      dtostrf(realPh, 2, 3, s);
+      switch (thisMode) { 
+        case 0: doc["phSoil0"] = s; break;
+        case 1: doc["phSoil1"] = s; break;
+        case 2: doc["phSoil0"] = s; break;
+      }
+    }
+    if ( realTDS  != -1 ) {
+      dtostrf(realTDS, 2, 0, s);
+      switch (thisMode) { 
+        case 0: doc["tdsSoil0"] = s; break;
+        case 1: doc["tdsSoil1"] = s; break;
+        case 2: doc["tdsSoil0"] = s; break;
+      }
+    }
+
+    doc["PhOk"] = PhOk;
+    doc["mode"] = thisMode;
+#endif
+
+    if(auto_mode) doc["auto_mode"] = 1;
+    else doc["auto_mode"] = 0;
+
+    serializeJson(doc, out);      
+    SendMQTT(out, TOPIC_HWSTAT);
+    // Запоминаем время отправки. Бесплатный сервер не позволяет отправлять сообщения чаще чем одно сообщение в секунду
+    mqtt_send_last = millis();
+    return(true);
+  }
+  return(false);
 }
 
 bool setCollector() //Приведение конфигурации коллектора в силу
@@ -333,56 +373,6 @@ bool setCollector() //Приведение конфигурации коллек
   }          
   return ioDeviceSync(ioExp2);
 #endif
-}
-
-bool statusPub()    //Публикация состояния параметров системы
-{
-  if (mqtt.connected()) 
-  {
-    DynamicJsonDocument doc(256);
-    String out;
-    char s[8];   //строка mqtt сообщения
-
-#ifdef HUMCONTROL
-
-#endif
-
-#ifdef PHTDSCONTROL   
-    if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
-      dtostrf(Wtemp, 2, 2, s);
-      switch (thisMode) { 
-        case 0: doc["tempClWt"]  = s; break;
-        case 1: doc["tempSoil1"] = s; break;
-        case 2: doc["tempClWt"]  = s; break;
-      }
-    }
-    if (realPh != -1){
-      dtostrf(realPh, 2, 3, s);
-      switch (thisMode) { 
-        case 0: doc["phClWt"]  = s; break;
-        case 1: doc["phSoil1"] = s; break;
-        case 2: doc["phClWt"]  = s; break;
-      }
-    }
-    if (realTDS != -1) {
-      dtostrf(realTDS, 2, 0, s);
-      switch (thisMode) { 
-        case 0: doc["tdsClWt"]  = s; break;
-        case 1: doc["tdsSoil1"] = s; break;
-        case 2: doc["tdsClWt"]  = s; break;
-      }
-    } 
-    doc["PhOk"] = PhOk;
-    doc["mode"] = thisMode;
-#endif
-
-    serializeJson(doc, out);      
-    SendMQTT(out, TOPIC_HWSTAT);
-    // Запоминаем время отправки. Бесплатный сервер не позволяет отправлять сообщения чаще чем одно сообщение в секунду
-    mqtt_send_last = millis();
-    return(true);
-  }
-  return(false);
 }
 
 void startWiFi(unsigned long waitTime) { 

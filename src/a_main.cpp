@@ -70,25 +70,25 @@ int16_t    packetSize = 0;
 //*************************************************************************8
 
 #ifdef PHTDSCONTROL
-long average;                 // перем. среднего
-int  PhvalArray[NUM_AVER];    // массив зачений Ph
-int  TDSvalArray[NUM_AVER];   // массив зачений TDS
-byte idx = 0;                 // индекс
+long average;                           // перем. среднего
+int  PhvalArray[NUM_AVER];              // массив зачений Ph
+int  TDSvalArray[NUM_AVER];             // массив зачений TDS
+byte idx = 0;                           // индекс
 
 //Заполнение массива
 void ArrayFill(int newVal, int *valArray){
-//  if (++idx >= NUM_AVER) idx = 0;   // перезаписывая самое старое значение
-  if (idx >= NUM_AVER) idx = 0;   // перезаписывая самое старое значение
-  valArray[idx] = newVal;           // пишем каждый раз в новую ячейку
+//  if (++idx >= NUM_AVER) idx = 0;     // перезаписывая самое старое значение
+  if (idx >= NUM_AVER) idx = 0;         // перезаписывая самое старое значение
+  valArray[idx] = newVal;               // пишем каждый раз в новую ячейку
 }
 //Вычисление среднего значения массива
-int middleArifm(int *valArray) {       // принимает новое значение
-  average = 0;                      // обнуляем среднее
+int middleArifm(int *valArray) {        // принимает новое значение
+  average = 0;                          // обнуляем среднее
   for (int i = 0; i < NUM_AVER; i++) {
-    average += valArray[i];         // суммируем
+    average += valArray[i];             // суммируем
   }
-  average /= NUM_AVER;              // делим
-  return average;                   // возвращаем
+  average /= NUM_AVER;                  // делим
+  return average;                       // возвращаем
 }
 #endif
 //********************************************************************************
@@ -148,20 +148,17 @@ void process() {
     String out;
     if ( realPh < 0 ) realPh = 0;
     if ( rawPh == -1 ) realPh = -1;
-  	if (realPh > -1 && realPh <= phmin)
-    {
+  	if (realPh > -1 && realPh <= phmin && auto_mode) {
       pumps.pourVol(phVol, PHUP);
       doc["PhUp"] = phVol;
       serializeJson(doc, out);      
       SendMQTT(out, TOPIC_REG);
       PhOk = false;
 	  }
-  	if (realPh > phmin && realPh < phmax)
-    {
-      PhOk = true;
-  	}
-  	if (realPh >= phmax)
-    {
+
+  	if (realPh > phmin && realPh < phmax) { PhOk = true; }
+
+  	if (realPh >= phmax && auto_mode) {
       pumps.pourVol(phVol, PHDOWN);
       doc["PhDown"] = phVol;
       serializeJson(doc, out);      
@@ -169,7 +166,6 @@ void process() {
       PhOk = false;
 	  }
     timing3 = timing2 + ( regDelay / 2 );
-
     timing2 = millis();
   }
 
@@ -183,7 +179,7 @@ void process() {
     if ( realTDS < 0 ) realTDS = 0;
     if ( rawTDS == -1 ) realTDS = -1;
 
-  	if (realTDS > 0 && realTDS < tdsmin && PhOk == true)
+  	if (realTDS > 0 && realTDS < tdsmin && PhOk == true && auto_mode && thisMode != 0 )
     {
       if(tdsAVol > 0)
       {
@@ -207,10 +203,11 @@ void process() {
       }
 	  }
 
-  	if (realTDS > tdsmin && realTDS < tdsmax && PhOk == true){
+  	if (realTDS > tdsmin && realTDS < tdsmax && PhOk == true && thisMode != 0 ){
+
   	}
 
-  	if (realTDS > tdsmax && PhOk == true){
+  	if (realTDS > tdsmax && PhOk == true && auto_mode && thisMode != 0 ){
       // doc["TDSDown"] = phVol;
       // serializeJson(doc, out);      
       // SendMQTT(out, TOPIC_REG);
@@ -308,7 +305,7 @@ void process() {
     for(int i = 0; i <= 3; i++ ){
       ioDeviceDigitalWrite(ioExp2, i, ioDeviceDigitalRead(ioExpInp, i));
 #ifdef USE_LOG
-      Serial.print(i);
+      Serial.print(i);  
       Serial.print("-");
       Serial.print(ioDeviceDigitalRead(ioExpInp, i));
       Serial.print(" ");
@@ -456,17 +453,6 @@ void process() {
         bool timeToSync = ntpSyncTimer.isReady();
         if (timeToSync) { ntp_cnt = 0; refresh_time = true; }
         if (timeToSync || (refresh_time && (ntp_t == 0 || (millis() - ntp_t > 60000)) && (ntp_cnt < 10 || !init_time))) {
-          Serial.print("-> ntp_cnt = ");
-          Serial.print(ntp_cnt);
-          Serial.print(" ntp_t = ");
-          Serial.print(ntp_t);
-          Serial.print(" millis() - ntp_t= ");
-          Serial.print(millis() - ntp_t);
-          Serial.print(" init_time = ");
-          Serial.println(init_time);
- 
-
-
           ntp_t = millis();
           getNTP();
         }
@@ -979,14 +965,17 @@ void parsing() {
 
       // $7 - Управление смесителем
       //   $7 0 Х - переключение режима работы коллектора 0-емкость подготовки 1-бак расствора 2-подлив воды в бак расствора
+      //   $7 1 Х - вкл\выкл режима корректировки расствора 0-выкл 1-вкл
  
       case 7:
         switch (intData[1]) 
         { 
           case 0:
-            if (intData[2] >= 0 && intData[2] <= MAX_EFFECT) {
-              set_thisMode(intData[2]);
-            }          
+            if (intData[2] >= 0 && intData[2] <= MAX_EFFECT) set_thisMode(intData[2]);
+          break;
+          case 1:
+            if (intData[2] == 0) auto_mode = false;
+            else auto_mode = true;
           break;
         }
       break;
@@ -1031,14 +1020,14 @@ void parsing() {
             if (useMQTT) mqttSendStartState();
           break;
           case 6:   // $11 6 X; - Отправка параметров состояния в MQTT: 0 - индивидуально; 1 - пакетом
-            set_mqtt_state_packet(intData[2] == 1);
+            set_mqtt_state_packet ( intData[2] == 1 );
           break;
-          case 7:   // $11 7 D; - Интервал отправки uptime на сервер MQTT
-            set_upTimeSendInterval(intData[2]);
+          case 7:   // $11 7 D; - Интервал отправки uptime на сервер MQTT в секундах
+            set_upTimeSendInterval ( intData[2] );
           break;
           default:
             err = true;
-            notifyUnknownCommand(incomeBuffer);
+            notifyUnknownCommand ( incomeBuffer );
           break;
         }
         if (!err) {

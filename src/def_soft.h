@@ -5,12 +5,7 @@
 #define USE_LOG
 // Определения программных констант и переменных
 
-// #if (USE_SD == 1)
-// #define MAX_EFFECT              45         // количество эффектов, определенных в прошивке
-// #else
-#define MAX_EFFECT              4         // количество режимов работы прибора определенных в прошивке
-// #endif
-
+#define MAX_EFFECT              2         // количество режимов работы прибора определенных в прошивке
 
 extern unsigned long timing, timing1, timing2, timing3, per, regDelay; // Таймеры опросов
 
@@ -69,7 +64,7 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 #endif
 
 #ifndef MQTT_SEND_DELAY                          // Отправлять сообщение на MQTT-сервер не чаще 1 сообщения в секунду (ограничение бесплатного MQTT сервера);
-#define MQTT_SEND_DELAY     1                    // Сообщения, отправленные чаще защитного интервала "съедаются" сервером (игнорируются, пропадают); 
+#define MQTT_SEND_DELAY      1                   // Сообщения, отправленные чаще защитного интервала "съедаются" сервером (игнорируются, пропадают); 
 #endif                                           // Если нет ограничений на частоту отправки сообщений - поставьте здесь 0
                                                   
 
@@ -118,18 +113,17 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 extern  float realPh, realTDS, Wtemp;
 
 extern  boolean TDScalib;  // TDS Calibration complete 
-extern  boolean Phcalib;  //  Ph Calibration complete
+extern  boolean Phcalib;   //  Ph Calibration complete
 extern  boolean PhOk;      //  Ph Correction complete
 
 extern  int rawPh, rawTDS;
-extern  boolean RAWMode;  // RAW read mode
+extern  boolean RAWMode;   // RAW read mode
 
-extern  float phmin, phmax, 
-              phk, PhMP, tdsk, TdsMP, PhCalP1, PhCalP2;
+extern  float phmin, phmax, phk, PhMP, tdsk, TdsMP, PhCalP1, PhCalP2;
 
 extern  uint16_t phVol, tdsAVol, tdsBVol, tdsCVol,
 tdsmin, tdsmax, 
-rawPhCalP1, rawPhCalP2, 
+rawPhCalP1,  rawPhCalP2, 
 rawTDSCalP1, rawTDSCalP2,
 TDSCalP1, TDSCalP2,
 phKa,  // усиление
@@ -139,45 +133,45 @@ tdsKb; // средняя точка
 
 #endif
 
-extern  bool     useMQTT;                        // Использовать канал управления через MQTT - флаг намерения    // При отключении из приложения set_useMQTT(false) устанавлифается соответствующее состояние (параметр QA), состояние 'намерение отключить MQTT'
-extern  bool     stopMQTT;                       // Использовать канал управления через MQTT - флаг результата   // которое должно быть отправлено на MQTT-сервер, значит реально состояние 'MQTT остановлен' - только после отправки флага QA на сервер
-extern  char     mqtt_server[25] ;               // Имя сервера MQTT
-extern  char     mqtt_user[15]   ;               // Логин от сервера
-extern  char     mqtt_pass[15]   ;               // Пароль от сервера
-extern  char     mqtt_prefix[31] ;               // Префикс топика сообщения
-extern  uint16_t mqtt_port       ;               // Порт для подключения к серверу MQTT
-extern  uint16_t mqtt_send_delay ;               // Задержка между последовательными обращениями к MQTT серверу
-extern  bool     mqtt_state_packet;              // Способ передачи состояния: true - в пакете, false - каждый параметр индивидуально
+extern  bool     useMQTT;                  // Использовать канал управления через MQTT - флаг намерения    // При отключении из приложения set_useMQTT(false) устанавлифается соответствующее состояние (параметр QA), состояние 'намерение отключить MQTT'
+extern  bool     stopMQTT;                 // Использовать канал управления через MQTT - флаг результата   // которое должно быть отправлено на MQTT-сервер, значит реально состояние 'MQTT остановлен' - только после отправки флага QA на сервер
+extern  char     mqtt_server[25] ;         // Имя сервера MQTT
+extern  char     mqtt_user[15]   ;         // Логин от сервера
+extern  char     mqtt_pass[15]   ;         // Пароль от сервера
+extern  char     mqtt_prefix[31] ;         // Префикс топика сообщения
+extern  uint16_t mqtt_port       ;         // Порт для подключения к серверу MQTT
+extern  uint16_t mqtt_send_delay ;         // Задержка между последовательными обращениями к MQTT серверу
+extern  bool     mqtt_state_packet;        // Способ передачи состояния: true - в пакете, false - каждый параметр индивидуально
 
 // Выделение места под массив команд, поступающих от MQTT-сервера
 // Callback на поступление команды от MQTT сервера происходит асинхронно, и если предыдущая
 // команда еще не обработалась - происходит новый вызов обработчика команд, который не рентабелен -
 // это приводит к краху приложения. Чтобы избежать этого поступающие команды будем складывать в очередь 
 // и выполнять их в основном цикле программы
-#define  QSIZE_IN 8                         // размер очереди команд от MQTT
-#define  QSIZE_OUT 96                       // размер очереди исходящих сообщений MQTT
+#define  QSIZE_IN       8                  // размер очереди команд от MQTT
+#define  QSIZE_OUT      96                 // размер очереди исходящих сообщений MQTT
 extern String   cmdQueue[];                // Кольцевой буфер очереди полученных команд от MQTT
-extern String   tpcQueue[];               // Кольцевой буфер очереди отправки команд в MQTT (topic)
-extern String   outQueue[];               // Кольцевой буфер очереди отправки команд в MQTT (message)
-extern bool     rtnQueue[];               // Кольцевой буфер очереди отправки команд в MQTT (retain)
-extern byte     queueWriteIdx;                 // позиция записи в очередь обработки полученных команд
-extern byte     queueReadIdx;                  // позиция чтения из очереди обработки полученных команд
-extern byte     queueLength;                   // количество команд в очереди обработки полученных команд
-extern byte     outQueueWriteIdx;              // позиция записи в очередь отправки MQTT сообщений
-extern byte     outQueueReadIdx;               // позиция чтения из очереди отправки MQTT сообщений
-extern byte     outQueueLength;                // количество команд в очереди отправки MQTT сообщений
+extern String   tpcQueue[];                // Кольцевой буфер очереди отправки команд в MQTT (topic)
+extern String   outQueue[];                // Кольцевой буфер очереди отправки команд в MQTT (message)
+extern bool     rtnQueue[];                // Кольцевой буфер очереди отправки команд в MQTT (retain)
+extern byte     queueWriteIdx;             // позиция записи в очередь обработки полученных команд
+extern byte     queueReadIdx;              // позиция чтения из очереди обработки полученных команд
+extern byte     queueLength;               // количество команд в очереди обработки полученных команд
+extern byte     outQueueWriteIdx;          // позиция записи в очередь отправки MQTT сообщений
+extern byte     outQueueReadIdx;           // позиция чтения из очереди отправки MQTT сообщений
+extern byte     outQueueLength;            // количество команд в очереди отправки MQTT сообщений
 
 extern String   last_mqtt_server;
 extern uint16_t last_mqtt_port;
 
-extern String   changed_keys;                 // Строка, содержащая список измененных параметров, чье состояние требуется отправить серверу
+extern String   changed_keys;              // Строка, содержащая список измененных параметров, чье состояние требуется отправить серверу
 extern bool     mqtt_connecting;           // Выполняется подключение к MQTT (еще не установлено)
 extern bool     mqtt_topic_subscribed;     // Подписка на топик команд выполнена
-extern byte     mqtt_conn_cnt;                 // Счетчик попыток подключения для форматирования вывода
-extern unsigned long mqtt_conn_last;               // Время последней попытки подключения к MQTT-серверу
-extern unsigned long mqtt_send_last;               // Время последней отправки сообщения к MQTT-серверу
-extern uint16_t upTimeSendInterval;            // Интервал отправки uptime в секундах, 0 если не нужно отправлять
-extern unsigned long uptime_send_last;             // Время последней отправки uptime к MQTT-серверу по инициативе устройства
+extern byte     mqtt_conn_cnt;             // Счетчик попыток подключения для форматирования вывода
+extern unsigned long mqtt_conn_last;       // Время последней попытки подключения к MQTT-серверу
+extern unsigned long mqtt_send_last;       // Время последней отправки сообщения к MQTT-серверу
+extern uint16_t upTimeSendInterval;        // Интервал отправки uptime в секундах, 0 если не нужно отправлять
+extern unsigned long uptime_send_last;     // Время последней отправки uptime к MQTT-серверу по инициативе устройства
 #endif
 
 // --------------------Режимы работы Wifi соединения-----------------------
