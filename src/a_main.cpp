@@ -312,7 +312,7 @@ void process() {
 #endif
     }
 #ifdef USE_LOG
-    Serial.print("\n");
+    Serial.print("| ");
 #endif
     ioDeviceSync(ioExp2);
 
@@ -327,7 +327,7 @@ void process() {
     Serial.print("Ph=");
     if (rawPh == -1) Serial.print("null");
     else Serial.print(realPh);
-        Serial.print("; ");
+        Serial.print(" | ");
 #endif
 
     realTDS = tdsk * middleArifm(TDSvalArray) - TdsMP;
@@ -336,16 +336,16 @@ void process() {
     Serial.print("TDS=");
     if (rawTDS == -1) Serial.print("null");
     else Serial.print(realTDS);
-    Serial.print("; ");
+    Serial.print(" | ");
 #endif
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
 #ifdef USE_LOG
       Serial.print(" Water temp:");
       Serial.print(Wtemp, 3);
-      Serial.print(" C; ");
+      Serial.print(" C");
     }
     else {
-      Serial.print("Error");
+      Serial.print(" Water temp->Error");
 # endif    
     }
     if (rawPh != -1){
@@ -354,7 +354,7 @@ void process() {
       {
         Serial.print("Avg Ph RAW:");
         Serial.print(middleArifm(PhvalArray));
-        Serial.print("; ");
+        Serial.print(" | ");
 //      Serial.print(" Ph RAW:");
 //      Serial.print(rawPh);
 //      Serial.print("; ");
@@ -367,7 +367,7 @@ void process() {
       {
         Serial.print("Avg TDS RAW:");
         Serial.print(middleArifm(TDSvalArray));
-        Serial.print("; ");
+        Serial.print(" | ");
 //      Serial.print(" TDS RAW:");
 //      Serial.print(rawTDS);
 //      Serial.print("; ");

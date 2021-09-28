@@ -166,7 +166,7 @@ void checkMqttConnection() {
       Serial.print(mqtt_port);
       Serial.print(F("'; ClientID -> '"));
       Serial.print(clientId);
-      Serial.println(F("' ..."));
+      Serial.print(F("' ..."));
     }
     mqtt_topic_subscribed = false;
     mqtt_conn_last = millis();
