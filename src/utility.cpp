@@ -231,7 +231,7 @@ void profpub() {
   }
 }
 
-void CalprofPub() {
+void calPointPub() {
   if (mqtt.connected()) {
     DynamicJsonDocument doc(256);
     String out;

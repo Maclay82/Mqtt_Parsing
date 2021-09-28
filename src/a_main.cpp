@@ -583,7 +583,7 @@ void parsing() {
 
     3 - Вывести профиль
         $3 1 - profpub профиль выращивания
-        $3 2 - CalprofPub калибровочные точки  
+        $3 2 - calPointPub калибровочные точки  
         $3 3 - HWprofPub аппаратные настройки
 
     4 - Редактирование профиля регулировки
@@ -690,7 +690,7 @@ void parsing() {
 
       // $3 - Вывести профиль
       //   $3 1 - profpub профиль выращивания
-      //   $3 2 - CalprofPub калибровочные точки
+      //   $3 2 - calPointPub калибровочные точки
       //   $3 3 - HWprofPub аппаратные настройки
       case 3:
         switch (intData[1]) { 
@@ -698,7 +698,7 @@ void parsing() {
             profpub();
           break;
           case 2:
-            CalprofPub();
+            calPointPub();
           break;
           case 3:
             HWprofPub();
@@ -798,14 +798,14 @@ void parsing() {
           case 9:  
             if (floatData[0] > 0){
 
-              CalprofPub();
+              calPointPub();
             }
           break;
           // $4 10 X - Значение калибровочного раствора TDS
           case 10:  
             if (floatData[0] > 0){
 
-              CalprofPub();
+              calPointPub();
             }
           break;
         }
