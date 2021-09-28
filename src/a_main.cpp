@@ -976,6 +976,7 @@ void parsing() {
           case 1:
             if (intData[2] == 0) auto_mode = false;
             else auto_mode = true;
+            statusPub();
           break;
         }
       break;

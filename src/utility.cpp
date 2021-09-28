@@ -222,9 +222,7 @@ void profpub() {
     doc["tdsAVol"] = tdsAVol;
     doc["tdsBVol"] = tdsBVol;
     doc["tdsCVol"] = tdsCVol;
-    doc["mode"] = thisMode;
 #endif
-
     serializeJson(doc, out);      
     SendMQTT(out, TOPIC_PROF);
 
