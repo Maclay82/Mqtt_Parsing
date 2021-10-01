@@ -3,8 +3,8 @@
 extern i2cPumps pumps;
 
 // ----------------------------------------------------
-eSources cmdSource; // Источник команды; NONE - нет значения; BOTH - любой, UDP-клиент, MQTT-клиент
-eModes parseMode; // Текущий режим парсера
+eSources  cmdSource; // Источник команды; NONE - нет значения; BOTH - любой, UDP-клиент, MQTT-клиент
+eModes    parseMode; // Текущий режим парсера
 
 unsigned long timing, timing1, timing2, timing3, per, regDelay; // Таймеры опросов, длительность в миллисекундах
 
@@ -21,17 +21,21 @@ OneWire oneWire(D5); //Активация датчика температуры
 // Pass our oneWire reference to Dallas Temperature. 
 DallasTemperature TempSensors(&oneWire);
 
-float realPh = -1, realTDS = -1, Wtemp = -1;
-
 boolean TDScalib = false;  //  TDS Calibration complete 
 boolean Phcalib = false;   //  Ph Calibration complete
 boolean PhOk = false;      //  Ph Correction complete
 
-int rawPh = 0, rawTDS = 0;
+int rawPh = 0, rawTDS = 0, Wlvl = 0;
 boolean RAWMode = true;  // RAW read mode
+int levels[LVLSNSCOUNT];
+boolean invLVLsensor[LVLSNSCOUNT] = {false,false,true};//{true,true,false};
+// invLVLsensor[0] = true; //hi
+// invLVLsensor[1] = true; //mid
+// invLVLsensor[2] = false;//low
 
 float phmin, phmax, phk=1, PhMP=0, tdsk=1, TdsMP=0,
-PhCalP1 = 4.0, PhCalP2 = 7.0; 
+      PhCalP1 = 4.0, PhCalP2 = 7.0; 
+float realPh = -1, realTDS = -1, Wtemp = -1;
 
 uint16_t phVol, tdsAVol, tdsBVol, tdsCVol, tdsmin, tdsmax, 
 TDSCalP1 = 206, TDSCalP2 = 1930,
@@ -115,7 +119,7 @@ void process() {
 #ifdef PHTDSCONTROL
 
 
-  if (millis() - timing1 >=  OPROSDELAY)  // opros datchikov Ph i TDS
+  if (millis() - timing1 >=  OPROSDELAY)  // opros datchikov Ph, TDS i level
   {
     uint16_t result = 0;
     Wire.requestFrom(PHADDRESS, 2);        //requests 2 bytes
@@ -139,6 +143,20 @@ void process() {
     ArrayFill(rawTDS, TDSvalArray);
     ++idx;
     timing1 = millis();
+
+    ioDeviceSync(ioExpInp);
+    for(int i = 0; i < LVLSNSCOUNT; i++ ) levels[i] = ioDeviceDigitalRead (ioExpInp, i);
+
+    for(int i = 0; i < LVLSNSCOUNT; i++ ) {
+      if (levels[i]  == invLVLsensor[i]) {
+        Wlvl = LVLSNSCOUNT - i;
+        i = LVLSNSCOUNT;
+      }
+    }
+    if (thisMode != 0 && thisMode%2 == 0 && levels[0] == invLVLsensor[0]){ 
+      thisMode = thisMode - 1;
+      setCollector();
+    }
   }
 
   if (millis() - timing2 >  regDelay)  // Решение на регулеровку Ph
@@ -302,7 +320,7 @@ void process() {
 #ifdef PHTDSCONTROL
 
     ioDeviceSync(ioExpInp);
-    for(int i = 0; i <= 3; i++ ){
+    for(int i = 0; i < LVLSNSCOUNT; i++ ){
       ioDeviceDigitalWrite(ioExp2, i, ioDeviceDigitalRead(ioExpInp, i));
 #ifdef USE_LOG
       Serial.print(i);  
@@ -340,19 +358,19 @@ void process() {
 #endif
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
 #ifdef USE_LOG
-      Serial.print(" Water temp:");
+      Serial.print("Water temp=");
       Serial.print(Wtemp, 3);
-      Serial.print(" C");
+      Serial.print(" C ");
     }
     else {
-      Serial.print(" Water temp->Error");
+      Serial.print("Water temp->Error ");
 # endif    
     }
     if (rawPh != -1){
       #ifdef USE_LOG
       if(RAWMode == true)
       {
-        Serial.print("Avg Ph RAW:");
+        Serial.print("| Avg Ph RAW:");
         Serial.print(middleArifm(PhvalArray));
         Serial.print(" | ");
 //      Serial.print(" Ph RAW:");
@@ -365,7 +383,7 @@ void process() {
       #ifdef USE_LOG
       if(RAWMode == true)
       {
-        Serial.print("Avg TDS RAW:");
+        Serial.print("| Avg TDS RAW:");
         Serial.print(middleArifm(TDSvalArray));
         Serial.print(" | ");
 //      Serial.print(" TDS RAW:");

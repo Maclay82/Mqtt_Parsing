@@ -322,6 +322,8 @@ bool statusPub()    //Публикация состояния параметро
         case 2: doc["tdsSoil0"] = s; break;
       }
     }
+    if (thisMode != 0)
+    doc["lewel"] = Wlvl;
 
     doc["PhOk"] = PhOk;
     doc["mode"] = thisMode;

@@ -96,7 +96,6 @@ void loadSettings() {
   if (isInitialized) {    
     useNtp = getUseNtp();
     timeZoneOffset = getTimeZone();
-
     syncTimePeriod = getNtpSyncTime();
     useSoftAP = getUseSoftAP();
     getSoftAPName().toCharArray(apName, 10);        //  54-63   - имя точки доступа    ( 9 байт макс) + 1 байт '\0'
@@ -143,7 +142,7 @@ void loadSettings() {
     tdsAVol = getTdsAVol();
     tdsBVol = getTdsBVol();
     tdsCVol = getTdsCVol();
-    regDelay = getregDelay() * 1000 * 60;
+    regDelay = getregDelay() * 60000;
     phmin = getPhmin();
     phmax = getPhmax();
     tdsmin = getTDSmin();
@@ -228,9 +227,7 @@ void saveDefaults() {
   putUseNtp(true);
   putTimeZone(TIMEZONE);
   putNtpSyncTime(SYNCTIMEPERIOD);
-
-  putUseSoftAP(false);
-
+  useSoftAP = false;
   strcpy(apName, DEFAULT_AP_NAME);
   strcpy(apPass, DEFAULT_AP_PASS);
   strcpy(ssid,   NETWORK_SSID);
@@ -240,22 +237,27 @@ void saveDefaults() {
   strcpy(mqtt_server, DEFAULT_MQTT_SERVER);
   strcpy(mqtt_user,   DEFAULT_MQTT_USER);
   strcpy(mqtt_pass,   DEFAULT_MQTT_PASS);
+  strcpy(mqtt_prefix, DEFAULT_MQTT_PREFIX);
+  mqtt_port = DEFAULT_MQTT_PORT;
+  mqtt_send_delay = MQTT_SEND_DELAY;
   #endif  
+  upTimeSendInterval = 0;
 
-  putSoftAPName(String(DEFAULT_AP_NAME));
-  putSoftAPPass(String(DEFAULT_AP_PASS));
-  putSsid(String(NETWORK_SSID));
-  putPass(String(NETWORK_PASS));
-  putUseDHCP(USEDHCP);
+  putUseSoftAP(useSoftAP);
+  putSoftAPName(String(apName));
+  putSoftAPPass(String(apPass));
+  putSsid(String(ssid));
+  putPass(String(pass));
+  putUseDHCP(useDHCP);
   #if (USE_MQTT == 1)
-  putMqttServer(String(DEFAULT_MQTT_SERVER));
-  putMqttUser(String(DEFAULT_MQTT_USER));
-  putMqttPass(String(DEFAULT_MQTT_PASS));
-  putMqttPrefix(String(DEFAULT_MQTT_PREFIX));
-  putMqttPort(DEFAULT_MQTT_PORT);
-  putUseMqtt(true);
+  putMqttServer(String(mqtt_server));
+  putMqttUser(String(mqtt_user));
+  putMqttPass(String(mqtt_pass));
+  putMqttPrefix(String(mqtt_prefix));
+  putMqttPort(mqtt_port);
+  putUseMqtt(USE_MQTT);
   putSendStateInPacket(true);
-  putMqttSendDelay(MQTT_SEND_DELAY);
+  putMqttSendDelay(mqtt_send_delay);
   putUpTimeSendInterval(upTimeSendInterval);
   #endif
 
@@ -693,7 +695,7 @@ uint16_t getMqttPort() {
 
 void putMqttPort(uint16_t port) {
   if (port != getMqttPort()) {
-    EEPROM_int_write(237, port);
+    EEPROM_int_write(237, port); 
   }  
 }
 

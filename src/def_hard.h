@@ -6,10 +6,7 @@
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
-
-
 // *************************************************************************
-
 enum  eModes   {NORMAL, FRACTION, TEXT};
 enum  eSources {NONE, BOTH, UDP, MQTT};
 
@@ -274,30 +271,38 @@ extern HTU21D myHumidity;
 #endif                                           // Если нет ограничений на частоту отправки сообщений - поставьте здесь 0
 
 #ifdef PHTDSCONTROL
-
 extern i2cPumps pumps;
 extern float realTDS, realPh, Wtemp;
+extern int Wlvl;
 
-#define PHUP        1 //  PH up pump
-#define PHDOWN      2 //  PH down pump
-#define TDSA        3 //  TDS A pump
-#define TDSB        4 //  TDS B pump
-#define TDSC        5 //  TDS C pump
+#define PHUP        1       //  PH up pump
+#define PHDOWN      2       //  PH down pump
+#define TDSA        3       //  TDS A pump
+#define TDSB        4       //  TDS B pump
+#define TDSC        5       //  TDS C pump
+#define ADD         6       //  Addition pump
 
-#define ClWaterIn        7 //  Вход чистой воды
-#define ClWaterOut       6 //  Выход чистой воды  
-#define SolWaterIn_1     5 //  Вход бака расствора 1
-#define SolWaterOut_1    4 //  Выход бака расствора 1  
+#define ClWaterIn        7  //  Вход чистой воды
+#define ClWaterOut       6  //  Выход чистой воды  
+#define SolWaterIn_1     5  //  Вход бака расствора 1
+#define SolWaterOut_1    4  //  Выход бака расствора 1  
 
+#define PHREGADR   0x2C     //  PH reg. AD5282 address in 7bit format
+#define TDSREGADR  0x2E     // TDS reg. AD5282 address in 7bit format
+#define PHADDRESS  0x48     //  PH ADC MCP3221 address in 7bit format
+#define TDSADDRESS 0x49     // TDS ADC MCP3221 address in 7bit format
 
-#define PHREGADR   0x2C //  PH reg. AD5282 address in 7bit format
-#define TDSREGADR  0x2E // TDS reg. AD5282 address in 7bit format
-#define PHADDRESS  0x48 //  PH ADC MCP3221 address in 7bit format
-#define TDSADDRESS 0x49 // TDS ADC MCP3221 address in 7bit format
-
-#define PUMPSCALEADR 400 // start pumps scale address 
+#define PUMPSCALEADR 400    // start pumps scale address 
 #define PUMPCALVOLADR 350
 extern IoAbstractionRef ioExp2, ioExpInp, I2CExp; //классы плат I2C расширителей
+
+#ifndef LVLSNSCOUNT 
+#define LVLSNSCOUNT 3       //количество датчиков уровня в ёмкости
+#endif
+
+#ifndef DEV_ID
+#define DEV_ID 1
+#endif
 
 #endif
 
