@@ -28,10 +28,7 @@ boolean PhOk = false;      //  Ph Correction complete
 int rawPh = 0, rawTDS = 0, Wlvl = 0;
 boolean RAWMode = true;  // RAW read mode
 int levels[LVLSNSCOUNT];
-boolean invLVLsensor[LVLSNSCOUNT] = {false,false,true};//{true,true,false};
-// invLVLsensor[0] = true; //hi
-// invLVLsensor[1] = true; //mid
-// invLVLsensor[2] = false;//low
+boolean invLVLsensor[LVLSNSCOUNT] = {true, true, false}; // Инверсия датчиков { hi, mid, low };
 
 float phmin, phmax, phk=1, PhMP=0, tdsk=1, TdsMP=0,
       PhCalP1 = 4.0, PhCalP2 = 7.0; 
@@ -148,15 +145,13 @@ void process() {
     for(int i = 0; i < LVLSNSCOUNT; i++ ) levels[i] = ioDeviceDigitalRead (ioExpInp, i);
 
     for(int i = 0; i < LVLSNSCOUNT; i++ ) {
-      if (levels[i]  == invLVLsensor[i]) {
+      if (levels[i]  != invLVLsensor[i]) {
         Wlvl = LVLSNSCOUNT - i;
         i = LVLSNSCOUNT;
       }
     }
-    if (thisMode != 0 && thisMode%2 == 0 && levels[0] == invLVLsensor[0]){ 
-      thisMode = thisMode - 1;
-      setCollector();
-    }
+    // Обработка датчика перелива
+    if (thisMode != 0 && thisMode%2 == 0 && levels[0] != invLVLsensor[0]) set_thisMode(thisMode - 1);
   }
 
   if (millis() - timing2 >  regDelay)  // Решение на регулеровку Ph
@@ -197,7 +192,7 @@ void process() {
     if ( realTDS < 0 ) realTDS = 0;
     if ( rawTDS == -1 ) realTDS = -1;
 
-  	if (realTDS > 0 && realTDS < tdsmin && PhOk == true && auto_mode && thisMode != 0 )
+  	if (realTDS > 0 && realTDS < tdsmin && PhOk == true && auto_mode && thisMode != 0 && thisMode%2 != 0)
     {
       if(tdsAVol > 0)
       {
@@ -225,7 +220,8 @@ void process() {
 
   	}
 
-  	if (realTDS > tdsmax && PhOk == true && auto_mode && thisMode != 0 ){
+    // Проверка на возможность разбавить расствор
+  	if (realTDS > tdsmax && PhOk == true && thisMode != 0  && thisMode%2 != 0 && levels [0] == invLVLsensor[0] && auto_mode){
       // doc["TDSDown"] = phVol;
       // serializeJson(doc, out);      
       // SendMQTT(out, TOPIC_REG);

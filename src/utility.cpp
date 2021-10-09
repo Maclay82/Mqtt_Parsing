@@ -299,15 +299,15 @@ bool statusPub()    //Публикация состояния параметро
 
 #ifdef PHTDSCONTROL   
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
-      dtostrf(Wtemp, 2, 2, s);
+      dtostrf(Wtemp, 1, 2, s);
       switch (thisMode) { 
-        case 0: doc["tempSoil0"] = s; break;
-        case 1: doc["tempSoil1"] = s; break;
-        case 2: doc["tempSoil0"] = s; break;
+        case 0: doc["tSoil0"] = s; break;
+        case 1: doc["tSoil1"] = s; break;
+        case 2: doc["tSoil0"] = s; break;
       }
     }
     if (realPh != -1){
-      dtostrf(realPh, 2, 3, s);
+      dtostrf(realPh, 3, 3, s);
       switch (thisMode) { 
         case 0: doc["phSoil0"] = s; break;
         case 1: doc["phSoil1"] = s; break;
@@ -315,22 +315,24 @@ bool statusPub()    //Публикация состояния параметро
       }
     }
     if ( realTDS  != -1 ) {
-      dtostrf(realTDS, 2, 0, s);
+      dtostrf(realTDS, 1, 0, s);
       switch (thisMode) { 
         case 0: doc["tdsSoil0"] = s; break;
         case 1: doc["tdsSoil1"] = s; break;
         case 2: doc["tdsSoil0"] = s; break;
       }
     }
-    if (thisMode != 0)
-    doc["lewel"] = Wlvl;
 
-    doc["PhOk"] = PhOk;
-    doc["mode"] = thisMode;
+    if (thisMode != 0 && thisMode%2 != 0 ) doc["Wlvl"] = Wlvl;
+
+    if(PhOk) doc["PhOk"] = 1; 
+    else doc["PhOk"] = 0;
+
+    doc["ColMd"] = thisMode;
 #endif
 
-    if(auto_mode) doc["auto_mode"] = 1;
-    else doc["auto_mode"] = 0;
+    if(auto_mode) doc["auto"] = 1;
+    else doc["auto"] = 0;
 
     serializeJson(doc, out);      
     SendMQTT(out, TOPIC_HWSTAT);
