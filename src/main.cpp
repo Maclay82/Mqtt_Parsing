@@ -4,6 +4,7 @@
 #define FIRMWARE_VER F("WiFiMQTTNode-0.1")
 
 uint16_t AUTO_MODE_PERIOD = 10;    // Период активации автоматического режима в минутах по умолчанию
+uint16_t AUTO_FILL_PERIOD = 24;    // Период активации автоматического подлива в часах 
 bool     auto_mode = true;         // Флаг автоматического режима
 bool     count_mode = false;       // Флаг включения счетчика воды подлива
 
@@ -74,6 +75,8 @@ String   effect_name;                  // текущий режим - назва
 timerMinim saveSettingsTimer(15000);                      // Таймер отложенного сохранения настроек
 timerMinim ntpSyncTimer  (1000 * 60 * syncTimePeriod);  // Сверяем время с NTP-сервером через syncTimePeriod минут
 timerMinim AutoModeTimer (1000 * 60 * AUTO_MODE_PERIOD);  // Таймер активации автоматического режима через AUTO_MODE_PERIOD минут
+timerMinim AutoFillTimer (1000 * 3600 * AUTO_FILL_PERIOD);  // Таймер активации автоматического долива часов
+//timerMinim AutoFillTimer (1000 * AUTO_FILL_PERIOD);  // Таймер активации автоматического долива секунд
 
 #if (USE_MQTT == 1)
 

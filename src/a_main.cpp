@@ -21,9 +21,10 @@ OneWire oneWire(D5); //Активация датчика температуры
 // Pass our oneWire reference to Dallas Temperature. 
 DallasTemperature TempSensors(&oneWire);
 
-boolean TDScalib = false;  //  TDS Calibration complete 
-boolean Phcalib = false;   //  Ph Calibration complete
-boolean PhOk = false;      //  Ph Correction complete
+boolean TDScalib  = false;  //  TDS Calibration complete 
+boolean Phcalib   = false;  //  Ph Calibration complete
+boolean PhOk      = false;  //  Ph Correction complete
+boolean AutoFill  = false;  //  AutoFill is start
 
 int rawPh = 0, rawTDS = 0, Wlvl = 0;
 boolean RAWMode = true;  // RAW read mode
@@ -142,20 +143,55 @@ void process() {
     timing1 = millis();
 
     ioDeviceSync(ioExpInp);
-    for(int i = 0; i < LVLSNSCOUNT; i++ ) levels[i] = ioDeviceDigitalRead (ioExpInp, i);
-
     for(int i = 0; i < LVLSNSCOUNT; i++ ) {
-      if (levels[i]  != invLVLsensor[i]) {
+      levels[i] = ioDeviceDigitalRead (ioExpInp, i);
+    }
+    for(int i = 0; i < LVLSNSCOUNT; i++ ) {
+      if (levels[i] != invLVLsensor[i]){
         Wlvl = LVLSNSCOUNT - i;
         i = LVLSNSCOUNT;
       }
     }
-    // Обработка датчика перелива
-    if (thisMode != 0 && thisMode%2 == 0 && levels[0] != invLVLsensor[0]) set_thisMode(thisMode - 1);
+
+    if (thisMode != 0 && thisMode%2 != 0 && Wlvl < 2 && !AutoFill) {                // Начало ожидания долива
+      AutoFill = true;
+      AutoFillTimer.reset();
+    }
+
+    if (thisMode != 0 && thisMode%2 != 0 && Wlvl >= 2 && AutoFill) {                // Сброс ожидания долива
+      AutoFill = false;
+    }
+
+    if (AutoFillTimer.isReady() && thisMode != 0 && thisMode%2 != 0 && Wlvl < 2 && AutoFill){  // Старт обычного долива
+      set_thisMode(thisMode + 1);
+      AutoFillTimer.reset();
+    } 
+
+    if( thisMode != 0 && thisMode%2 != 0 && Wlvl < 1 ){                             // Старт экстренного долива
+      set_thisMode(thisMode + 1);
+      AutoFill = true;
+      AutoFillTimer.reset();
+    }
+
+    if (thisMode != 0 && thisMode%2 == 0 && Wlvl >= 2 && AutoFill) {                // Окончание долива
+      Serial.println("Отработка окончания долива");
+      set_thisMode(thisMode - 1);
+      AutoFill = false;
+      AutoFillTimer.reset();
+    }
+
+    if (thisMode != 0 && thisMode%2 == 0 && levels[0] != invLVLsensor[0]){          // Обработка датчика перелива
+      Serial.println("Отработка датчика перелива");
+      set_thisMode(thisMode - 1);
+      AutoFill = false;
+      AutoFillTimer.reset();
+    }
   }
 
   if (millis() - timing2 >  regDelay)  // Решение на регулеровку Ph
   {
+
+
     realPh = phk * middleArifm(PhvalArray) - PhMP;
     DynamicJsonDocument doc(256);
     String out;
@@ -221,11 +257,11 @@ void process() {
   	}
 
     // Проверка на возможность разбавить расствор
-  	if (realTDS > tdsmax && PhOk == true && thisMode != 0  && thisMode%2 != 0 && levels [0] == invLVLsensor[0] && auto_mode){
-      // doc["TDSDown"] = phVol;
-      // serializeJson(doc, out);      
-      // SendMQTT(out, TOPIC_REG);
+  	if (realTDS > tdsmax && PhOk == true && thisMode != 0  && thisMode%2 != 0 && levels [0] == invLVLsensor[0] && auto_mode)
+    {
+
 	  }
+
     timing3 = millis();
   }
 #endif
@@ -235,11 +271,9 @@ void process() {
     #ifdef USE_LOG
     Serial.print("Time:");
     Serial.print((float)millis()/60000.0);
-    Serial.print(" | sensor_scan >> ");
     #endif  
     char s[8];   //строка mqtt сообщения
-    String Str;
-    Str = "";
+    String Str = "";
 
 #ifdef HUMCONTROL
     humd = myHumidity.readHumidity() + humcorr;
@@ -314,7 +348,9 @@ void process() {
 #endif
 
 #ifdef PHTDSCONTROL
-
+#ifdef USE_LOG
+    Serial.print(" | sensor_scan >> ");
+#endif
     ioDeviceSync(ioExpInp);
     for(int i = 0; i < LVLSNSCOUNT; i++ ){
       ioDeviceDigitalWrite(ioExp2, i, ioDeviceDigitalRead(ioExpInp, i));
@@ -325,47 +361,37 @@ void process() {
       Serial.print(" ");
 #endif
     }
+    ioDeviceSync(ioExp2);
 #ifdef USE_LOG
     Serial.print("| ");
 #endif
-    ioDeviceSync(ioExp2);
 
-    TempSensors.requestTemperatures(); // Send the command to get temperatures
+    TempSensors.requestTemperatures();      // Send the command to get temperature
+    Wtemp = TempSensors.getTempCByIndex(0); // get temperature
     
-    Wtemp = TempSensors.getTempCByIndex(0);
-    
-
     realPh = phk * middleArifm(PhvalArray) - PhMP;
     if ( realPh < 0 ) realPh = 0;
+    realTDS = tdsk * middleArifm(TDSvalArray) - TdsMP;
+    if ( realTDS < 0 ) realTDS = 0;
+
 #ifdef USE_LOG
     Serial.print("Ph=");
     if (rawPh == -1) Serial.print("null");
     else Serial.print(realPh);
-        Serial.print(" | ");
-#endif
-
-    realTDS = tdsk * middleArifm(TDSvalArray) - TdsMP;
-    if ( realTDS < 0 ) realTDS = 0;
-#ifdef USE_LOG
-    Serial.print("TDS=");
+    Serial.print(" | TDS=");
     if (rawTDS == -1) Serial.print("null");
     else Serial.print(realTDS);
     Serial.print(" | ");
-#endif
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
-#ifdef USE_LOG
       Serial.print("Water temp=");
       Serial.print(Wtemp, 3);
-      Serial.print(" C ");
+      Serial.print("C ");
     }
     else {
-      Serial.print("Water temp->Error ");
-# endif    
+      Serial.print("Water temp=Error ");
     }
     if (rawPh != -1){
-      #ifdef USE_LOG
-      if(RAWMode == true)
-      {
+      if(RAWMode == true){
         Serial.print("| Avg Ph RAW:");
         Serial.print(middleArifm(PhvalArray));
         Serial.print(" | ");
@@ -373,12 +399,9 @@ void process() {
 //      Serial.print(rawPh);
 //      Serial.print("; ");
       }
-      #endif
     }
-    if (rawTDS != -1){  
-      #ifdef USE_LOG
-      if(RAWMode == true)
-      {
+    if (rawTDS != -1) {  
+      if(RAWMode == true) {
         Serial.print("| Avg TDS RAW:");
         Serial.print(middleArifm(TDSvalArray));
         Serial.print(" | ");
@@ -386,8 +409,8 @@ void process() {
 //      Serial.print(rawTDS);
 //      Serial.print("; ");
       }
-      #endif
     }
+#endif
 
     if (mqtt.connected()){
       statusPub();    //Публикация состояния параметров системы
@@ -400,22 +423,22 @@ void process() {
       if (rawPh != -1){
         if(RAWMode == true)
         {
-          dtostrf(middleArifm(PhvalArray), 2, 0, s);
+          dtostrf(middleArifm(PhvalArray), 3, 3, s);
           Str = s;
           SendMQTT(Str, TOPIC_rawPh);
         }    
-        dtostrf(realPh, 2, 3, s);
+        dtostrf(realPh, 3, 3, s);
         Str = s;
         SendMQTT(Str, TOPIC_ph);    
       }
       if (rawTDS != -1){
         if(RAWMode == true)
         {
-          dtostrf(middleArifm(TDSvalArray), 2, 0, s);
+          dtostrf(middleArifm(TDSvalArray), 1, 0, s);
           Str = s;
           SendMQTT(Str, (TOPIC_rawTDS));
         }    
-        dtostrf(realTDS, 2, 0, s);
+        dtostrf(realTDS, 1, 0, s);
         Str = s;
         SendMQTT(Str, TOPIC_tds);    
       } 
