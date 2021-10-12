@@ -637,13 +637,12 @@ void parsing() {
         $4 9 X - Значение текущего калибровочного раствора Ph
         $4 10 X - Значение текущего калибровочного раствора TDS
 
-    5 - Калибровка и управление датчиками
+    5 - Калибровка датчиков и настройка усилителей Ph и TDS
         $5 0 Х - Включить - 1, выключить - 0 отображение сырых данных Ph и TDS
         
 
         Протокол связи, посылка начинается с режима. Режимы:
     6 - текст $6 N|some text, где N - назначение текста;
-
         1 - имя сервера NTP
         2 - SSID сети подключения
         3 - пароль для подключения к сети 
@@ -699,12 +698,6 @@ void parsing() {
       //   $1 0 X N - налить калибровочный обьем X насосом N
       //   $1 1 X N - сообщить какой обьём жидкости X налил насос N действительно (измерить мензуркой)  
       case 1:
-            // Serial.print("$1 ");
-            // Serial.print(intData[1]);
-            // Serial.print(" ");
-            // Serial.print(intData[2]);
-            // Serial.print(" ");
-            // Serial.println(intData[3]);
         switch (intData[1]) { 
           // $1 0 X N - налить калибровочный обьем X насосом N
           case 0:
@@ -906,25 +899,80 @@ void parsing() {
                 TDScal = false;
                 calPointPub();
               }
-              calPointPub();
             }
           break;
         }
       break;
 
       // ----------------------------------------------------
-      // 5 - Калибровка датчиков
+      // 5 - Калибровка датчиков и настройка усилителей Ph и TDS
       //     $5 0 Х - Включить - 1, выключить - 0 отображение сырых данных(RAW) Ph и TDS
+      //     $5 1 Х - задать phKa
+      //     $5 2 Х - задать phKb
+      //     $5 3 Х - задать tdsKa
+      //     $5 4 Х - задать tdsKb
+
       case 5:
         switch (intData[1]) { 
+#ifdef PHTDSCONTROL
           case 0:
             if(intData[2] == 1) putRAWMode(true);
             else putRAWMode(false);
             RAWMode = getRAWMode();
             profpub();
           break;
+
+          case 1:
+            if(intData[2] > 0){
+              phKa = intData[2];
+              Wire.beginTransmission(PHREGADR);   // transmit to device
+              Wire.write(byte(0x01));             // sends instruction byte  
+              Wire.write(phKa);                   // sends potentiometer value byte  
+              Wire.endTransmission();             // stop transmitting
+              putPhKa  (phKa);
+              HWprofPub();
+            }
+          break;
+
+          case 2:
+            if(intData[2] > 0){
+              phKb = intData[2];
+              Wire.beginTransmission(PHREGADR);   // transmit to device
+              Wire.write(byte(0x02));             // sends instruction byte  
+              Wire.write(phKb);                   // sends potentiometer value byte  
+              Wire.endTransmission();             // stop transmitting
+              putPhKb  (phKb);
+              HWprofPub();
+            }
+          break;
+
+          case 3:
+            if(intData[2] > 0){
+              tdsKa = intData[2];
+              Wire.beginTransmission(TDSREGADR);  // transmit to device
+              Wire.write(byte(0x01));             // sends instruction byte  
+              Wire.write(tdsKa);                  // sends potentiometer value byte  
+              Wire.endTransmission();             // stop transmitting
+              putTDSKa (tdsKa);  // усиление
+              HWprofPub();
+            }
+          break;
+
+          case 4:
+            if(intData[2] > 0){
+              tdsKb = intData[2];
+              Wire.beginTransmission(TDSREGADR);  // transmit to device
+              Wire.write(byte(0x02));             // sends instruction byte  
+              Wire.write(tdsKb);                  // sends potentiometer value byte  
+              Wire.endTransmission();             // stop transmitting
+              putTDSKb (tdsKb);
+              HWprofPub();
+            }
+          break;
+#endif        
         }
       break;
+
 
       // ----------------------------------------------------
       // 6 - прием строки: строка принимается в формате N|text, где N:
@@ -942,44 +990,41 @@ void parsing() {
 
       //  13 - префикс топика сообщения к MQTT-серверу
 
-      //  15 - Загрузить пользовательскую картинку из файла на матрицу; $6 15|ST|filename; ST - "FS" - файловая система; "SD" - карточка
-      //  16 - Сохранить текущее изображение с матрицы в файл $6 16|ST|filename; ST - "FS" - файловая система; "SD" - карточка
-      //  17 - Удалить файл $6 16|ST|filename; ST - "FS" - файловая система; "SD" - карточка
       // ----------------------------------------------------
 
       case 6:
         b_tmp = 0;
         tmp_eff = receiveText.indexOf("|");
         if (tmp_eff > 0) {
-           b_tmp = receiveText.substring(0, tmp_eff).toInt();
-           str = receiveText.substring(tmp_eff+1, receiveText.length()+1);
-           switch(b_tmp) {
+          b_tmp = receiveText.substring(0, tmp_eff).toInt();
+          str = receiveText.substring(tmp_eff+1, receiveText.length()+1);
+          switch(b_tmp) {
 
             case 1:
               set_ntpServerName(str);
               if (wifi_connected) {
                 refresh_time = true; ntp_t = 0; ntp_cnt = 0;
               }
-              break;
+            break;
 
             case 2:
               set_Ssid(str);
-              break;
+            break;
 
             case 3:
               set_pass(str);
-              break;
+            break;
 
             case 4:
               set_SoftAPName(str);
-              break;
+            break;
 
             case 5:
               set_SoftAPPass(str);
               // Передается в одном пакете - использовать SoftAP, имя точки и пароль
               // После получения пароля - перезапустить создание точки доступа
               if (useSoftAP) startSoftAP();
-              break;
+            break;
 
             case 7:
               // Запрос значений параметров, требуемых приложением вида str="CE|CC|CO|CK|NC|SC|C1|DC|DD|DI|NP|NT|NZ|NS|DW|OF"
@@ -1008,23 +1053,23 @@ void parsing() {
                 }
                 #endif
               }
-              break;
+            break;
               
-            #if (USE_MQTT == 1)
+          #if (USE_MQTT == 1)
             case 8:
               set_MqttServer(str);
-              break;
+            break;
             case 9:
               set_MqttUser(str);
-              break;
+            break;
             case 10:
               set_MqttPass(str);
-              break;
+            break;
             case 13:
               set_MqttPrefix(str);
-              break;
-            #endif
-           }
+            break;
+          #endif
+          }
         }
 
         // При сохранении текста бегущей строки (b_tmp == 0) не нужно сразу автоматически сохранять ее в EEPROM - Сохранение будет выполнено по таймеру. 
@@ -1049,7 +1094,8 @@ void parsing() {
                 sendAcknowledge(cmdSource);
                 break;
             }
-          } else {
+          } 
+          else {
             switch (b_tmp) {
               default:
                 // Другие команды - отправить подтверждение о выполнении
@@ -1057,7 +1103,8 @@ void parsing() {
                 break;
             }
           }
-        } else {
+        } 
+        else {
           #if (USE_MQTT == 1)
           notifyUnknownCommand(incomeBuffer);
           #endif

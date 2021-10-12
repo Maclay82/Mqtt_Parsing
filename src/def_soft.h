@@ -102,15 +102,6 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 #define  TOPIC_rawPh    "rawPh"                // MQTT Topic
 #define  TOPIC_Wtemp    "Wtemp"                // MQTT Topic
 
-#define  TOPIC_phKa     "phKa"                 // MQTT Topic
-#define  TOPIC_phKb     "phKb"                 // MQTT Topic
-#define  TOPIC_tdsKa    "tdsKa"                // MQTT Topic
-#define  TOPIC_tdsKb    "tdsKb"                // MQTT Topic
-#define  TOPIC_phCP1    "phCP1"                // MQTT Topic
-#define  TOPIC_phCP2    "phCP2"                // MQTT Topic
-#define  TOPIC_tdsCP1   "tdsCP1"               // MQTT Topic
-#define  TOPIC_tdsCP2   "tdsCP2"               // MQTT Topic
-
 extern  float realPh, realTDS, Wtemp;
 
 extern  boolean TDScal;    // TDS Calibration start 

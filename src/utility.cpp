@@ -345,10 +345,10 @@ bool statusPub()    //Публикация состояния параметро
 
 bool setCollector() //Приведение конфигурации коллектора в силу
 {
-#ifdef HUMCONTROL
+  #ifdef HUMCONTROL
 
-#endif
-#ifdef PHTDSCONTROL
+  #endif
+  #ifdef PHTDSCONTROL
   if(ioDeviceSync(ioExp2) == true)
   {
     switch (thisMode) 
@@ -374,7 +374,7 @@ bool setCollector() //Приведение конфигурации коллек
     }
   }          
   return ioDeviceSync(ioExp2);
-#endif
+  #endif
 }
 
 void startWiFi(unsigned long waitTime) { 
@@ -408,9 +408,8 @@ void startWiFi(unsigned long waitTime) {
       Serial.print(".");
       Serial.print(IP_STA[3]);                  
     }
-   
-    WiFi.setHostname (host_name.c_str());             
 
+    WiFi.setHostname (host_name.c_str());             
     WiFi.begin(ssid, pass);
 
     // Проверка соединения (таймаут 180 секунд, прерывается при необходимости нажатием кнопки)

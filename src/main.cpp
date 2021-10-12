@@ -85,18 +85,18 @@ timerMinim AutoFillTimer (1000 * 3600 * AUTO_FILL_PERIOD);  // Таймер ак
 void callback(char* topic, byte* payload, unsigned int length) {
   if (stopMQTT) return;
   // проверяем из нужного ли нам топика пришли данные
-#ifdef USE_LOG
+  #ifdef USE_LOG
   Serial.print("MQTT << topic='" + String(topic) + "'");
-#endif
+  #endif
   if (strcmp(topic, mqtt_topic(TOPIC_CMD).c_str()) == 0) {
     memset(incomeMqttBuffer, 0, BUF_MAX_SIZE);
     memcpy(incomeMqttBuffer, payload, length);
     
-#ifdef USE_LOG
+    #ifdef USE_LOG
     Serial.print(F("; cmd='"));
     Serial.print(incomeMqttBuffer);
     Serial.print("'");
-#endif
+    #endif
     
     // В одном сообщении может быть несколько команд. Каждая команда начинается с '$' и заканчивается ';'/ Пробелы между ';' и '$' НЕ допускаются.
     String command = String(incomeMqttBuffer);    
@@ -128,16 +128,16 @@ void callback(char* topic, byte* payload, unsigned int length) {
   char temp[length];
   strncpy(temp, (char*)payload, length);
 
-#ifdef USE_LOG
+  #ifdef USE_LOG
   Serial.println();
   Serial.print("Command from MQTT broker is : ");
   Serial.print("topic ");
   Serial.print(topic);
   Serial.print(" payload ");
   Serial.println(temp);
-#endif
+  #endif
 
-#ifdef HUMCONTROL
+  #ifdef HUMCONTROL
   if ((String)topic == (String)mqtt_topic(TOPIC_MAXHUM).c_str())
   {
     maxhum = atof(temp);
@@ -165,61 +165,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
       profpub();
     }
   }
-#endif
+  #endif
 
-#ifdef PHTDSCONTROL
-  if ((String)topic == (String)TOPIC_phKa){
-    phKa = atoi(temp);
-    Wire.beginTransmission(PHREGADR); // transmit to device
-    Wire.write(byte(0x01));            // sends instruction byte  
-    Wire.write(phKa);             // sends potentiometer value byte  
-    Wire.endTransmission();     // stop transmitting
-
-    Serial.print(" phKa:");
-    Serial.print(phKa);
-    Serial.println();
-    putPhKa  (phKa);
-    profpub();
-  }
-  if ((String)topic == (String)TOPIC_phKb){
-    phKb = atoi(temp);
-    Wire.beginTransmission(PHREGADR); // transmit to device
-    Wire.write(byte(0x02));            // sends instruction byte  
-    Wire.write(phKb);             // sends potentiometer value byte  
-    Wire.endTransmission();     // stop transmitting
-
-    Serial.print(" phKb:");
-    Serial.print(phKb);
-    Serial.println();
-    putPhKb  (phKb);
-    profpub();
-  }
-  if ((String)topic == (String)TOPIC_tdsKa){
-    tdsKa = atoi(temp);
-    Wire.beginTransmission(TDSREGADR); // transmit to device
-    Wire.write(byte(0x01));            // sends instruction byte  
-    Wire.write(tdsKa);             // sends potentiometer value byte  
-    Wire.endTransmission();     // stop transmitting
-
-    Serial.print(" tdsKa:");
-    Serial.print(tdsKa);
-    Serial.println();
-    putTDSKa (tdsKa);  // усиление
-    profpub();
-  }
-  if ((String)topic == (String)TOPIC_tdsKb){
-    tdsKb = atoi(temp);
-    Wire.beginTransmission(TDSREGADR); // transmit to device
-    Wire.write(byte(0x02));            // sends instruction byte  
-    Wire.write(tdsKb);             // sends potentiometer value byte  
-    Wire.endTransmission();     // stop transmitting
-
-    Serial.print(" tdsKb:");
-    Serial.print(tdsKb);
-    putTDSKb (tdsKb);
-    profpub();
-  }
-#endif
 }
 
 #endif
@@ -231,8 +178,7 @@ void setup() {
   
   Wire.begin();
 
-#ifdef PHTDSCONTROL
-
+  #ifdef PHTDSCONTROL
   for(int i = 0; i <= 7; i++ ){ 
     //ioDevicePinMode(ioExp, i, OUTPUT);
     ioDevicePinMode(ioExp2, i, OUTPUT);
@@ -245,7 +191,7 @@ void setup() {
   }
   ioDeviceSync(ioExp2);
   ioDeviceSync(ioExpInp);
-#endif
+  #endif
 
   EEPROM.begin(EEPROM_MAX);
 
@@ -300,7 +246,7 @@ void setup() {
 
   loadSettings();
 
-  setCollector(); //Приведение конфигурации коллектора в силу
+  setCollector(); //Применение конфигурации коллектора
   
   // Подключение к сети
   connectToNetwork();

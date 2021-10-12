@@ -132,12 +132,12 @@ void loadSettings() {
 #endif
 
 #ifdef PHTDSCONTROL
-    RAWMode = getRAWMode(); // режим чтения "сырых" данных с Ph TDS
+    RAWMode = getRAWMode();           // режим чтения "сырых" данных с Ph TDS
     thisMode = getCurrentMode();
-    phKa  = getPhKa(); //getPhKa усиление
-    phKb  = getPhKb(); //getPhKb средняя точка
-    tdsKa = getTDSKa(); //getTDSKa усиление
-    tdsKb = getTDSKb(); //getTDSKb средняя точка
+    phKa  = getPhKa();                //getPhKa усиление
+    phKb  = getPhKb();                //getPhKb средняя точка
+    tdsKa = getTDSKa();               //getTDSKa усиление
+    tdsKb = getTDSKb();               //getTDSKb средняя точка
     phVol = getPhVol();
     tdsAVol = getTdsAVol();
     tdsBVol = getTdsBVol();
@@ -186,6 +186,7 @@ void clearEEPROM() {
 }
 
 void saveDefaults() {
+
 #ifdef HUMCONTROL  
   putMaxHum(maxhumDEF);
   putMinHum(minhumDEF);
@@ -194,20 +195,20 @@ void saveDefaults() {
 #ifdef PHTDSCONTROL
   putRAWMode      (false);
   putCurrentMode  (1);
-  putPhKa         (150);  // усиление
-  putPhKb         (125);  // ст
-  putTDSKa        (60);  // усиление
-  putTDSKb        (110); //средняя точка
+  putPhKa         (150);    // усиление
+  putPhKb         (125);    // ст
+  putTDSKa        (60);     // усиление
+  putTDSKb        (110);    //средняя точка
   putPhVol        (1);
   putTdsAVol      (1);
   putTdsBVol      (1);
   putTdsCVol      (0);
-  putregDelay     (5);
+  putregDelay     (15);
 
-  putPhmin        (6.0); //нижняя граница Ph
-  putPhmax        (6.8); //верхняя граница Ph
-  putTDSmin       (700); //нижняя граница TDS
-  putTDSmax       (1200); //верхняя граница TDS
+  putPhmin        (6.0);    //нижняя граница Ph
+  putPhmax        (6.8);    //верхняя граница Ph
+  putTDSmin       (700);    //нижняя граница TDS
+  putTDSmax       (1200);   //верхняя граница TDS
   putPhCalP1      (4.0); 
   putRawPhCalP1   (802); 
   putPhCalP2      (7.0);
@@ -790,20 +791,20 @@ void EEPROM_long_write(uint16_t addr, uint32_t num) {
   saveSettingsTimer.reset();
 }
 
-void EEPROMWriteFloat(uint16_t addr, float val) // запись в ЕЕПРОМ
-{
-  byte *x = (byte *)&val;
-  for(byte i = 0; i < 4; i++) EEPROM.write(i+addr, x[i]);
-  eepromModified = true;
-  saveSettingsTimer.reset();
-}
-
 float EEPROMReadFloat(uint16_t addr) // чтение из ЕЕПРОМ
 {
   byte x[4];
   for(byte i = 0; i < 4; i++) x[i] = EEPROM.read(i+addr);
   float *y = (float *)&x;
   return y[0];
+}
+
+void EEPROMWriteFloat(uint16_t addr, float val) // запись в ЕЕПРОМ
+{
+  byte *x = (byte *)&val;
+  for(byte i = 0; i < 4; i++) EEPROM.write(i+addr, x[i]);
+  eepromModified = true;
+  saveSettingsTimer.reset();
 }
 
 String EEPROM_string_read(uint16_t addr, int16_t len) {
