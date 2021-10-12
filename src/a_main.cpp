@@ -385,7 +385,7 @@ void process() {
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
       Serial.print("Water temp=");
       Serial.print(Wtemp, 3);
-      Serial.print("C ");
+      Serial.print(" C ");
     }
     else {
       Serial.print("Water temp=Error ");
@@ -636,8 +636,9 @@ void parsing() {
         $4 9 X - Значение калибровочного раствора Ph
         $4 10 X - Значение калибровочного раствора TDS
 
-    5 - Калибровка датчиков
+    5 - Калибровка и управление датчиками
         $5 0 Х - Включить - 1, выключить - 0 отображение сырых данных Ph и TDS
+        
 
         Протокол связи, посылка начинается с режима. Режимы:
     6 - текст $6 N|some text, где N - назначение текста;
@@ -675,13 +676,15 @@ void parsing() {
       - $19 8 YYYY MM DD HH MM; - Установить текущее время YYYY.MM.DD HH:MM
 
       - $19 17 D I; - Продолжительность отображения даты / часов (в секундах)
+       
     21 - настройки подключения к сети / точке доступа
       - $21 0 X - использовать точку доступа: X=0 - не использовать X=1 - использовать
       - $21 1 IP1 IP2 IP3 IP4 - установить статический IP адрес подключения к локальной WiFi сети, пример: $21 1 192 168 0 106
       - $21 2; Выполнить переподключение к сети WiFi
+
     23 - прочие настройки
-      - $23 1 ST   - Сохранить EEPROM в файл    ST = 0 - внутр. файл. систему; 1 - на SD-карту
-      - $23 2 ST   - Загрузить EEPROM из файла  ST = 0 - внутр. файл. системы; 1 - на SD-карты
+      - $23 1 ST - Сохранить EEPROM в файл    ST = 0 - внутр. файл. систему; 1 - на SD-карту
+      - $23 2 ST - Загрузить EEPROM из файла  ST = 0 - внутр. файл. системы; 1 - на SD-карты
   */  
 
   // Если прием данных завершен и управляющая команда в intData[0] распознана
@@ -835,12 +838,70 @@ void parsing() {
           case 9:  
             if (floatData[0] > 0){
 
+// //              if ((String)command_in == "ph1")
+//       {
+//         calph1 = atof(data_in);
+//         cp1raw = PhRaw;
+//         Serial.print("calph1=");
+//         Serial.print(calph1);
+//         Serial.println(";");
+//         CalPh = true;  //  Cal. Ph start
+//       }
+// //      if ((String)command_in == "ph2")
+//       {
+//         calph2 = atof(data_in);
+//         cp2raw = PhRaw;
+//         if (CalPh == true && calph1 < calph2)
+//         {
+//           Serial.print("calph2=");
+//           Serial.print(calph2);
+//           Serial.println(";\n");
+//           EEPROMWriteFloat(33, calph1);
+//           EEPROMWriteInt(37, cp1raw);
+//           EEPROMWriteFloat(39, calph2);
+//           EEPROMWriteInt(43, cp2raw);
+//           phk = ( calph2 - calph1 ) / ( cp2raw - cp1raw );
+//           phb = phk * cp1raw - calph1;
+//           CalPh = false;  //  Cal. Ph complete
+//         }
+//       }
+
+
+
               calPointPub();
             }
           break;
           // $4 10 X - Значение калибровочного раствора TDS
           case 10:  
             if (floatData[0] > 0){
+
+      // if ((String)command_in == "tds1")
+      // {
+      //   caltds1 = atof(data_in);
+      //   ct1raw = TDSRaw;
+      //   Serial.print("caltds1=");
+      //   Serial.print(caltds1);
+      //   Serial.println(";");
+      //   CalTDS = true;  // Cal. TDS start 
+      // }
+      // if ((String)command_in == "tds2")
+      // {
+      //   caltds2 = atof(data_in);
+      //   ct2raw = TDSRaw;
+      //   if (CalTDS == true && caltds1 < caltds2)
+      //   {
+      //     Serial.print("caltds2=");
+      //     Serial.print(caltds2);
+      //     Serial.println(";");
+      //     EEPROMWriteFloat(45, caltds1);
+      //     EEPROMWriteInt(49, ct1raw);      
+      //     EEPROMWriteFloat(51, caltds2);
+      //     EEPROMWriteInt(55, ct2raw);
+      //     tdsk = ( caltds2 - caltds1 ) / ( ct2raw - ct1raw );
+      //     tdsb = tdsk * ct1raw - caltds1;
+      //     CalTDS = false;  // Cal. TDS complete 
+      //   }
+      // }
 
               calPointPub();
             }
