@@ -479,32 +479,24 @@ uint16_t getRawTDSCalP2 (){ //Выгрузка 2ой калибровочной 
   return EEPROM_int_read(30);
 }
 void putPhCalP1 (float value) { //Загрузка 1ой калибровочной точки Ph //  32 - PhCalP1
-  if (value != getPhmin()) {
-    EEPROMWriteFloat(32, value);
-    EEPROM.commit();
-  }
+  if (value != getPhmin()) EEPROMWriteFloat(32, value);
 }
 float getPhCalP1(){             //Выгрузка 1ой калибровочной точки Ph 
   return EEPROMReadFloat(32);
 }
 void putPhCalP2 (float value) {//Загрузка 2ой калибровочной точки Ph //  36 - PhCalP2
-  if (value != getPhmin()) {
-    EEPROMWriteFloat(36, value);
-    EEPROM.commit();
-  }
+  if (value != getPhmin()) EEPROMWriteFloat(36, value);
 }
 float getPhCalP2(){           //Выгрузка 1ой калибровочной точки Ph 
   return EEPROMReadFloat(36);
 }
 void putTDSCalP1 (uint16_t value){ //Загрузка 1ой калибровочной точки TDS   //  40 - TDSCalP1
-
   if (value != getTDSmax ()) EEPROM_int_write(40, value);
 }
 uint16_t getTDSCalP1 (){ //Выгрузка 1ой калибровочной точки (сырые данные)
   return EEPROM_int_read(40);
 }
 void putTDSCalP2 (uint16_t value){ //Загрузка 2ой калибровочной точки TDS   //  42 - TDSCalP2
-
   if (value != getTDSmax ()) EEPROM_int_write(42, value);
 }
 uint16_t getTDSCalP2 (){ //Выгрузка 2ой калибровочной точки (сырые данные)
@@ -845,6 +837,8 @@ void EEPROM_string_write(uint16_t addr, String buffer, uint16_t max_len) {
     EEPROMwrite(addr+i, buffer[i]);
     i++;
   }
+  eepromModified = true;
+  saveSettingsTimer.reset();
 }
 
 // Проверка наличия сохраненной резервной копии
@@ -853,7 +847,6 @@ uint8_t checkEepromBackup() {
   File file;
   String  fileName = F("/eeprom.bin");
   uint8_t existsFS = 0; 
-  
   file = LittleFS.open(fileName, "r");
   if (file) {
     if (file.size() == EEPROM_MAX) {
@@ -861,7 +854,6 @@ uint8_t checkEepromBackup() {
     }
     file.close();
   }
-  
   return existsFS;
 }
 
@@ -870,7 +862,6 @@ uint8_t checkEepromBackup() {
 // storage = "SD" - на SD-карту
 // возврат: true - успех; false - ошибка
 bool saveEepromToFile(String storage) {
-
   const uint8_t part_size = 128;
   bool ok = true;
   uint8_t buf[part_size];
@@ -937,7 +928,6 @@ bool saveEepromToFile(String storage) {
   Serial.println(F("Файл сохранен."));
 
   eeprom_backup = checkEepromBackup();
-  
   return true;
 }
 

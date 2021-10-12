@@ -113,8 +113,8 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 
 extern  float realPh, realTDS, Wtemp;
 
-extern  boolean TDScalib;  // TDS Calibration complete 
-extern  boolean Phcalib;   //  Ph Calibration complete
+extern  boolean TDScal;    // TDS Calibration start 
+extern  boolean PhСal;     //  Ph Calibration start
 extern  boolean PhOk;      //  Ph Correction complete
 
 extern  int rawPh, rawTDS;

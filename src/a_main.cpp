@@ -21,13 +21,14 @@ OneWire oneWire(D5); //Активация датчика температуры
 // Pass our oneWire reference to Dallas Temperature. 
 DallasTemperature TempSensors(&oneWire);
 
-boolean TDScalib  = false;  //  TDS Calibration complete 
-boolean Phcalib   = false;  //  Ph Calibration complete
+boolean TDScal    = false;  //  TDS Calibration start 
+boolean PhСal     = false;  //  Ph Calibration start
 boolean PhOk      = false;  //  Ph Correction complete
 boolean AutoFill  = false;  //  AutoFill is start
 
-int rawPh = 0, rawTDS = 0, Wlvl = 0;
 boolean RAWMode = true;  // RAW read mode
+
+int rawPh = 0, rawTDS = 0, Wlvl = 0;
 int levels[LVLSNSCOUNT];
 boolean invLVLsensor[LVLSNSCOUNT] = {true, true, false}; // Инверсия датчиков { hi, mid, low };
 
@@ -633,8 +634,8 @@ void parsing() {
         $4 6 Х - Задать объём компонента C X мл. для регулировки TDS (целое число)
         $4 7 X - Задать TDS max (целое число)
         $4 8 X - Задать TDS min (целое число)
-        $4 9 X - Значение калибровочного раствора Ph
-        $4 10 X - Значение калибровочного раствора TDS
+        $4 9 X - Значение текущего калибровочного раствора Ph
+        $4 10 X - Значение текущего калибровочного раствора TDS
 
     5 - Калибровка и управление датчиками
         $5 0 Х - Включить - 1, выключить - 0 отображение сырых данных Ph и TDS
@@ -757,8 +758,8 @@ void parsing() {
       //   $4 6 Х - Задать объём компонента C X мл. для регулировки TDS (целое число)
       //   $4 7 X - Задать TDS max (целое число)
       //   $4 8 X - Задать TDS min (целое число)
-      //   $4 9 X - Значение калибровочного раствора Ph
-      //   $4 10 X - Значение калибровочного раствора TDS
+      //   $4 9 X - Значение текущего калибровочного раствора Ph
+      //   $4 10 X - Значение текущего калибровочного раствора TDS
       case 4:
         switch (intData[1]) { 
           // $4 0 Х - Задать время регулирования X минут (целое число)
@@ -834,75 +835,77 @@ void parsing() {
             }
           break;
 
-          // $4 9 X - Значение калибровочного раствора Ph
+          // $4 9 X - Значение текущего калибровочного раствора Ph
           case 9:  
-            if (floatData[0] > 0){
-
-// //              if ((String)command_in == "ph1")
-//       {
-//         calph1 = atof(data_in);
-//         cp1raw = PhRaw;
-//         Serial.print("calph1=");
-//         Serial.print(calph1);
-//         Serial.println(";");
-//         CalPh = true;  //  Cal. Ph start
-//       }
-// //      if ((String)command_in == "ph2")
-//       {
-//         calph2 = atof(data_in);
-//         cp2raw = PhRaw;
-//         if (CalPh == true && calph1 < calph2)
-//         {
-//           Serial.print("calph2=");
-//           Serial.print(calph2);
-//           Serial.println(";\n");
-//           EEPROMWriteFloat(33, calph1);
-//           EEPROMWriteInt(37, cp1raw);
-//           EEPROMWriteFloat(39, calph2);
-//           EEPROMWriteInt(43, cp2raw);
-//           phk = ( calph2 - calph1 ) / ( cp2raw - cp1raw );
-//           phb = phk * cp1raw - calph1;
-//           CalPh = false;  //  Cal. Ph complete
-//         }
-//       }
-
-
-
-              calPointPub();
+            if (floatData[0] > 0 && floatData[0] < 14){
+              if (!PhСal){
+                PhCalP1 = floatData[0];
+                rawPhCalP1 = rawPh;
+                PhСal = true;
+              }
+              else{
+                PhCalP2 = floatData[0];
+                rawPhCalP2 = rawPh;
+                float tmp;
+                if(PhCalP2 < PhCalP1 && rawPhCalP2 > rawPhCalP1){
+                  tmp = PhCalP2;
+                  PhCalP2 = PhCalP1;
+                  PhCalP1 = tmp;
+                }
+                if(PhCalP2 < PhCalP1 && rawPhCalP2 < rawPhCalP1){
+                  tmp = PhCalP2;
+                  PhCalP2 = PhCalP1;
+                  PhCalP1 = tmp;
+                  tmp = rawPhCalP2;
+                  rawPhCalP2 = rawPhCalP1;
+                  rawPhCalP1 = tmp;
+                }
+                putPhCalP1      (PhCalP1); 
+                putRawPhCalP1   (rawPhCalP1); 
+                putPhCalP2      (PhCalP2 );
+                putRawPhCalP2   (rawPhCalP2);
+                phk = ( PhCalP2 - PhCalP1 ) / ( rawPhCalP2 - rawPhCalP1 );
+                PhMP = phk * rawPhCalP1 - PhCalP1;
+                PhСal = false;
+                calPointPub();
+              }
             }
           break;
-          // $4 10 X - Значение калибровочного раствора TDS
+
+          // $4 10 X - Значение текущего калибровочного раствора TDS
           case 10:  
             if (floatData[0] > 0){
-
-      // if ((String)command_in == "tds1")
-      // {
-      //   caltds1 = atof(data_in);
-      //   ct1raw = TDSRaw;
-      //   Serial.print("caltds1=");
-      //   Serial.print(caltds1);
-      //   Serial.println(";");
-      //   CalTDS = true;  // Cal. TDS start 
-      // }
-      // if ((String)command_in == "tds2")
-      // {
-      //   caltds2 = atof(data_in);
-      //   ct2raw = TDSRaw;
-      //   if (CalTDS == true && caltds1 < caltds2)
-      //   {
-      //     Serial.print("caltds2=");
-      //     Serial.print(caltds2);
-      //     Serial.println(";");
-      //     EEPROMWriteFloat(45, caltds1);
-      //     EEPROMWriteInt(49, ct1raw);      
-      //     EEPROMWriteFloat(51, caltds2);
-      //     EEPROMWriteInt(55, ct2raw);
-      //     tdsk = ( caltds2 - caltds1 ) / ( ct2raw - ct1raw );
-      //     tdsb = tdsk * ct1raw - caltds1;
-      //     CalTDS = false;  // Cal. TDS complete 
-      //   }
-      // }
-
+              if (!TDScal){
+                TDSCalP1 = floatData[0];
+                rawTDSCalP1 = rawTDS;
+                TDScal = true;
+              }
+              else{
+                TDSCalP2 = floatData[0];
+                rawTDSCalP2 = rawTDS;
+                uint16_t  tmp;
+                if(TDSCalP2 < TDSCalP1 && rawTDSCalP2 > rawTDSCalP1){
+                  tmp = TDSCalP2;
+                  TDSCalP2 = TDSCalP1;
+                  TDSCalP1 = tmp;
+                }
+                if(TDSCalP2 < TDSCalP1 && rawTDSCalP2 < rawTDSCalP1){
+                  tmp = TDSCalP2;
+                  TDSCalP2 = TDSCalP1;
+                  TDSCalP1 = tmp;
+                  tmp = rawTDSCalP2;
+                  rawTDSCalP2 = rawTDSCalP1;
+                  rawTDSCalP1 = tmp;
+                }
+                putTDSCalP1      (TDSCalP1); 
+                putRawTDSCalP1   (rawTDSCalP1); 
+                putTDSCalP2      (TDSCalP2 );
+                putRawTDSCalP2   (rawTDSCalP2);
+                tdsk = ( TDSCalP2 - TDSCalP1 ) / ( rawTDSCalP2 - rawTDSCalP1 );
+                TdsMP = tdsk * rawTDSCalP1 - TDSCalP1;
+                TDScal = false;
+                calPointPub();
+              }
               calPointPub();
             }
           break;
