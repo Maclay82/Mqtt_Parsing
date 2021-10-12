@@ -914,7 +914,7 @@ void parsing() {
 
       case 5:
         switch (intData[1]) { 
-#ifdef PHTDSCONTROL
+         #ifdef PHTDSCONTROL
           case 0:
             if(intData[2] == 1) putRAWMode(true);
             else putRAWMode(false);
@@ -969,7 +969,7 @@ void parsing() {
               HWprofPub();
             }
           break;
-#endif        
+         #endif        
         }
       break;
 
