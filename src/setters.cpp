@@ -89,7 +89,6 @@ void set_thisMode(int8_t value) {
   // addKeyToChanged("EN");
 }
 
-
 // DI useDHCP
 void set_useDHCP(bool value) {
   if (useDHCP == value) return;

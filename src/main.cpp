@@ -380,7 +380,6 @@ void setup() {
 #endif
 
 #ifdef PHTDSCONTROL
-
   phk = ( PhCalP2 - PhCalP1 ) / ( rawPhCalP2 - rawPhCalP1 );
   PhMP = phk * rawPhCalP1 - PhCalP1;
   tdsk = ( TDSCalP2 - TDSCalP1 ) / ( rawTDSCalP2 - rawTDSCalP1 );
@@ -422,6 +421,5 @@ void loop() {
     auto_mode = true;
     profpub();
   }
-
   mqtt.loop();
 }
