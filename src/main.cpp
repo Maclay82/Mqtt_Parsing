@@ -289,7 +289,7 @@ void setup() {
     else // U_SPIFFS
       type = F("файловой системы SPIFFS...");
     // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-    Serial.print(F("Начато обновление "));    
+    Serial.print(F("Обновление начато"));    
     Serial.println(type);    
   });
 
