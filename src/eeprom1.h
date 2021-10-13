@@ -1,9 +1,9 @@
 #ifndef EEPROM1_H
 #define EEPROM1_H
-void loadSettings();
-void clearEEPROM();
-void saveDefaults();
-void saveSettings();
+void loadSettings();  // Загрузка настроек
+void clearEEPROM();   // Очистка EEPROM
+void saveDefaults();  // Сохранение настроек по умолчанию
+void saveSettings();  // Сохранение настроек
 uint16_t getUpTimeSendInterval();
 void putUpTimeSendInterval(uint16_t value);
 

@@ -10,8 +10,8 @@ size_t     spiffs_used_bytes;                    // Использовано б�
 int8_t     eeprom_backup = 0;                    // Флаг - backup настроек 0 - нeт; 1 - FS; 2 - SD; 3 - FS и SD
 
 
-void loadSettings() {
-
+void loadSettings()   // Загрузка настроек
+{
   // Адреса в EEPROM:
   //   0 - если EEPROM_OK - EEPROM инициализировано, если другое значение - нет                             // EEPROMread(0)                 // EEPROMWrite(0, EEPROM_OK)
 

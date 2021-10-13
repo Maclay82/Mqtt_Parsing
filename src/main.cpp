@@ -178,7 +178,7 @@ void setup() {
   
   Wire.begin();
 
-  #ifdef PHTDSCONTROL
+ #ifdef PHTDSCONTROL
   for(int i = 0; i <= 7; i++ ){ 
     //ioDevicePinMode(ioExp, i, OUTPUT);
     ioDevicePinMode(ioExp2, i, OUTPUT);
@@ -191,7 +191,7 @@ void setup() {
   }
   ioDeviceSync(ioExp2);
   ioDeviceSync(ioExpInp);
-  #endif
+ #endif
 
   EEPROM.begin(EEPROM_MAX);
 
@@ -200,9 +200,9 @@ void setup() {
 
   host_name = String(HOST_NAME) + //"-" + 
   String(DEV_ID);
-  Serial.println();
+  Serial.print("FIRMWARE:\t");
   Serial.println(FIRMWARE_VER);
-  Serial.println("Host: '" + host_name + "'");//String(HOST_NAME) + "'");
+  Serial.println("Host name:\t" + host_name);
   
 //-------------------------Инициализация файловой системы--------------------
 
@@ -240,9 +240,10 @@ void setup() {
   if ((eeprom_backup & 0x01) > 0) {
     Serial.println(F("Найдены сохраненные настройки: FS://eeprom.bin"));
   }
-  if ((eeprom_backup & 0x02) > 0) {
-    Serial.println(F("Найдены сохраненные настройки: SD://eeprom.bin"));
-  }
+
+  // if ((eeprom_backup & 0x02) > 0) {
+  //   Serial.println(F("Найдены сохраненные настройки: SD://eeprom.bin"));
+  // }
 
   loadSettings();
 
@@ -251,7 +252,7 @@ void setup() {
   // Подключение к сети
   connectToNetwork();
 
-  ntpSyncTimer.setInterval ( 1000L * 60 * syncTimePeriod );
+  ntpSyncTimer.setInterval ( 60000L * syncTimePeriod );
 
   #if (USE_MQTT == 1)
   // Настройка соединения с MQTT сервером
@@ -264,7 +265,7 @@ void setup() {
   mqtt.setCallback(callback);
   checkMqttConnection();    
   String msg = F("START");
-  SendMQTT(msg, TOPIC_MQTTSTT);
+  SendMQTT(msg, TOPIC_STA);
   #endif
 
   // Port defaults to 8266
@@ -296,7 +297,7 @@ void setup() {
     Serial.println(F("\nОбновление завершено"));
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    Serial.printf("\nProgress: %u%%\r", (progress / (total / 100)));
   });
 
   ArduinoOTA.onError([](ota_error_t error) {

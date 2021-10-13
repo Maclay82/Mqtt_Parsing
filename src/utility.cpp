@@ -140,8 +140,8 @@ void parseNTP() {
   String t2 = getDateTimeString(t);
 
   Serial.print(F("Секунд с 1970: "));
-  Serial.println(t);
-  Serial.print(F("Текущее время: ")); 
+  Serial.print(t);
+  Serial.print(F(" Текущее время: ")); 
   Serial.println(t2);
 
   setTime(t);  
