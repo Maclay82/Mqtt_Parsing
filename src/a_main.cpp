@@ -17,20 +17,21 @@ float minhum, maxhum; // = minhumDEF // = maxhumDEF;
 
 #ifdef PHTDSCONTROL
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
-OneWire oneWire(D5); //Активация датчика температуры
+// OneWire oneWire(D5); //Активация датчика температуры
+OneWire oneWire(16); //Активация датчика температуры
 // Pass our oneWire reference to Dallas Temperature. 
 DallasTemperature TempSensors(&oneWire);
 
-boolean TDScal    = false;  //  TDS Calibration start 
-boolean PhСal     = false;  //  Ph Calibration start
-boolean PhOk      = false;  //  Ph Correction complete
-boolean AutoFill  = false;  //  AutoFill is start
+bool TDScal    = false;  //  TDS Calibration start 
+bool PhСal     = false;  //  Ph Calibration start
+bool PhOk      = false;  //  Ph Correction complete
+bool AutoFill  = false;  //  AutoFill is start
 
-boolean RAWMode = true;  // RAW read mode
+bool RAWMode = true;  // RAW read mode
 
 int rawPh = 0, rawTDS = 0, Wlvl = 0;
 int levels[LVLSNSCOUNT];
-boolean invLVLsensor[LVLSNSCOUNT] = {true, true, false}; // Инверсия датчиков { hi, mid, low };
+bool invLVLsensor[LVLSNSCOUNT] = {true, true, false}; // Инверсия датчиков { hi, mid, low };
 
 float phmin, phmax, phk=1, PhMP=0, tdsk=1, TdsMP=0,
       PhCalP1 = 4.0, PhCalP2 = 7.0; 
@@ -59,8 +60,8 @@ byte       ackCounter = 0;                  // счетчик отправляе
 
 // --------------- ВРЕМЕННЫЕ ПЕРЕМЕННЫЕ ПАРСЕРА ------------------
 
-boolean    recievedFlag;                               // буфер содержит принятые данные
-boolean    parseStarted;
+bool    recievedFlag;                               // буфер содержит принятые данные
+bool    parseStarted;
 byte       parse_index;
 String     string_convert;
 String     receiveText;

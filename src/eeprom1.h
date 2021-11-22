@@ -15,7 +15,7 @@ void putMinHum(float value);
 #endif
 
 #ifdef PHTDSCONTROL
-void putRAWMode (boolean value);        // putRAWMode режим чтения "сырых" данных с Ph TDS
+void putRAWMode (bool value);        // putRAWMode режим чтения "сырых" данных с Ph TDS
 bool getRAWMode();                      // getRAWMode режим чтения "сырых" данных с Ph TDS
 void putPhKa (uint16_t value);          // усиление
 uint16_t getPhKa ();                    // усиление
@@ -69,7 +69,7 @@ void putPumpCalVol (uint16_t value, int numpump);
 uint16_t getPumpCalVol(int numpump);
 #endif
 
-void putUseNtp(boolean value);
+void putUseNtp(bool value);
 bool getUseNtp();
 void putNtpSyncTime(uint16_t value);
 uint16_t getNtpSyncTime();
@@ -78,7 +78,7 @@ int8_t getTimeZone();
 bool getUseDHCP();
 void putUseDHCP(bool flag);
 bool getUseSoftAP();
-void putUseSoftAP(boolean use);
+void putUseSoftAP(bool use);
 String getSoftAPName();
 void putSoftAPName(String SoftAPName);
 String getSoftAPPass();
@@ -96,9 +96,9 @@ void putStaticIP(byte p1, byte p2, byte p3, byte p4);
 
 #if (USE_MQTT == 1)
 bool getUseMqtt();
-void putUseMqtt(boolean use);
+void putUseMqtt(bool use);
 bool getSendStateInPacket();
-void putSendStateInPacket(boolean use_packet);
+void putSendStateInPacket(bool use_packet);
 uint16_t getMqttPort();
 void putMqttPort(uint16_t port);
 String getMqttServer();

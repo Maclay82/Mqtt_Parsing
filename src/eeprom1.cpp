@@ -331,7 +331,7 @@ void putCurrentMode(int8_t mode) {
   }
 }
 
-void putRAWMode (boolean value){
+void putRAWMode (bool value){
   if (value != getRAWMode()) EEPROMwrite(15, value);
 }
 bool getRAWMode() {
@@ -542,7 +542,7 @@ void putPumpCalVol (uint16_t value, int numpump){
 #endif
 
 
-void putUseNtp(boolean value) {
+void putUseNtp(bool value) {
   if (value != getUseNtp()) {
     EEPROMwrite(5, value);
   }
@@ -589,7 +589,7 @@ bool getUseSoftAP() {
   return EEPROMread(14) == 1;
 }
 
-void putUseSoftAP(boolean use) {  
+void putUseSoftAP(bool use) {  
   if (use != getUseSoftAP()) {
     EEPROMwrite(14, use ? 1 : 0);
   }
@@ -665,7 +665,7 @@ bool getUseMqtt() {
   return EEPROMread(239) == 1;
 }
 
-void putUseMqtt(boolean use) {  
+void putUseMqtt(bool use) {  
   if (use != getUseMqtt()) {
     EEPROMwrite(239, use ? 1 : 0);
   }
@@ -675,7 +675,7 @@ bool getSendStateInPacket() {
   return EEPROMread(240) == 1;
 }
 
-void putSendStateInPacket(boolean use_packet) {  
+void putSendStateInPacket(bool use_packet) {  
   if (use_packet != getSendStateInPacket()) {
     EEPROMwrite(240, use_packet ? 1 : 0);
   }
