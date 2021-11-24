@@ -15,8 +15,8 @@ void putMinHum(float value);
 #endif
 
 #ifdef PHTDSCONTROL
-void putRAWMode (bool value);        // putRAWMode режим чтения "сырых" данных с Ph TDS
-bool getRAWMode();                      // getRAWMode режим чтения "сырых" данных с Ph TDS
+void putRAWMode (boolean value);        // putRAWMode режим чтения "сырых" данных с Ph TDS
+boolean getRAWMode();                      // getRAWMode режим чтения "сырых" данных с Ph TDS
 void putPhKa (uint16_t value);          // усиление
 uint16_t getPhKa ();                    // усиление
 void putPhKb (uint16_t value);          // средняя точка
@@ -69,16 +69,16 @@ void putPumpCalVol (uint16_t value, int numpump);
 uint16_t getPumpCalVol(int numpump);
 #endif
 
-void putUseNtp(bool value);
-bool getUseNtp();
+void putUseNtp(boolean value);
+boolean getUseNtp();
 void putNtpSyncTime(uint16_t value);
 uint16_t getNtpSyncTime();
 void putTimeZone(int8_t value);
 int8_t getTimeZone();
-bool getUseDHCP();
-void putUseDHCP(bool flag);
-bool getUseSoftAP();
-void putUseSoftAP(bool use);
+boolean getUseDHCP();
+void putUseDHCP(boolean flag);
+boolean getUseSoftAP();
+void putUseSoftAP(boolean use);
 String getSoftAPName();
 void putSoftAPName(String SoftAPName);
 String getSoftAPPass();
@@ -95,10 +95,10 @@ void getStaticIP();
 void putStaticIP(byte p1, byte p2, byte p3, byte p4);
 
 #if (USE_MQTT == 1)
-bool getUseMqtt();
-void putUseMqtt(bool use);
-bool getSendStateInPacket();
-void putSendStateInPacket(bool use_packet);
+boolean getUseMqtt();
+void putUseMqtt(boolean use);
+boolean getSendStateInPacket();
+void putSendStateInPacket(boolean use_packet);
 uint16_t getMqttPort();
 void putMqttPort(uint16_t port);
 String getMqttServer();
@@ -133,12 +133,12 @@ uint8_t checkEepromBackup();
 // Сохранить eeprom в файл
 // storage = "FS" - внутренняя файловая система
 // возврат: true - успех; false - ошибка
-bool saveEepromToFile(String storage);
+boolean saveEepromToFile(String storage);
 
 // Загрузить eeprom из файла
 // storage = "FS" - внутренняя файловая система
 // возврат: true - успех; false - ошибка
-bool loadEepromFromFile(String storage);
+boolean loadEepromFromFile(String storage);
 
 // ----------------------------------------------------------
 #endif

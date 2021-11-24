@@ -1,6 +1,6 @@
 #include "i2cPumps.h"
 
-i2cPumps::i2cPumps(byte address, bool revers) {
+i2cPumps::i2cPumps(byte address, boolean revers) {
   onpump = revers;
   Wire.begin();
   I2CExp    = ioFrom8574(address);//0x20);     //Pumps
@@ -14,8 +14,8 @@ i2cPumps::i2cPumps(byte address, bool revers) {
   ioDeviceSync(I2CExp);
 }
 
-bool   i2cPumps::pourVol (uint16_t volume, uint8_t num){
-  bool result = false;
+boolean   i2cPumps::pourVol (uint16_t volume, uint8_t num){
+  boolean result = false;
   Serial.print(num);
   Serial.print(" ");
   Serial.print(volume);

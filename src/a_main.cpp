@@ -17,21 +17,21 @@ float minhum, maxhum; // = minhumDEF // = maxhumDEF;
 
 #ifdef PHTDSCONTROL
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
-// OneWire oneWire(D5); //Активация датчика температуры
-OneWire oneWire(16); //Активация датчика температуры
+// OneWire oneWire(D5); //Инициализация датчика температуры
+OneWire oneWire(16); //Инициализация датчика температуры
 // Pass our oneWire reference to Dallas Temperature. 
 DallasTemperature TempSensors(&oneWire);
 
-bool TDScal    = false;  //  TDS Calibration start 
-bool PhСal     = false;  //  Ph Calibration start
-bool PhOk      = false;  //  Ph Correction complete
-bool AutoFill  = false;  //  AutoFill is start
+boolean TDScal=false;  //  TDS Calibration start 
+boolean PhCal=false;  //  Ph Calibration start
+boolean PhOk=false;  //  Ph Correction complete
+boolean AutoFill=false;  //  AutoFill is start
 
-bool RAWMode = true;  // RAW read mode
+boolean RAWMode = true;  // RAW read mode
 
 int rawPh = 0, rawTDS = 0, Wlvl = 0;
 int levels[LVLSNSCOUNT];
-bool invLVLsensor[LVLSNSCOUNT] = {true, true, false}; // Инверсия датчиков { hi, mid, low };
+boolean invLVLsensor[LVLSNSCOUNT] = {true, true, false}; // Инверсия датчиков { hi, mid, low };
 
 float phmin, phmax, phk=1, PhMP=0, tdsk=1, TdsMP=0,
       PhCalP1 = 4.0, PhCalP2 = 7.0; 
@@ -60,12 +60,12 @@ byte       ackCounter = 0;                  // счетчик отправляе
 
 // --------------- ВРЕМЕННЫЕ ПЕРЕМЕННЫЕ ПАРСЕРА ------------------
 
-bool    recievedFlag;                               // буфер содержит принятые данные
-bool    parseStarted;
+boolean    recievedFlag;                               // буфер содержит принятые данные
+boolean    parseStarted;
 byte       parse_index;
 String     string_convert;
 String     receiveText;
-bool       haveIncomeData;
+boolean       haveIncomeData;
 char       incomingByte;
 
 int16_t    bufIdx = 0;                                 // Могут приниматься пакеты > 255 байт - тип int16_t
@@ -489,7 +489,7 @@ void process() {
           #endif
         }
         
-        bool timeToSync = ntpSyncTimer.isReady();
+        boolean timeToSync = ntpSyncTimer.isReady();
         if (timeToSync) { ntp_cnt = 0; refresh_time = true; }
         if (timeToSync || (refresh_time && (ntp_t == 0 || (millis() - ntp_t > 60000)) && (ntp_cnt < 10 || !init_time))) {
           ntp_t = millis();
@@ -558,7 +558,7 @@ void process() {
       } else {
         // Выключить панель, запомнив текущий режим
         saveMode = thisMode;
-        bool mm = manualMode;
+        boolean mm = manualMode;
         // Выключить панель - черный экран
         putCurrentManualMode(saveMode);
         putAutoplay(mm);
@@ -609,7 +609,7 @@ void parsing() {
   byte b_tmp;
   int8_t tmp_eff;
   // char c = 0;
-  bool err = false;
+  boolean err = false;
 
   /*
       ----------------------------------------------------
@@ -832,10 +832,10 @@ void parsing() {
           // $4 9 X - Значение текущего калибровочного раствора Ph
           case 9:  
             if (floatData[0] > 0 && floatData[0] < 14){
-              if (!PhСal){
+              if (!PhCal){
                 PhCalP1 = floatData[0];
                 rawPhCalP1 = rawPh;
-                PhСal = true;
+                PhCal = true;
               }
               else{
                 PhCalP2 = floatData[0];
@@ -860,7 +860,7 @@ void parsing() {
                 putRawPhCalP2   (rawPhCalP2);
                 phk = ( PhCalP2 - PhCalP1 ) / ( rawPhCalP2 - rawPhCalP1 );
                 PhMP = phk * rawPhCalP1 - PhCalP1;
-                PhСal = false;
+                PhCal = false;
                 calPointPub();
               }
             }
@@ -1506,7 +1506,7 @@ void sendPageParams(int page) {
 void sendPageParams(int page, eSources src) {
   String str = "";//, color, text;
 
-  bool err = false;
+  boolean err = false;
   
   switch (page) { 
     case 1:  // Настройки
@@ -2004,7 +2004,7 @@ void sendAcknowledge(eSources src) {
   if (src == UDP || src == BOTH) {
     // Отправить подтверждение, чтобы клиентский сокет прервал ожидание
     String reply = "";
-    bool isCmd = false; 
+    boolean isCmd = false; 
     if (cmd95.length() > 0) { reply += cmd95; cmd95 = ""; isCmd = true;}
     if (cmd96.length() > 0) { reply += cmd96; cmd96 = ""; isCmd = true; }
     reply += "ack" + String(ackCounter++) + ";";  
