@@ -5,8 +5,8 @@
 
 uint16_t AUTO_MODE_PERIOD = 10;    // Период активации автоматического режима в минутах по умолчанию
 uint16_t AUTO_FILL_PERIOD = 24;    // Период активации автоматического подлива в часах 
-bool     auto_mode = true;         // Флаг автоматического режима
-bool     count_mode = false;       // Флаг включения счетчика воды подлива
+boolean     auto_mode = true;         // Флаг автоматического режима
+boolean     count_mode = false;       // Флаг включения счетчика воды подлива
 
 #ifdef PHTDSCONTROL
 //Инициализация плат I2C расширителей
@@ -24,17 +24,17 @@ char   apPass[17] = DEFAULT_AP_PASS;        // Пароль подключени
 char   ssid[25]   = NETWORK_SSID;           // SSID (имя) вашего роутера (конфигурируется подключением через точку доступа и сохранением в EEPROM)
 char   pass[17]   = NETWORK_PASS;           // пароль роутера
 byte   IP_STA[]   = DEFAULT_IP;             // Статический адрес в локальной сети WiFi по умолчанию при первом запуске. Потом - загружается из настроек, сохраненных в EEPROM
-bool   useDHCP    = USEDHCP;                // получать динамический IP
+boolean   useDHCP    = USEDHCP;                // получать динамический IP
 unsigned int localPort = 2390;              // локальный порт на котором слушаются входящие команды управления от приложения на смартфоне, передаваемые через локальную сеть
 
 // --------------------Режимы работы Wifi соединения-----------------------
-bool   useSoftAP = false;               // использовать режим точки доступа
-bool   wifi_connected = false;          // true - подключение к wifi сети выполнена  
-bool   ap_connected = false;            // true - работаем в режиме точки доступа;
+boolean   useSoftAP = false;               // использовать режим точки доступа
+boolean   wifi_connected = false;          // true - подключение к wifi сети выполнена  
+boolean   ap_connected = false;            // true - работаем в режиме точки доступа;
 
 // **************** СИНХРОНИЗАЦИЯ ЧАСОВ ЧЕРЕЗ ИНТЕРНЕТ *******************
 
-bool      useNtp;                       // Использовать синхронизацию времени с NTP-сервером
+boolean      useNtp;                       // Использовать синхронизацию времени с NTP-сервером
 IPAddress timeServerIP;                 // IP сервера времени
 uint16_t  syncTimePeriod;               // Период синхронизации в минутах по умолчанию
 byte      packetBuffer[NTP_PACKET_SIZE];// буфер для хранения входящих и исходящих пакетов NTP
@@ -42,9 +42,9 @@ byte      packetBuffer[NTP_PACKET_SIZE];// буфер для хранения в
 int8_t timeZoneOffset;                  // смещение часового пояса от UTC
 long   ntp_t   = 0;                     // Время, прошедшее с запроса данных с NTP-сервера (таймаут)
 byte   ntp_cnt = 0;                     // Счетчик попыток получить данные от сервера
-bool   init_time = false;               // Флаг false - время не инициализировано; true - время инициализировано
-bool   refresh_time = true;             // Флаг true - пришло время выполнить синхронизацию часов с сервером NTP
-bool   getNtpInProgress = true;         // Запрос времени с NTP сервера в процессе выполнения
+boolean   init_time = false;               // Флаг false - время не инициализировано; true - время инициализировано
+boolean   refresh_time = true;             // Флаг true - пришло время выполнить синхронизацию часов с сервером NTP
+boolean   getNtpInProgress = true;         // Запрос времени с NTP сервера в процессе выполнения
 char   ntpServerName[31] = "";          // Используемый сервер NTP
 
 uint32_t upTime = 0;                    // время работы системы с последней перезагрузки
@@ -176,7 +176,8 @@ void setup() {
     ESP.wdtEnable(WDTO_8S);
   #endif
   
-  Wire.begin();
+  Wire.begin(5,4);
+  //Wire.begin();
 
  #ifdef PHTDSCONTROL
   for(int i = 0; i <= 7; i++ ){ 
