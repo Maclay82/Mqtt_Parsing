@@ -18,6 +18,7 @@ extern float minhum, maxhum;
 #define REGDELAY 1            // время цикла регулировки в минутах
 #define NUM_AVER 20           // выборка (из скольки усредняем)
 extern boolean     count_mode;         // Флаг автоматического режима
+extern Adafruit_SSD1306 display;
 #endif
 
 extern uint16_t AUTO_MODE_PERIOD;  // Период активации автоматического режима в минутах по умолчанию

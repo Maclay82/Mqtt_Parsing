@@ -192,8 +192,6 @@ void process() {
 
   if (millis() - timing2 >  regDelay)  // Решение на регулеровку Ph
   {
-
-
     realPh = phk * middleArifm(PhvalArray) - PhMP;
     DynamicJsonDocument doc(256);
     String out;
@@ -450,6 +448,35 @@ void process() {
 #ifdef USE_LOG
     Serial.print("\n");
 #endif
+
+
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setCursor(0,0);
+  display.print("Ph: ");
+  // display.setTextSize(2);
+  // display.setCursor(0,10);
+  display.print(String(realPh));
+  display.setTextSize(2);
+  display.setCursor(0, 17);
+  // display.print("Humidity: ");
+  display.print("TDS:");
+  // display.setTextSize(2);
+  // display.setCursor(0, 45);
+  //display.print(String(bme.readHumidity()));
+  display.print(String(realTDS));
+  // display.print(" %"); 
+  display.setTextSize(1);
+  display.setCursor(0, 50);
+  // display.print("Humidity: ");
+  display.print("ip:");
+  display.print(WiFi.localIP());
+
+  
+  
+  display.display();
+
+
     timing = millis();
   }
 

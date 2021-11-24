@@ -14,6 +14,12 @@ boolean     count_mode = false;       // Флаг включения счетч�
 i2cPumps pumps(0x20, true);                       //Pumps
 IoAbstractionRef ioExp2   = ioFrom8574(0x24);     //Leds
 IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
 #endif
 
 // *************************** ПОДКЛЮЧЕНИЕ К СЕТИ **************************
@@ -192,6 +198,16 @@ void setup() {
   }
   ioDeviceSync(ioExp2);
   ioDeviceSync(ioExpInp);
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  
+  delay(0);
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+
  #endif
 
   EEPROM.begin(EEPROM_MAX);
