@@ -5,8 +5,8 @@
 
 uint16_t AUTO_MODE_PERIOD = 10;    // Период активации автоматического режима в минутах по умолчанию
 uint16_t AUTO_FILL_PERIOD = 24;    // Период активации автоматического подлива в часах 
-boolean     auto_mode = true;         // Флаг автоматического режима
-boolean     count_mode = false;       // Флаг включения счетчика воды подлива
+boolean  auto_mode = true;         // Флаг автоматического режима
+boolean  count_mode = false;       // Флаг включения счетчика воды подлива
 
 #ifdef PHTDSCONTROL
 //Инициализация плат I2C расширителей
@@ -17,7 +17,6 @@ IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 #endif
@@ -172,18 +171,20 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
   }
   #endif
-
 }
-
 #endif
 
 void setup() {
   #if defined(ESP8266)
     ESP.wdtEnable(WDTO_8S);
   #endif
-  
+
+  #if defined(ESP8266)
+  Wire.begin();
+  #endif
+  #if defined(ESP32)
   Wire.begin(5,4);
-  //Wire.begin();
+  #endif
 
  #ifdef PHTDSCONTROL
   for(int i = 0; i <= 7; i++ ){ 
@@ -199,6 +200,15 @@ void setup() {
   ioDeviceSync(ioExp2);
   ioDeviceSync(ioExpInp);
 
+ #endif
+
+  EEPROM.begin(EEPROM_MAX);
+
+  Serial.begin(115200);
+  delay(300);
+
+#ifdef PHTDSCONTROL
+
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;);
@@ -208,12 +218,8 @@ void setup() {
   display.clearDisplay();
   display.setTextColor(WHITE);
 
- #endif
+#endif
 
-  EEPROM.begin(EEPROM_MAX);
-
-  Serial.begin(115200);
-  delay(300);
 
   host_name = String(HOST_NAME) + //"-" + 
   String(DEV_ID);
