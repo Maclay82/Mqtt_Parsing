@@ -2,7 +2,7 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA1      // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA2       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
@@ -152,7 +152,7 @@ I2C address 0x49 TDS
 
 #define REFRESHTIME 10000                 // Время обновления показаний прибора для MQTT
 
-#define USEDHCP 0
+#define USEDHCP 1
 #define DEFAULT_IP {192, 168, 2, 111}       // Сетевой адрес устройства по умолчанию
 
 #define ICCSCAN 0
