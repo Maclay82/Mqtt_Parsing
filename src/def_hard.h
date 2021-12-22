@@ -152,7 +152,7 @@ I2C address 0x49 TDS
 
 #define REFRESHTIME 10000                 // Время обновления показаний прибора для MQTT
 
-#define USEDHCP 1
+#define USEDHCP  1
 #define DEFAULT_IP {192, 168, 2, 111}       // Сетевой адрес устройства по умолчанию
 
 #define ICCSCAN 0
