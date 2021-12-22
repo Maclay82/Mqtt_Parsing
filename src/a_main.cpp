@@ -376,10 +376,10 @@ void process() {
 
 #ifdef USE_LOG
     Serial.print("Ph=");
-    if (rawPh == -1) Serial.print("null");
+    if (rawPh == -1) Serial.print("ERR");
     else Serial.print(realPh);
     Serial.print(" | TDS=");
-    if (rawTDS == -1) Serial.print("null");
+    if (rawTDS == -1) Serial.print("ERR");
     else Serial.print(realTDS);
     Serial.print(" | ");
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
@@ -456,7 +456,9 @@ void process() {
   display.print("Ph: ");
   // display.setTextSize(2);
   // display.setCursor(0,10);
-  display.print(String(realPh));
+  if (rawPh == -1) display.print(String("ERR"));
+  else display.print(String(realPh));
+  
   display.setTextSize(2);
   display.setCursor(0, 17);
   // display.print("Humidity: ");
@@ -464,6 +466,10 @@ void process() {
   // display.setTextSize(2);
   // display.setCursor(0, 45);
   //display.print(String(bme.readHumidity()));
+
+  if (rawTDS == -1) display.print(String("ERR"));
+  else display.print(String(realTDS));
+
   display.print(String(realTDS));
   // display.print(" %"); 
   display.setTextSize(1);
