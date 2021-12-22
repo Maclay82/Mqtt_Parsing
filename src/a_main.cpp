@@ -16,10 +16,13 @@ float minhum, maxhum; // = minhumDEF // = maxhumDEF;
 #endif
 
 #ifdef PHTDSCONTROL
-// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
-// OneWire oneWire(D5); //Инициализация датчика температуры
-OneWire oneWire(16); //Инициализация датчика температуры
-// Pass our oneWire reference to Dallas Temperature. 
+//Инициализация датчика температуры
+#if defined(ESP8266)
+OneWire oneWire(D5); 
+#endif
+#if defined(ESP32)
+OneWire oneWire(16);
+#endif
 DallasTemperature TempSensors(&oneWire);
 
 boolean TDScal=false;  //  TDS Calibration start 
