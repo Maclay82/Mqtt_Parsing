@@ -34,17 +34,17 @@ int levels[LVLSNSCOUNT];
 boolean invLVLsensor[LVLSNSCOUNT] = {true, true, false}; // Инверсия датчиков { hi, mid, low };
 
 float phmin, phmax, phk=1, PhMP=0, tdsk=1, TdsMP=0,
-      PhCalP1 = 4.0, PhCalP2 = 7.0; 
+      PhCalP1, PhCalP2; 
 float realPh = -1, realTDS = -1, Wtemp = -1;
 
 uint16_t phVol, tdsAVol, tdsBVol, tdsCVol, tdsmin, tdsmax, 
-TDSCalP1 = 206, TDSCalP2 = 1930,
-rawPhCalP1=802, rawPhCalP2=1750, 
-rawTDSCalP1=220, rawTDSCalP2=1924,
-phKa = 150,  // усиление
-phKb = 125,  // средняя точка
-tdsKa = 60,  // усиление
-tdsKb = 110; // средняя точка
+TDSCalP1, TDSCalP2,
+rawPhCalP1, rawPhCalP2, 
+rawTDSCalP1, rawTDSCalP2,
+phKa,  // усиление
+phKb,  // средняя точка
+tdsKa,  // усиление
+tdsKb; // средняя точка
 
 #endif
 
