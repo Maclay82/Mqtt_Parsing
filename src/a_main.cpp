@@ -376,10 +376,10 @@ void process() {
 
 #ifdef USE_LOG
     Serial.print("Ph=");
-    if (rawPh == -1) Serial.print("ERR");
+    if (rawPh == -1) Serial.print("err");
     else Serial.print(realPh);
     Serial.print(" | TDS=");
-    if (rawTDS == -1) Serial.print("ERR");
+    if (rawTDS == -1) Serial.print("err");
     else Serial.print(realTDS);
     Serial.print(" | ");
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
