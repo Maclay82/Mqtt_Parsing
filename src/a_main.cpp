@@ -470,7 +470,6 @@ void process() {
   if (rawTDS == -1) display.print(String("ERR"));
   else display.print(String(realTDS));
 
-  display.print(String(realTDS));
   // display.print(" %"); 
   display.setTextSize(1);
   display.setCursor(0, 50);
