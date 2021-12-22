@@ -11,7 +11,7 @@ String GetToken(String &str, uint32_t index, char separator);
 String padNum(int16_t num, byte cnt);
 String getDateTimeString(time_t t);
 // leap year calulator expects year argument as years offset from 1970
-bool LEAP_YEAR(uint16_t Y);
+boolean LEAP_YEAR(uint16_t Y);
 void sendNTPpacket(IPAddress& address);
 void parseNTP();
 void getNTP();
@@ -19,8 +19,8 @@ void getNTP();
 void profpub();
 void calPointPub();
 void HWprofPub();
-bool statusPub();    //Публикация состояния параметров системы
-bool setCollector(); //Приведение конфигурации коллектора в силу
+boolean statusPub();    //Публикация состояния параметров системы
+boolean setCollector(); //Приведение конфигурации коллектора в силу
 void startWiFi(unsigned long waitTime);
 void startSoftAP();
 void connectToNetwork();

@@ -94,7 +94,7 @@ String getDateTimeString(time_t t) {
 }
 
 // leap year calulator expects year argument as years offset from 1970
-bool LEAP_YEAR(uint16_t Y) {
+boolean LEAP_YEAR(uint16_t Y) {
   return ((1970+(Y))>0) && !((1970+(Y))%4) && ( ((1970+(Y))%100) || !((1970+(Y))%400) );
 }
 
@@ -140,8 +140,8 @@ void parseNTP() {
   String t2 = getDateTimeString(t);
 
   Serial.print(F("Секунд с 1970: "));
-  Serial.println(t);
-  Serial.print(F("Текущее время: ")); 
+  Serial.print(t);
+  Serial.print(F(" Текущее время: ")); 
   Serial.println(t2);
 
   setTime(t);  
@@ -285,7 +285,7 @@ void HWprofPub() {
   }
 }
 
-bool statusPub()    //Публикация состояния параметров системы
+boolean statusPub()    //Публикация состояния параметров системы
 {
   if (mqtt.connected()) 
   {
@@ -343,7 +343,7 @@ bool statusPub()    //Публикация состояния параметро
   return(false);
 }
 
-bool setCollector() //Приведение конфигурации коллектора в силу
+boolean setCollector() //Приведение конфигурации коллектора в силу
 {
   #ifdef HUMCONTROL
 
@@ -416,7 +416,7 @@ void startWiFi(unsigned long waitTime) {
     // Такой таймаут нужен в случае, когда отключают электричество, при последующем включении устройство стартует быстрее
     // чем роутер успеет загрузиться и создать сеть. При коротком таймауте устройство не найдет сеть и создаст точку доступа,
     // не сможет получить время и т.д.
-    bool stop_waiting = false;
+    boolean stop_waiting = false;
     unsigned long start_wifi_check = millis();
     unsigned long last_wifi_check = 0;
     int16_t cnt = 0;

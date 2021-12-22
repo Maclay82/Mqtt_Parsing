@@ -1,9 +1,9 @@
 #ifndef EEPROM1_H
 #define EEPROM1_H
-void loadSettings();
-void clearEEPROM();
-void saveDefaults();
-void saveSettings();
+void loadSettings();  // Загрузка настроек
+void clearEEPROM();   // Очистка EEPROM
+void saveDefaults();  // Сохранение настроек по умолчанию
+void saveSettings();  // Сохранение настроек
 uint16_t getUpTimeSendInterval();
 void putUpTimeSendInterval(uint16_t value);
 
@@ -16,7 +16,7 @@ void putMinHum(float value);
 
 #ifdef PHTDSCONTROL
 void putRAWMode (boolean value);        // putRAWMode режим чтения "сырых" данных с Ph TDS
-bool getRAWMode();                      // getRAWMode режим чтения "сырых" данных с Ph TDS
+boolean getRAWMode();                      // getRAWMode режим чтения "сырых" данных с Ph TDS
 void putPhKa (uint16_t value);          // усиление
 uint16_t getPhKa ();                    // усиление
 void putPhKb (uint16_t value);          // средняя точка
@@ -70,14 +70,14 @@ uint16_t getPumpCalVol(int numpump);
 #endif
 
 void putUseNtp(boolean value);
-bool getUseNtp();
+boolean getUseNtp();
 void putNtpSyncTime(uint16_t value);
 uint16_t getNtpSyncTime();
 void putTimeZone(int8_t value);
 int8_t getTimeZone();
-bool getUseDHCP();
-void putUseDHCP(bool flag);
-bool getUseSoftAP();
+boolean getUseDHCP();
+void putUseDHCP(boolean flag);
+boolean getUseSoftAP();
 void putUseSoftAP(boolean use);
 String getSoftAPName();
 void putSoftAPName(String SoftAPName);
@@ -95,9 +95,9 @@ void getStaticIP();
 void putStaticIP(byte p1, byte p2, byte p3, byte p4);
 
 #if (USE_MQTT == 1)
-bool getUseMqtt();
+boolean getUseMqtt();
 void putUseMqtt(boolean use);
-bool getSendStateInPacket();
+boolean getSendStateInPacket();
 void putSendStateInPacket(boolean use_packet);
 uint16_t getMqttPort();
 void putMqttPort(uint16_t port);
@@ -133,12 +133,12 @@ uint8_t checkEepromBackup();
 // Сохранить eeprom в файл
 // storage = "FS" - внутренняя файловая система
 // возврат: true - успех; false - ошибка
-bool saveEepromToFile(String storage);
+boolean saveEepromToFile(String storage);
 
 // Загрузить eeprom из файла
 // storage = "FS" - внутренняя файловая система
 // возврат: true - успех; false - ошибка
-bool loadEepromFromFile(String storage);
+boolean loadEepromFromFile(String storage);
 
 // ----------------------------------------------------------
 #endif

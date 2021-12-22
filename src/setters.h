@@ -12,9 +12,9 @@ void addKeyToChanged(String key);
 void set_thisMode(int8_t value);
 
 // DI useDHCP
-void set_useDHCP(bool value);
+void set_useDHCP(boolean value);
 // NP useNtp
-void set_useNtp(bool value);
+void set_useNtp(boolean value);
 // NT syncTimePeriod
 void set_syncTimePeriod(uint16_t value);
 // NZ timeZoneOffset
@@ -31,15 +31,15 @@ void set_SoftAPName(String value);
 // AA apPass
 void set_SoftAPPass(String value);
 // IP wifi_connected
-void set_wifi_connected(bool value);
+void set_wifi_connected(boolean value);
 // IP IP_STA[]
 void set_StaticIP(byte p1, byte p2, byte p3, byte p4);
 // AU useSoftAP
-void set_useSoftAP(bool value);
+void set_useSoftAP(boolean value);
 
 #if (USE_MQTT == 1)
 // QA useMQTT
-void set_useMQTT(bool value);
+void set_useMQTT(boolean value);
 
 // QP mqtt_port
 void set_mqtt_port(int16_t value);
@@ -54,7 +54,7 @@ void set_mqtt_send_delay(int16_t value);
 // QR mqtt_prefix
 void set_MqttPrefix(String value);
 // QK mqtt_state_packet
-void set_mqtt_state_packet(bool value);
+void set_mqtt_state_packet(boolean value);
 // UI upTimeSendInterval
 void set_upTimeSendInterval(uint16_t value);
 #endif

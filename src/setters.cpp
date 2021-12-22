@@ -20,7 +20,7 @@ void addKeyToChanged(String key) {
 }
 /*
 // DM manualMode
-void set_manualMode(bool value) {
+void set_manualMode(boolean value) {
   if (manualMode == value) return;
   putAutoplay(value);
   manualMode = getAutoplay();
@@ -44,14 +44,14 @@ void set_idleTime(uint32_t value) {
 }
 
 // AL isAlarming 
-void set_isAlarming(bool value) {
+void set_isAlarming(boolean value) {
   if (isAlarming == value) return;
   isAlarming = value;
   addKeyToChanged("AL");
 }
 
 // AL isAlarmStopped
-void set_isAlarmStopped(bool value) {
+void set_isAlarmStopped(boolean value) {
   if (isAlarmStopped == value) return;
   isAlarmStopped = value;
   addKeyToChanged("AL");
@@ -71,7 +71,7 @@ void set_isAlarmStopped(bool value) {
 void set_thisMode(int8_t value) {
   if (thisMode == value) return;
   
-  // bool valid = (value == -1) || (value >= 0 && value < MAX_EFFECT);
+  // boolean valid = (value == -1) || (value >= 0 && value < MAX_EFFECT);
   // if (!valid) return;
 
   // valid = (value >= 0 && value < MAX_EFFECT);
@@ -90,7 +90,7 @@ void set_thisMode(int8_t value) {
 }
 
 // DI useDHCP
-void set_useDHCP(bool value) {
+void set_useDHCP(boolean value) {
   if (useDHCP == value) return;
   putUseDHCP(value);
   useDHCP = getUseDHCP();
@@ -98,7 +98,7 @@ void set_useDHCP(bool value) {
 }
 
 // NP useNtp
-void set_useNtp(bool value) {
+void set_useNtp(boolean value) {
   if (useNtp == value) return;
   putUseNtp(value);
   useNtp = getUseNtp();
@@ -162,7 +162,7 @@ void set_SoftAPPass(String value) {
 }              
 
 // IP wifi_connected
-void set_wifi_connected(bool value) {
+void set_wifi_connected(boolean value) {
   if (wifi_connected == value) return;
   wifi_connected = value;
   addKeyToChanged("IP");
@@ -214,7 +214,7 @@ void set_alarmTime(byte wd, byte hour_value, byte minute_value) {
 }
 */
 // AU useSoftAP
-void set_useSoftAP(bool value) {
+void set_useSoftAP(boolean value) {
   if (useSoftAP == value) return;
   putUseSoftAP(value);
   useSoftAP = getUseSoftAP();
@@ -336,7 +336,7 @@ void set_dusk_effect_id(int8_t value) {
 
 #if (USE_MQTT == 1)
 // QA useMQTT
-void set_useMQTT(bool value) {
+void set_useMQTT(boolean value) {
   if (useMQTT == value) return;  
   if (useMQTT || value) stopMQTT = false;
   putUseMqtt(value);
@@ -394,7 +394,7 @@ void set_MqttPrefix(String value) {
 }
 
 // QK mqtt_state_packet
-void set_mqtt_state_packet(bool value) {
+void set_mqtt_state_packet(boolean value) {
   if (mqtt_state_packet == value) return;  
   putSendStateInPacket(value);
   mqtt_state_packet = getSendStateInPacket();

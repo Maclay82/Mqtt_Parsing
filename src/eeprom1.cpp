@@ -1,17 +1,17 @@
 #include <Arduino.h>
 #include "def_soft.h"     // Определение параметров эффектов, переменных программы и т.п.
 
-bool     eepromModified = false;            // флаг: EEPROM изменен, требует сохранения
+boolean     eepromModified = false;            // флаг: EEPROM изменен, требует сохранения
 // ------------------- ФАЙЛОВАЯ СИСТЕМА SPIFFS ----------------------
 
-bool       spiffs_ok = false;                    // Флаг - файловая система SPIFFS доступна для использования
+boolean       spiffs_ok = false;                    // Флаг - файловая система SPIFFS доступна для использования
 size_t     spiffs_total_bytes;                   // Доступно байт в SPIFFS
 size_t     spiffs_used_bytes;                    // Использовано байт в SPIFFS
 int8_t     eeprom_backup = 0;                    // Флаг - backup настроек 0 - нeт; 1 - FS; 2 - SD; 3 - FS и SD
 
 
-void loadSettings() {
-
+void loadSettings()   // Загрузка настроек
+{
   // Адреса в EEPROM:
   //   0 - если EEPROM_OK - EEPROM инициализировано, если другое значение - нет                             // EEPROMread(0)                 // EEPROMWrite(0, EEPROM_OK)
 
@@ -91,7 +91,7 @@ void loadSettings() {
   #endif
 
   // Инициализировано ли EEPROM
-  bool isInitialized = EEPROMread(0) == EEPROM_OK;  
+  boolean isInitialized = EEPROMread(0) == EEPROM_OK;  
   
   if (isInitialized) {    
     useNtp = getUseNtp();
@@ -334,7 +334,7 @@ void putCurrentMode(int8_t mode) {
 void putRAWMode (boolean value){
   if (value != getRAWMode()) EEPROMwrite(15, value);
 }
-bool getRAWMode() {
+boolean getRAWMode() {
   return EEPROMread(15) == 1;
 }
 void putPhKa (uint16_t value){  // коэфициент усиления Ph
@@ -548,7 +548,7 @@ void putUseNtp(boolean value) {
   }
 }
 
-bool getUseNtp() {
+boolean getUseNtp() {
   return EEPROMread(5) == 1;
 }
 
@@ -574,18 +574,18 @@ int8_t getTimeZone() {
   return (int8_t)EEPROMread(8);
 }
 
-bool getUseDHCP() {
+boolean getUseDHCP() {
   return EEPROMread(9) == 1;
 }
 
-void putUseDHCP(bool flag) {
+void putUseDHCP(boolean flag) {
   if (flag != getUseDHCP()) {
     EEPROMwrite(9, flag ? 1 : 0);
   }  
 }
 
 
-bool getUseSoftAP() {
+boolean getUseSoftAP() {
   return EEPROMread(14) == 1;
 }
 
@@ -661,7 +661,7 @@ void putStaticIP(byte p1, byte p2, byte p3, byte p4) {
 
 #if (USE_MQTT == 1)
 
-bool getUseMqtt() {
+boolean getUseMqtt() {
   return EEPROMread(239) == 1;
 }
 
@@ -671,7 +671,7 @@ void putUseMqtt(boolean use) {
   }
 }
 
-bool getSendStateInPacket() {
+boolean getSendStateInPacket() {
   return EEPROMread(240) == 1;
 }
 
@@ -862,9 +862,9 @@ uint8_t checkEepromBackup() {
 // storage = "FS" - внутренняя файловая система
 // storage = "SD" - на SD-карту
 // возврат: true - успех; false - ошибка
-bool saveEepromToFile(String storage) {
+boolean saveEepromToFile(String storage) {
   const uint8_t part_size = 128;
-  bool ok = true;
+  boolean ok = true;
   uint8_t buf[part_size];
   String message = "", fileName = F("/eeprom.bin");
   size_t len = 0;
@@ -936,10 +936,10 @@ bool saveEepromToFile(String storage) {
 // storage = "FS" - внутренняя файловая система
 // storage = "SD" - на SD-карту
 // возврат: true - успех; false - ошибка
-bool loadEepromFromFile(String storage) {
+boolean loadEepromFromFile(String storage) {
 
   const uint8_t part_size = 128;
-  bool ok = true;
+  boolean ok = true;
   uint8_t buf[part_size];
   String message = "", fileName = F("/eeprom.bin");
   size_t len = 0;

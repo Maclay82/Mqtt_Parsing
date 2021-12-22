@@ -11,13 +11,13 @@
 // Формирование топика сообщения
 String mqtt_topic(String topic);
 // Поместить сообщения для отправки на сервер в очередь
-void putOutQueue(String topic, String message, bool retain = false);
+void putOutQueue(String topic, String message, boolean retain = false);
 void SendMQTT(String &message, String topic);
 void notifyUnknownCommand(const char* text);
-bool subscribeMqttTopics();
+boolean subscribeMqttTopics();
 void checkMqttConnection();
 // Отправка в MQTT канал - текущие значения переменных
-void SendCurrentState(String keys, String topic, bool immediate);
+void SendCurrentState(String keys, String topic, boolean immediate);
 // Получение строки пары ключ-значение в формате json;
 String getKVP(String &key, JsonVariant &value);
 // Отправка в MQTT канал  состояния всех параметров при старте прошивки

@@ -5,8 +5,8 @@
 
 uint16_t AUTO_MODE_PERIOD = 10;    // Период активации автоматического режима в минутах по умолчанию
 uint16_t AUTO_FILL_PERIOD = 24;    // Период активации автоматического подлива в часах 
-bool     auto_mode = true;         // Флаг автоматического режима
-bool     count_mode = false;       // Флаг включения счетчика воды подлива
+boolean     auto_mode = true;         // Флаг автоматического режима
+boolean     count_mode = false;       // Флаг включения счетчика воды подлива
 
 #ifdef PHTDSCONTROL
 //Инициализация плат I2C расширителей
@@ -14,6 +14,12 @@ bool     count_mode = false;       // Флаг включения счетчик
 i2cPumps pumps(0x20, true);                       //Pumps
 IoAbstractionRef ioExp2   = ioFrom8574(0x24);     //Leds
 IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
 #endif
 
 // *************************** ПОДКЛЮЧЕНИЕ К СЕТИ **************************
@@ -24,17 +30,17 @@ char   apPass[17] = DEFAULT_AP_PASS;        // Пароль подключени
 char   ssid[25]   = NETWORK_SSID;           // SSID (имя) вашего роутера (конфигурируется подключением через точку доступа и сохранением в EEPROM)
 char   pass[17]   = NETWORK_PASS;           // пароль роутера
 byte   IP_STA[]   = DEFAULT_IP;             // Статический адрес в локальной сети WiFi по умолчанию при первом запуске. Потом - загружается из настроек, сохраненных в EEPROM
-bool   useDHCP    = USEDHCP;                // получать динамический IP
+boolean   useDHCP    = USEDHCP;                // получать динамический IP
 unsigned int localPort = 2390;              // локальный порт на котором слушаются входящие команды управления от приложения на смартфоне, передаваемые через локальную сеть
 
 // --------------------Режимы работы Wifi соединения-----------------------
-bool   useSoftAP = false;               // использовать режим точки доступа
-bool   wifi_connected = false;          // true - подключение к wifi сети выполнена  
-bool   ap_connected = false;            // true - работаем в режиме точки доступа;
+boolean   useSoftAP = false;               // использовать режим точки доступа
+boolean   wifi_connected = false;          // true - подключение к wifi сети выполнена  
+boolean   ap_connected = false;            // true - работаем в режиме точки доступа;
 
 // **************** СИНХРОНИЗАЦИЯ ЧАСОВ ЧЕРЕЗ ИНТЕРНЕТ *******************
 
-bool      useNtp;                       // Использовать синхронизацию времени с NTP-сервером
+boolean      useNtp;                       // Использовать синхронизацию времени с NTP-сервером
 IPAddress timeServerIP;                 // IP сервера времени
 uint16_t  syncTimePeriod;               // Период синхронизации в минутах по умолчанию
 byte      packetBuffer[NTP_PACKET_SIZE];// буфер для хранения входящих и исходящих пакетов NTP
@@ -42,9 +48,9 @@ byte      packetBuffer[NTP_PACKET_SIZE];// буфер для хранения в
 int8_t timeZoneOffset;                  // смещение часового пояса от UTC
 long   ntp_t   = 0;                     // Время, прошедшее с запроса данных с NTP-сервера (таймаут)
 byte   ntp_cnt = 0;                     // Счетчик попыток получить данные от сервера
-bool   init_time = false;               // Флаг false - время не инициализировано; true - время инициализировано
-bool   refresh_time = true;             // Флаг true - пришло время выполнить синхронизацию часов с сервером NTP
-bool   getNtpInProgress = true;         // Запрос времени с NTP сервера в процессе выполнения
+boolean   init_time = false;               // Флаг false - время не инициализировано; true - время инициализировано
+boolean   refresh_time = true;             // Флаг true - пришло время выполнить синхронизацию часов с сервером NTP
+boolean   getNtpInProgress = true;         // Запрос времени с NTP сервера в процессе выполнения
 char   ntpServerName[31] = "";          // Используемый сервер NTP
 
 uint32_t upTime = 0;                    // время работы системы с последней перезагрузки
@@ -176,9 +182,10 @@ void setup() {
     ESP.wdtEnable(WDTO_8S);
   #endif
   
-  Wire.begin();
+  Wire.begin(5,4);
+  //Wire.begin();
 
-  #ifdef PHTDSCONTROL
+ #ifdef PHTDSCONTROL
   for(int i = 0; i <= 7; i++ ){ 
     //ioDevicePinMode(ioExp, i, OUTPUT);
     ioDevicePinMode(ioExp2, i, OUTPUT);
@@ -191,7 +198,17 @@ void setup() {
   }
   ioDeviceSync(ioExp2);
   ioDeviceSync(ioExpInp);
-  #endif
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  
+  delay(0);
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+
+ #endif
 
   EEPROM.begin(EEPROM_MAX);
 
@@ -200,9 +217,9 @@ void setup() {
 
   host_name = String(HOST_NAME) + //"-" + 
   String(DEV_ID);
-  Serial.println();
+  Serial.print("FIRMWARE:\t");
   Serial.println(FIRMWARE_VER);
-  Serial.println("Host: '" + host_name + "'");//String(HOST_NAME) + "'");
+  Serial.println("Host name:\t" + host_name);
   
 //-------------------------Инициализация файловой системы--------------------
 
@@ -240,9 +257,10 @@ void setup() {
   if ((eeprom_backup & 0x01) > 0) {
     Serial.println(F("Найдены сохраненные настройки: FS://eeprom.bin"));
   }
-  if ((eeprom_backup & 0x02) > 0) {
-    Serial.println(F("Найдены сохраненные настройки: SD://eeprom.bin"));
-  }
+
+  // if ((eeprom_backup & 0x02) > 0) {
+  //   Serial.println(F("Найдены сохраненные настройки: SD://eeprom.bin"));
+  // }
 
   loadSettings();
 
@@ -251,7 +269,7 @@ void setup() {
   // Подключение к сети
   connectToNetwork();
 
-  ntpSyncTimer.setInterval ( 1000L * 60 * syncTimePeriod );
+  ntpSyncTimer.setInterval ( 60000L * syncTimePeriod );
 
   #if (USE_MQTT == 1)
   // Настройка соединения с MQTT сервером
@@ -264,7 +282,7 @@ void setup() {
   mqtt.setCallback(callback);
   checkMqttConnection();    
   String msg = F("START");
-  SendMQTT(msg, TOPIC_MQTTSTT);
+  SendMQTT(msg, TOPIC_STA);
   #endif
 
   // Port defaults to 8266
@@ -288,7 +306,7 @@ void setup() {
     else // U_SPIFFS
       type = F("файловой системы SPIFFS...");
     // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-    Serial.print(F("Начато обновление "));    
+    Serial.print(F("Обновление начато"));    
     Serial.println(type);    
   });
 
@@ -296,7 +314,7 @@ void setup() {
     Serial.println(F("\nОбновление завершено"));
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    Serial.printf("\nProgress: %u%%\r", (progress / (total / 100)));
   });
 
   ArduinoOTA.onError([](ota_error_t error) {

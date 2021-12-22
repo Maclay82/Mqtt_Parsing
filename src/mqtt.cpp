@@ -5,20 +5,20 @@ WiFiClient m_client;                            // Объект для рабо�
 PubSubClient mqtt(m_client);                    // Объект соединения с MQTT сервером
 
 
-bool     useMQTT = true;                         // Использовать канал управления через MQTT - флаг намерения    // При отключении из приложения set_useMQTT(false) устанавлифается соответствующее состояние (параметр QA), состояние 'намерение отключить MQTT'
-bool     stopMQTT = false;                       // Использовать канал управления через MQTT - флаг результата   // которое должно быть отправлено на MQTT-сервер, значит реально состояние 'MQTT остановлен' - только после отправки флага QA на сервер
+boolean     useMQTT = true;                         // Использовать канал управления через MQTT - флаг намерения    // При отключении из приложения set_useMQTT(false) устанавлифается соответствующее состояние (параметр QA), состояние 'намерение отключить MQTT'
+boolean     stopMQTT = false;                       // Использовать канал управления через MQTT - флаг результата   // которое должно быть отправлено на MQTT-сервер, значит реально состояние 'MQTT остановлен' - только после отправки флага QA на сервер
 char     mqtt_server[25] = DEFAULT_MQTT_SERVER;  // Имя сервера MQTT
 char     mqtt_user[15]   = "";                   // Логин от сервера
 char     mqtt_pass[15]   = "";                   // Пароль от сервера
 char     mqtt_prefix[31] = "";                   // Префикс топика сообщения
 uint16_t mqtt_port       = DEFAULT_MQTT_PORT;    // Порт для подключения к серверу MQTT
 uint16_t mqtt_send_delay = MQTT_SEND_DELAY;      // Задержка между последовательными обращениями к MQTT серверу
-bool     mqtt_state_packet = true;               // Способ передачи состояния: true - в пакете, false - каждый параметр индивидуально
+boolean     mqtt_state_packet = true;               // Способ передачи состояния: true - в пакете, false - каждый параметр индивидуально
 
 String   cmdQueue[QSIZE_IN];                // Кольцевой буфер очереди полученных команд от MQTT
 String   tpcQueue[QSIZE_OUT];               // Кольцевой буфер очереди отправки команд в MQTT (topic)
 String   outQueue[QSIZE_OUT];               // Кольцевой буфер очереди отправки команд в MQTT (message)
-bool     rtnQueue[QSIZE_OUT];               // Кольцевой буфер очереди отправки команд в MQTT (retain)
+boolean     rtnQueue[QSIZE_OUT];               // Кольцевой буфер очереди отправки команд в MQTT (retain)
 
 byte     queueWriteIdx = 0;                 // позиция записи в очередь обработки полученных команд
 byte     queueReadIdx = 0;                  // позиция чтения из очереди обработки полученных команд
@@ -31,8 +31,8 @@ String   last_mqtt_server = "";
 uint16_t last_mqtt_port = 0;
 
 String   changed_keys = "";                 // Строка, содержащая список измененных параметров, чье состояние требуется отправить серверу
-bool     mqtt_connecting = false;           // Выполняется подключение к MQTT (еще не установлено)
-bool     mqtt_topic_subscribed = false;     // Подписка на топик команд выполнена
+boolean     mqtt_connecting = false;           // Выполняется подключение к MQTT (еще не установлено)
+boolean     mqtt_topic_subscribed = false;     // Подписка на топик команд выполнена
 byte     mqtt_conn_cnt = 0;                 // Счетчик попыток подключения для форматирования вывода
 unsigned long mqtt_conn_last = 0;           // Время последней попытки подключения к MQTT-серверу
 unsigned long mqtt_send_last = 0;           // Время последней отправки сообщения к MQTT-серверу
@@ -49,9 +49,9 @@ String mqtt_topic(String topic) {
 }
 
 // Поместить сообщения для отправки на сервер в очередь
-void putOutQueue(String topic, String message, bool retain) {
+void putOutQueue(String topic, String message, boolean retain) {
   if (stopMQTT) return;
-  bool ok = false;
+  boolean ok = false;
   // Если в настройках сервера MQTT нет задержки между отправками сообщений - пытаемся отправить сразу без помещения в очередь
   if (mqtt_send_delay == 0) {
     ok = mqtt.beginPublish(topic.c_str(), message.length(), retain);
@@ -95,8 +95,8 @@ void notifyUnknownCommand(const char* text) {
   SendMQTT(out, TOPIC_ERR);
 }
 
-bool subscribeMqttTopics() {
-  bool ok = false;
+boolean subscribeMqttTopics() {
+  boolean ok = false;
   if (mqtt.connected() && millis() - mqtt_send_last > mqtt_send_delay) {
     Serial.print(F("Подписка на topic='cmd' >> "));
     Serial.print(mqtt_topic(TOPIC_CMD));
@@ -129,8 +129,8 @@ bool subscribeMqttTopics() {
 #endif
 
 #ifdef PHTDSCONTROL
-
 #endif
+
     mqtt_send_last = millis();
   }
   return ok;
@@ -173,7 +173,7 @@ void checkMqttConnection() {
 
     String topic = mqtt_topic(TOPIC_MQTTSTT);
 
-    if (mqtt.connect(clientId.c_str(), mqtt_user, mqtt_pass)){//, topic.c_str(), 0, true, "online")) {
+    if (mqtt.connect(clientId.c_str(), mqtt_user, mqtt_pass, topic.c_str(), 0, true, "offline")) {
       Serial.println(F("\nПодключение к MQTT-серверу выполнено."));
       if (outQueueLength > 0) {
         Serial.print(F("Сообщений в очереди отправки: "));  
@@ -211,7 +211,7 @@ void checkMqttConnection() {
 }
 
 // Отправка в MQTT канал - текущие значения переменных
-void SendCurrentState(String keys, String topic, bool immediate) {
+void SendCurrentState(String keys, String topic, boolean immediate) {
 
   if (stopMQTT) return;
 
@@ -229,7 +229,7 @@ void SendCurrentState(String keys, String topic, bool immediate) {
   JsonVariant value;
 
   String out, key, s_tmp;
-  bool big_size_key, retain;
+  boolean big_size_key, retain;
   int16_t pos_start = 0;
   int16_t pos_end = keys.indexOf('|', pos_start);
   int16_t len = keys.length();
@@ -321,14 +321,14 @@ void processOutQueue() {
     // Топик и содержимое отправляемого сообщения
     String topic = tpcQueue[outQueueReadIdx];
     String message = outQueue[outQueueReadIdx];
-    bool   retain = rtnQueue[outQueueReadIdx];
+    boolean   retain = rtnQueue[outQueueReadIdx];
     // Пытаемся отправить. Если инициализация отправки не удалась - возвращается false; Если удалась - true
       // Serial.print(F("Пытаемся отправить.")); 
       // Serial.print(F("topic - ")); 
       // Serial.print(topic); 
       // Serial.print(F(" >> ")); 
       // Serial.print(message);
-    bool ok = mqtt.beginPublish(topic.c_str(), message.length(), retain);
+    boolean ok = mqtt.beginPublish(topic.c_str(), message.length(), retain);
     if (ok) {
 //      Serial.print(F("успешно")); 
       // Если инициация отправки была успешной - заполняем буфер отправки передаваемой строкой сообщения

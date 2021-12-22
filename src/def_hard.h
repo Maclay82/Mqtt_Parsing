@@ -250,6 +250,8 @@ I2C address 0x49 TDS
 #include "mqtt.h"
 #include "setters.h"
 #include "utility.h"
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 #include "FS.h"                  // Работа с внутренней файловой системой чипа ESP8266/ESP32
 #if defined(ESP32)
