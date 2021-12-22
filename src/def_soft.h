@@ -50,7 +50,7 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 // чтобы изменения вступили в силу нужно также изменить значение константы EEPROM_OK в строке 8 этого файла
 
 #ifndef DEFAULT_MQTT_SERVER
-#define DEFAULT_MQTT_SERVER "192.168.2.100" // MQTT сервер
+#define DEFAULT_MQTT_SERVER "192.168.2.100"  // MQTT сервер
 #endif
 
 #ifndef DEFAULT_MQTT_USER
@@ -58,7 +58,7 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 #endif
 
 #ifndef DEFAULT_MQTT_PASS
-#define DEFAULT_MQTT_PASS   "DINH6J6T"      // Пароль mqtt-пользователя (укажите пароль вашего соединения)
+#define DEFAULT_MQTT_PASS   "DINH6J6T"  // Пароль mqtt-пользователя (укажите пароль вашего соединения)
 #endif
 
 #ifndef DEFAULT_MQTT_PORT
