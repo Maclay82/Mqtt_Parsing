@@ -178,20 +178,22 @@ void setup() {
   #if defined(ESP8266)
     ESP.wdtEnable(WDTO_8S);
   #endif
-
   #if defined(ESP8266)
-  Wire.begin();
+    Wire.begin();
   #endif
   #if defined(ESP32)
-  Wire.begin(5,4);
+    Wire.begin(5,4);
   #endif
 
  #ifdef PHTDSCONTROL
+
+ //test led
   for(int i = 0; i <= 7; i++ ){ 
     //ioDevicePinMode(ioExp, i, OUTPUT);
     ioDevicePinMode(ioExp2, i, OUTPUT);
     ioDevicePinMode(ioExpInp, i, INPUT);
   }
+ //test led
 
   for(int i = 0; i <= 7; i++ ){
     //ioDeviceDigitalWrite(ioExp, i, !true);
@@ -205,27 +207,17 @@ void setup() {
   EEPROM.begin(EEPROM_MAX);
 
   Serial.begin(115200);
-  delay(300);
-
-#ifdef PHTDSCONTROL
-
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println(F("SSD1306 allocation failed"));
-    for(;;);
-  }
-  
-  delay(0);
-  display.clearDisplay();
-  display.setTextColor(WHITE);
-
-#endif
-
+  delay(10);
 
   host_name = String(HOST_NAME) + //"-" + 
   String(DEV_ID);
   Serial.print("FIRMWARE:\t");
   Serial.println(FIRMWARE_VER);
   Serial.println("Host name:\t" + host_name);
+
+#ifdef PHTDSCONTROL
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) Serial.println(F("SSD1306 allocation failed")); 
+#endif
   
 //-------------------------Инициализация файловой системы--------------------
 
@@ -267,11 +259,15 @@ void setup() {
   // if ((eeprom_backup & 0x02) > 0) {
   //   Serial.println(F("Найдены сохраненные настройки: SD://eeprom.bin"));
   // }
-
   loadSettings();
 
   setCollector(); //Применение конфигурации коллектора
-  
+    
+#ifdef PHTDSCONTROL
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+#endif
+
   // Подключение к сети
   connectToNetwork();
 
@@ -286,16 +282,20 @@ void setup() {
   last_mqtt_port = mqtt_port;
   mqtt.setServer(mqtt_server, mqtt_port);
   mqtt.setCallback(callback);
-  checkMqttConnection();    
-  String msg = F("START");
-  SendMQTT(msg, TOPIC_STA);
+  checkMqttConnection();
+  if (mqtt.connected())
+  {
+    String msg = F("START");
+    SendMQTT(msg, TOPIC_STA);
+  }
+
   #endif
 
   // Port defaults to 8266
   // ArduinoOTA.setPort(8266);
 
   // Hostname defaults to esp8266-[ChipID]
-  ArduinoOTA.setHostname(host_name.c_str());
+  // ArduinoOTA.setHostname(host_name.c_str());
 
   // No authentication by default
   // ArduinoOTA.setPassword("admin");
@@ -355,6 +355,9 @@ void setup() {
   tdsk = ( TDSCalP2 - TDSCalP1 ) / ( rawTDSCalP2 - rawTDSCalP1 );
   TdsMP = tdsk * rawTDSCalP1 - TDSCalP1;
 
+Serial.print(F("Wire.beginTransmission"));
+
+
   Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
   Wire.write(byte(0x01));            // sends instruction byte  
   Wire.write(phKa);             // sends potentiometer value byte  
@@ -378,10 +381,8 @@ void loop() {
     ArduinoOTA.handle();
     #if (USE_MQTT == 1)
       if (!stopMQTT) {
-         checkMqttConnection();
-        if (mqtt.connected()) {
-          mqtt.loop();
-        }
+        checkMqttConnection();
+        if (mqtt.connected()) mqtt.loop();
       }
     #endif
   }
