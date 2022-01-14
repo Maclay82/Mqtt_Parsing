@@ -391,7 +391,7 @@ void process() {
     Serial.print(" | ");
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
       Serial.print("Water temp=");
-      Serial.print(Wtemp, 3);
+      Serial.print(Wtemp, 2);
       Serial.print(" C ");
     }
     else {
