@@ -19,6 +19,7 @@ extern float minhum, maxhum;
 #define NUM_AVER 20           // выборка (из скольки усредняем)
 extern boolean     count_mode;         // Флаг автоматического режима
 extern Adafruit_SSD1306 display;
+extern DallasTemperature sensors;
 #endif
 
 extern uint16_t AUTO_MODE_PERIOD;  // Период активации автоматического режима в минутах по умолчанию

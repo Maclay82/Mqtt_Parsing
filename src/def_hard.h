@@ -233,13 +233,14 @@ I2C address 0x49 TDS
 #include <PubSubClient.h>        // Библиотека для работы с MQTT
 #endif
 
-#include <DallasTemperature.h>   // Библиотека работы с датчиком температуры DS18B20 
 #include <ArduinoOTA.h>          // Библиотека обновления "по воздуху"
 #include <WiFiUdp.h>             // Библиотека поддержки WiFi
 #include <TimeLib.h>             // Библиотека поддержки функций времени
 #include <EEPROM.h>              // Библиотека поддержки постоянной памяти
 #include <ArduinoJson.h>         // Библиотека для работы с JSON (mqtt, состояние системы)
 #ifdef PHTDSCONTROL
+#include <OneWire.h>             // Библиотека работы с датчиком температуры DS18B20 
+#include <DallasTemperature.h>   // Библиотека работы с датчиком температуры DS18B20 
 #include <IoAbstraction.h>
 #include <IoAbstractionWire.h>
 #include "i2cPumps.h"

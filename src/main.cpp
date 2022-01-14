@@ -266,7 +266,9 @@ void setup() {
 #ifdef PHTDSCONTROL
   display.clearDisplay();
   display.setTextColor(WHITE);
+  display.display();
 #endif
+
 
   // Подключение к сети
   connectToNetwork();
@@ -344,19 +346,27 @@ void setup() {
   timing = timing1 = timing2 = millis();
   timing3 = timing2 + ( regDelay / 2 );
 
+
 #ifdef HUMCONTROL
   pinMode(HUMPWR, OUTPUT);
   myHumidity.begin();
 #endif
 
 #ifdef PHTDSCONTROL
+//ds18b20 Begin "Dallas Temperature IC Control Library"
+  sensors.begin();
+  // if (!sensors.getAddress(WaterThermAdr, 0)) Serial.println("Unable to find address for WaterTherm"); 
+  // // show the addresses we found on the bus
+  // Serial.print("\nWater temp sensor Address: ");
+  //   for (uint8_t i = 0; i < 8; i++) Serial.print(WaterThermAdr[i], HEX);
+  // Serial.println();
+  //sensors.setResolution(WaterThermAdr, 11);  // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
+//ds18b20 Begin end
+
   phk = ( PhCalP2 - PhCalP1 ) / ( rawPhCalP2 - rawPhCalP1 );
   PhMP = phk * rawPhCalP1 - PhCalP1;
   tdsk = ( TDSCalP2 - TDSCalP1 ) / ( rawTDSCalP2 - rawTDSCalP1 );
   TdsMP = tdsk * rawTDSCalP1 - TDSCalP1;
-
-Serial.print(F("Wire.beginTransmission"));
-
 
   Wire.beginTransmission(PHREGADR); // transmit to device #44 (0x2c)
   Wire.write(byte(0x01));            // sends instruction byte  
