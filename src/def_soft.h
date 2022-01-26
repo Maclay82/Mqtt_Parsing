@@ -58,7 +58,7 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 #endif
 
 #ifndef DEFAULT_MQTT_PASS
-#define DEFAULT_MQTT_PASS   "DINH6J6T"  // Пароль mqtt-пользователя (укажите пароль вашего соединения)
+#define DEFAULT_MQTT_PASS   "DINH6J6T"   // Пароль mqtt-пользователя (укажите пароль вашего соединения)
 #endif
 
 #ifndef DEFAULT_MQTT_PORT
