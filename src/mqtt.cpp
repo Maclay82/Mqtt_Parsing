@@ -173,7 +173,8 @@ void checkMqttConnection() {
 
     String topic = mqtt_topic(TOPIC_MQTTSTT);
 
-    if (mqtt.connect(clientId.c_str(), mqtt_user, mqtt_pass, topic.c_str(), 0, true, "offline")) {
+    if (mqtt.connect(clientId.c_str(), mqtt_user, mqtt_pass, topic.c_str(), 0, true, "offline")) 
+    {
       Serial.println(F("\nПодключение к MQTT-серверу выполнено."));
       if (outQueueLength > 0) {
         Serial.print(F("Сообщений в очереди отправки: "));  
@@ -181,7 +182,9 @@ void checkMqttConnection() {
       }
       putOutQueue(topic, "online", true);
       mqtt_connecting = false;      
-    } else {      
+    } 
+    else 
+    {      
       Serial.print(".");
       mqtt_connecting = true;
       mqtt_conn_cnt++;

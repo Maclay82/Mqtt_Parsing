@@ -19,6 +19,7 @@ extern float minhum, maxhum;
 #define NUM_AVER 20           // выборка (из скольки усредняем)
 extern boolean     count_mode;         // Флаг автоматического режима
 extern Adafruit_SSD1306 display;
+extern DallasTemperature sensors;
 #endif
 
 extern uint16_t AUTO_MODE_PERIOD;  // Период активации автоматического режима в минутах по умолчанию
@@ -50,7 +51,7 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 // чтобы изменения вступили в силу нужно также изменить значение константы EEPROM_OK в строке 8 этого файла
 
 #ifndef DEFAULT_MQTT_SERVER
-#define DEFAULT_MQTT_SERVER "192.168.2.100"  // MQTT сервер
+#define DEFAULT_MQTT_SERVER "192.168.2.125"  // MQTT сервер
 #endif
 
 #ifndef DEFAULT_MQTT_USER

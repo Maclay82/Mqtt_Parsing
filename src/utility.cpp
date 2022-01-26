@@ -99,7 +99,7 @@ boolean LEAP_YEAR(uint16_t Y) {
 }
 
 void sendNTPpacket(IPAddress& address) {
-  Serial.print(F("Отправка NTP пакета на сервер "));
+  Serial.print(F("\nОтправка NTP пакета на сервер "));
   Serial.println(ntpServerName);
   // set all bytes in the buffer to 0
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
@@ -390,8 +390,15 @@ void startWiFi(unsigned long waitTime) {
   WiFi.mode(WIFI_STA);
   // Пытаемся соединиться с роутером в сети
   if (strlen(ssid) > 0) {
-    Serial.print(F("\nПодключение к "));
+    Serial.print(F("Подключение к "));
     Serial.print(ssid);
+
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setCursor(0,0);
+    display.print("connect to:");
+    display.print(ssid);
+    display.display();
 
     if (IP_STA[0] + IP_STA[1] + IP_STA[2] + IP_STA[3] > 0 && useDHCP == false) {
       WiFi.config(IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3]),  // 192.168.0.106 
@@ -432,7 +439,7 @@ void startWiFi(unsigned long waitTime) {
           Serial.print(F("\nWiFi подключен. IP адрес: "));
           Serial.print(WiFi.localIP());
           Serial.print(F(" MAC адрес: "));
-          Serial.println(WiFi.macAddress());
+          Serial.print(WiFi.macAddress());
           break;
         }
         if (cnt % 80 == 0) {
@@ -468,6 +475,12 @@ void startWiFi(unsigned long waitTime) {
 void startSoftAP() {
   WiFi.softAPdisconnect(true);
   ap_connected = false;
+
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setCursor(0,0);
+  display.print("Wifi AP");
+  display.display();
 
   Serial.print(F("Создание точки доступа "));
   Serial.print(apName);
@@ -533,7 +546,14 @@ void connectToNetwork() {  // Подключиться к WiFi сети, ожи�
 
   // Сообщить UDP порт, на который ожидаются подключения
   if (wifi_connected || ap_connected) {
+
+    display.setTextSize(1);
+    display.setCursor(20, 50);
+    display.print("udp:");
+    display.print(localPort);
+    display.display();
+
     Serial.print(F("UDP-сервер на порту "));
-    Serial.println(localPort);
+    Serial.print(localPort);
   }
 }

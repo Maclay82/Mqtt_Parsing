@@ -16,14 +16,15 @@ float minhum, maxhum; // = minhumDEF // = maxhumDEF;
 #endif
 
 #ifdef PHTDSCONTROL
+  
 //Инициализация датчика температуры
 #if defined(ESP8266)
 OneWire oneWire(D5); 
 #endif
 #if defined(ESP32)
-OneWire oneWire(16);
+OneWire oneWire(15);
 #endif
-DallasTemperature TempSensors(&oneWire);
+DallasTemperature sensors(&oneWire);
 
 boolean TDScal=false;  //  TDS Calibration start 
 boolean PhCal=false;  //  Ph Calibration start
@@ -120,7 +121,6 @@ void process() {
   parsing();
 
 #ifdef PHTDSCONTROL
-
 
   if (millis() - timing1 >=  OPROSDELAY)  // opros datchikov Ph, TDS i level
   {
@@ -268,11 +268,11 @@ void process() {
     timing3 = millis();
   }
 #endif
-    
+
   if (millis() - timing >= REFRESHTIME){
 
     #ifdef USE_LOG
-    Serial.print("Time:");
+    Serial.print("\nTime:");
     Serial.print((float)millis()/60000.0);
     #endif  
     char s[8];   //строка mqtt сообщения
@@ -369,9 +369,13 @@ void process() {
     Serial.print("| ");
 #endif
 
-    TempSensors.requestTemperatures();      // Send the command to get temperature
-    Wtemp = TempSensors.getTempCByIndex(0); // get temperature
-    
+//water temp read
+    sensors.requestTemperatures(); // Send the command to get temperatures
+    Wtemp = sensors.getTempCByIndex(0);
+    if(Wtemp == DEVICE_DISCONNECTED_C) Serial.println("Error: Could not read temperature data");
+    // else Serial.println(Wtemp);
+//---
+
     realPh = phk * middleArifm(PhvalArray) - PhMP;
     if ( realPh < 0 ) realPh = 0;
     realTDS = tdsk * middleArifm(TDSvalArray) - TdsMP;
@@ -387,7 +391,7 @@ void process() {
     Serial.print(" | ");
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
       Serial.print("Water temp=");
-      Serial.print(Wtemp, 3);
+      Serial.print(Wtemp, 2);
       Serial.print(" C ");
     }
     else {
@@ -457,33 +461,31 @@ void process() {
   display.setTextSize(2);
   display.setCursor(0,0);
   display.print("Ph: ");
-  // display.setTextSize(2);
-  // display.setCursor(0,10);
   if (rawPh == -1) display.print(String("ERR"));
   else display.print(String(realPh));
   
   display.setTextSize(2);
-  display.setCursor(0, 17);
-  // display.print("Humidity: ");
+  display.setCursor(0, 16);
   display.print("TDS:");
-  // display.setTextSize(2);
-  // display.setCursor(0, 45);
-  //display.print(String(bme.readHumidity()));
 
   if (rawTDS == -1) display.print(String("ERR"));
   else display.print(String(realTDS));
 
-  // display.print(" %"); 
-  display.setTextSize(1);
-  display.setCursor(0, 50);
-  // display.print("Humidity: ");
-  display.print("ip:");
-  display.print(WiFi.localIP());
+  display.setTextSize(2);
+  display.setCursor(0, 32);
+  display.print("Wt:");
+  if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
+    display.print(Wtemp,2);
+    display.print("C");
+  }
+  else display.print(String("ERR"));
 
-  
-  
-  display.display();
-
+    display.setTextSize(1);
+    display.setCursor(0, 55);
+    display.print(WiFi.localIP());
+    display.print(":");
+    display.print(localPort);
+    display.display();
 
     timing = millis();
   }

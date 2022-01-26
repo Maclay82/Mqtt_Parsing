@@ -178,20 +178,22 @@ void setup() {
   #if defined(ESP8266)
     ESP.wdtEnable(WDTO_8S);
   #endif
-
   #if defined(ESP8266)
-  Wire.begin();
+    Wire.begin();
   #endif
   #if defined(ESP32)
-  Wire.begin(5,4);
+    Wire.begin(5,4);
   #endif
 
  #ifdef PHTDSCONTROL
+
+ //test led
   for(int i = 0; i <= 7; i++ ){ 
     //ioDevicePinMode(ioExp, i, OUTPUT);
     ioDevicePinMode(ioExp2, i, OUTPUT);
     ioDevicePinMode(ioExpInp, i, INPUT);
   }
+ //test led
 
   for(int i = 0; i <= 7; i++ ){
     //ioDeviceDigitalWrite(ioExp, i, !true);
@@ -205,27 +207,17 @@ void setup() {
   EEPROM.begin(EEPROM_MAX);
 
   Serial.begin(115200);
-  delay(300);
-
-#ifdef PHTDSCONTROL
-
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println(F("SSD1306 allocation failed"));
-    for(;;);
-  }
-  
-  delay(0);
-  display.clearDisplay();
-  display.setTextColor(WHITE);
-
-#endif
-
+  delay(10);
 
   host_name = String(HOST_NAME) + //"-" + 
   String(DEV_ID);
   Serial.print("FIRMWARE:\t");
   Serial.println(FIRMWARE_VER);
   Serial.println("Host name:\t" + host_name);
+
+#ifdef PHTDSCONTROL
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) Serial.println(F("SSD1306 allocation failed")); 
+#endif
   
 //-------------------------Инициализация файловой системы--------------------
 
@@ -267,11 +259,17 @@ void setup() {
   // if ((eeprom_backup & 0x02) > 0) {
   //   Serial.println(F("Найдены сохраненные настройки: SD://eeprom.bin"));
   // }
-
   loadSettings();
 
   setCollector(); //Применение конфигурации коллектора
-  
+    
+#ifdef PHTDSCONTROL
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.display();
+#endif
+
+
   // Подключение к сети
   connectToNetwork();
 
@@ -286,16 +284,20 @@ void setup() {
   last_mqtt_port = mqtt_port;
   mqtt.setServer(mqtt_server, mqtt_port);
   mqtt.setCallback(callback);
-  checkMqttConnection();    
-  String msg = F("START");
-  SendMQTT(msg, TOPIC_STA);
+  checkMqttConnection();
+  if (mqtt.connected())
+  {
+    String msg = F("START");
+    SendMQTT(msg, TOPIC_STA);
+  }
+
   #endif
 
   // Port defaults to 8266
   // ArduinoOTA.setPort(8266);
 
   // Hostname defaults to esp8266-[ChipID]
-  ArduinoOTA.setHostname(host_name.c_str());
+  // ArduinoOTA.setHostname(host_name.c_str());
 
   // No authentication by default
   // ArduinoOTA.setPassword("admin");
@@ -344,12 +346,23 @@ void setup() {
   timing = timing1 = timing2 = millis();
   timing3 = timing2 + ( regDelay / 2 );
 
+
 #ifdef HUMCONTROL
   pinMode(HUMPWR, OUTPUT);
   myHumidity.begin();
 #endif
 
 #ifdef PHTDSCONTROL
+//ds18b20 Begin "Dallas Temperature IC Control Library"
+  sensors.begin();
+  // if (!sensors.getAddress(WaterThermAdr, 0)) Serial.println("Unable to find address for WaterTherm"); 
+  // // show the addresses we found on the bus
+  // Serial.print("\nWater temp sensor Address: ");
+  //   for (uint8_t i = 0; i < 8; i++) Serial.print(WaterThermAdr[i], HEX);
+  // Serial.println();
+  //sensors.setResolution(WaterThermAdr, 11);  // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
+//ds18b20 Begin end
+
   phk = ( PhCalP2 - PhCalP1 ) / ( rawPhCalP2 - rawPhCalP1 );
   PhMP = phk * rawPhCalP1 - PhCalP1;
   tdsk = ( TDSCalP2 - TDSCalP1 ) / ( rawTDSCalP2 - rawTDSCalP1 );
@@ -378,10 +391,8 @@ void loop() {
     ArduinoOTA.handle();
     #if (USE_MQTT == 1)
       if (!stopMQTT) {
-         checkMqttConnection();
-        if (mqtt.connected()) {
-          mqtt.loop();
-        }
+        checkMqttConnection();
+        if (mqtt.connected()) mqtt.loop();
       }
     #endif
   }
