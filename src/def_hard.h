@@ -278,6 +278,11 @@ extern i2cPumps pumps;
 extern float realTDS, realPh, Wtemp;
 extern int Wlvl;
 
+#define PUMPSCALEADR 400    // start pumps scale address 
+#define PUMPCALVOLADR 350
+extern IoAbstractionRef ioExp2, ioExpInp, I2CExp; //классы плат I2C расширителей
+
+
 #define PHUP        1       //  PH up pump
 #define PHDOWN      2       //  PH down pump
 #define TDSA        3       //  TDS A pump
@@ -294,10 +299,6 @@ extern int Wlvl;
 #define TDSREGADR  0x2E     // TDS reg. AD5282 address in 7bit format
 #define PHADDRESS  0x48     //  PH ADC MCP3221 address in 7bit format
 #define TDSADDRESS 0x49     // TDS ADC MCP3221 address in 7bit format
-
-#define PUMPSCALEADR 400    // start pumps scale address 
-#define PUMPCALVOLADR 350
-extern IoAbstractionRef ioExp2, ioExpInp, I2CExp; //классы плат I2C расширителей
 
 #ifndef LVLSNSCOUNT 
 #define LVLSNSCOUNT 3       //количество датчиков уровня в ёмкости

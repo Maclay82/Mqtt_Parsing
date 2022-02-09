@@ -1,12 +1,10 @@
+#include <Arduino.h>
+#include "def_soft.h"     // Определение параметров эффектов, переменных программы и т.п.
+
 #ifndef I2CPUMPS_H
 #define I2CPUMPS_H
 
 #define PUMPCOUNT 8
-
-#include <Arduino.h>
-#include <IoAbstraction.h>
-#include <IoAbstractionWire.h>
-
 
 class i2cPumps
 {
