@@ -218,7 +218,7 @@ I2C address 0x49 TDS
 
 // ************** ИСПОЛЬЗУЕМЫЕ БИБЛИОТЕКИ ****************
 #include <Wire.h>
-#include <SparkFunHTU21D.h>
+//#include <SparkFunHTU21D.h>
 
 #if defined(ESP8266)
   #include <ESP8266WiFi.h>
