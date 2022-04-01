@@ -224,7 +224,6 @@ I2C address 0x49 TDS
   #include <ESP8266WiFi.h>
   #include <ESP8266mDNS.h>
 #endif
-
 #if defined(ESP32)
   #include <ESPmDNS.h>
 #endif
@@ -238,6 +237,7 @@ I2C address 0x49 TDS
 #include <TimeLib.h>             // Библиотека поддержки функций времени
 #include <EEPROM.h>              // Библиотека поддержки постоянной памяти
 #include <ArduinoJson.h>         // Библиотека для работы с JSON (mqtt, состояние системы)
+
 #ifdef PHTDSCONTROL
 #include <OneWire.h>             // Библиотека работы с датчиком температуры DS18B20 
 #include <DallasTemperature.h>   // Библиотека работы с датчиком температуры DS18B20 
@@ -245,6 +245,7 @@ I2C address 0x49 TDS
 #include <IoAbstractionWire.h>
 #include "i2cPumps.h"
 #endif
+
 #include "timerMinim.h"          // Библиотека таймеров
 #include "a_main.h"     
 #include "eeprom1.h"             // Библиотека для работы с постоянной памятью
@@ -280,7 +281,7 @@ extern int Wlvl;
 
 #define PUMPSCALEADR 400    // start pumps scale address 
 #define PUMPCALVOLADR 350
-extern IoAbstractionRef ioExp2, ioExpInp, I2CExp; //классы плат I2C расширителей
+extern IoAbstractionRef I2CExp, ioExp2, ioExpInp; //классы плат I2C расширителей
 
 
 #define PHUP        1       //  PH up pump
