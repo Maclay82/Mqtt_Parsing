@@ -95,6 +95,9 @@
                 "/home/maclay/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/fb_gfx",
                 "/home/maclay/.platformio/packages/framework-arduinoespressif32/cores/esp32",
                 "/home/maclay/.platformio/packages/framework-arduinoespressif32/variants/lolin32",
+                "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/lolin32/Adafruit BusIO@1.11.1",
+                "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/lolin32/EspSoftwareSerial/src",
+                "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/lolin32/MH-Z CO2 Sensors",
                 "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/AsyncUDP/src",
                 "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/AzureIoT/src",
                 "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/BLE/src",
@@ -208,6 +211,9 @@
                     "/home/maclay/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/fb_gfx",
                     "/home/maclay/.platformio/packages/framework-arduinoespressif32/cores/esp32",
                     "/home/maclay/.platformio/packages/framework-arduinoespressif32/variants/lolin32",
+                    "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/lolin32/Adafruit BusIO@1.11.1",
+                    "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/lolin32/EspSoftwareSerial/src",
+                    "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/lolin32/MH-Z CO2 Sensors",
                     "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/AsyncUDP/src",
                     "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/AzureIoT/src",
                     "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/BLE/src",
@@ -233,7 +239,7 @@
                 ]
             },
             "defines": [
-                "PLATFORMIO=50204",
+                "PLATFORMIO=50205",
                 "ARDUINO_LOLIN32",
                 "ESP32",
                 "ESP_PLATFORM",
