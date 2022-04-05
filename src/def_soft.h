@@ -56,7 +56,7 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 // чтобы изменения вступили в силу нужно также изменить значение константы EEPROM_OK в строке 8 этого файла
 
 #ifndef DEFAULT_MQTT_SERVER
-#define DEFAULT_MQTT_SERVER "192.168.2.125"  // MQTT сервер
+#define DEFAULT_MQTT_SERVER   "192.168.2.125"  //"192.168.1.166"  // MQTT сервер
 #endif
 
 #ifndef DEFAULT_MQTT_USER

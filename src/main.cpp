@@ -12,6 +12,12 @@ boolean  count_mode = false;       // Флаг включения счетчик
 MHZ co2(MH_Z19_RX, MH_Z19_TX, MHZ19B);
 #endif
 
+#ifdef HUMCONTROL
+HTU21D myHumidity;
+#endif
+
+
+
 #ifdef PHTDSCONTROL
 //Инициализация плат I2C расширителей
 //Экзэмпляры классов
@@ -68,12 +74,10 @@ char incomeMqttBuffer[BUF_MQTT_SIZE];   // Буфер для приема стр
 // Сервер не может инициировать отправку сообщения клиенту - только в ответ на запрос клиента
 // Следующие две переменные хранят сообщения, формируемые по инициативе сервера и отправляются в ответ на ближайший запрос от клиента,
 // например в ответ на периодический ping - в команде sendAcknowledge();
-
 String   cmd95;                        // Строка, формируемая sendPageParams(95) для отправки по инициативе сервера
 String   cmd96;                        // Строка, формируемая sendPageParams(96) для отправки по инициативе сервера
 
 // ---------------------------------------------------------------
-
 int8_t   thisMode = 1;                 // текущий режим - id
 String   effect_name;                  // текущий режим - название
 
@@ -146,19 +150,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
   #endif
 
   #ifdef HUMCONTROL
-  if ((String)topic == (String)mqtt_topic(TOPIC_MAXHUM).c_str())
-  {
-    maxhum = atof(temp);
-    putMaxHum(maxhum);
-    profpub();
-  }
-  if ((String)topic == (String)mqtt_topic(TOPIC_MINHUM).c_str())
-  {
-    minhum = atof(temp);
-    putMinHum(minhum);
-    profpub();
-  }
-
   if ((String)topic == (String)mqtt_topic(TOPIC_RELAY).c_str())//(String)mqtt_topic_relay)
   {
     if ( atoi(temp) == 1 ) {
@@ -180,23 +171,20 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void setup() {
   #if defined(ESP8266)
     ESP.wdtEnable(WDTO_8S);
-  #endif
-  #if defined(ESP8266)
     Wire.begin();
   #endif
   #if defined(ESP32)
     Wire.begin(5,4);
   #endif
 
-  #ifdef CO2CONTROL                // CO2 PPM MH-Z19B init
-
-
+  #ifdef HUMCONTROL                // Hum init
+    myHumidity.begin();
   #endif
 
+  #ifdef CO2CONTROL                // CO2 PPM MH-Z19B init
+  #endif
 
-
- #ifdef PHTDSCONTROL
-
+#ifdef PHTDSCONTROL
  //test led
   for(int i = 0; i <= 7; i++ ){ 
     //ioDevicePinMode(ioExp, i, OUTPUT);
@@ -211,13 +199,12 @@ void setup() {
   }
   ioDeviceSync(ioExp2);
   ioDeviceSync(ioExpInp);
-
  #endif
 
   EEPROM.begin(EEPROM_MAX);
 
   Serial.begin(115200);
-  delay(10);
+  delay(100);
 
   host_name = String(HOST_NAME) + //"-" + 
   String(DEV_ID);
