@@ -8,8 +8,7 @@ eModes    parseMode; // Текущий режим парсера
 unsigned long timing, timing1, timing2, timing3, per, regDelay; // Таймеры опросов, длительность в миллисекундах
 
 #ifdef HUMCONTROL
-HTU21D myHumidity;
-float temp = 0, CO2PPM = 0, humcorr = 3.2,
+float temp = 0, humd = 0, humcorr = 3.2,
 tempcorr = 0.0;
 float minhum, maxhum; // = minCO2PPMEF // = maxCO2PPMEF;
 #endif
@@ -307,15 +306,15 @@ void process() {
 #endif
 
 #ifdef HUMCONTROL
-    CO2PPM = myHumidity.readHumidity() + humcorr;
+    humd = myHumidity.readHumidity() + humcorr;
     temp = myHumidity.readTemperature() + tempcorr;
 
-    if(CO2PPM < 998){
+    if(humd < 998){
       if (auto_mode){
-        if ( CO2PPM > maxhum ){
+        if ( humd > maxhum ){
           digitalWrite (HUMPWR, LOW);  
         }
-        if ( CO2PPM < minhum ){
+        if ( humd < minhum ){
           digitalWrite (HUMPWR, HIGH);  
         }
       }
@@ -324,7 +323,7 @@ void process() {
       Serial.print(temp, 3);
       Serial.print("C");
       Serial.print(" Humidity:");
-      Serial.print(CO2PPM, 3);
+      Serial.print(humd, 3);
       Serial.println("%");
       #endif      
       if (mqtt.connected()) {
@@ -492,7 +491,7 @@ void process() {
 
       // Если настройки программы предполагают синхронизацию с NTP сервером и время пришло - выполнить синхронизацию
       if (useNtp) {
-        if ((ntp_t > 0) && getNtpInProgress && (millis() - ntp_t > 5000)) {
+        if ((ntp_t > 0) && getNtpInProgress && (millis() - ntp_t > 30000)) {
 #ifdef USE_LOG
           Serial.println(F("Таймаут NTP запроса!"));
 #endif
@@ -665,10 +664,16 @@ void parsing() {
         $4 8 X - Задать TDS min (целое число)
         $4 9 X - Значение текущего калибровочного раствора Ph
         $4 10 X - Значение текущего калибровочного раствора TDS
+        $4 11 X - Значение minHum
+        $4 12 X - Значение maxHum
 
     5 - Калибровка датчиков и настройка усилителей Ph и TDS
         $5 0 Х - Включить - 1, выключить - 0 отображение сырых данных Ph и TDS
-        
+        $5 1 Х - задать phKa
+        $5 2 Х - задать phKb
+        $5 3 Х - задать tdsKa
+        $5 4 Х - задать tdsKb
+        $5 5   - задать нулевое значение датчика CO2 MH-Z19B (400 PPM)
 
         Протокол связи, посылка начинается с режима. Режимы:
     6 - текст $6 N|some text, где N - назначение текста;
@@ -785,10 +790,12 @@ void parsing() {
       //   $4 8 X - Задать TDS min (целое число)
       //   $4 9 X - Значение текущего калибровочного раствора Ph
       //   $4 10 X - Значение текущего калибровочного раствора TDS
-#ifdef PHTDSCONTROL
+      //   $4 11 X - Значение minHum
+      //   $4 12 X - Значение maxHum
       case 4:
         switch (intData[1]) { 
           // $4 0 Х - Задать время регулирования X минут (целое число)
+#ifdef PHTDSCONTROL
           case 0:
             if (floatData[0] > 0){
               putregDelay((int)floatData[0]);
@@ -934,19 +941,40 @@ void parsing() {
               }
             }
           break;
+#endif
+
+#ifdef HUMCONTROL
+          // $4 11 Х - Задать minHum
+          case 11:  
+            if (floatData[0] > 0 && floatData[0] != getMinHum()){
+              minhum = floatData[0];
+              putMinHum(minhum);
+              profpub();
+            }
+          break;
+          // $4 12 Х - Задать maxHum
+          case 12:  
+            if (floatData[0] > 0 && floatData[0] != getMaxHum()){
+              maxhum = floatData[0];
+              putMaxHum(maxhum);
+              profpub();
+            }
+          break;
+#endif
         }
       break;
 
       // ----------------------------------------------------
-      // 5 - Калибровка датчиков и настройка усилителей Ph и TDS
+      // 5 - Калибровка датчиков и настройка усилителей Ph и TDS и других датчиков
       //     $5 0 Х - Включить - 1, выключить - 0 отображение сырых данных(RAW) Ph и TDS
       //     $5 1 Х - задать phKa
       //     $5 2 Х - задать phKb
       //     $5 3 Х - задать tdsKa
       //     $5 4 Х - задать tdsKb
+      //     $5 5   - задать нулевое значение датчика CO2 MH-Z19B (400 PPM)
       case 5:
         switch (intData[1]) { 
-         #ifdef PHTDSCONTROL
+#ifdef PHTDSCONTROL
           case 0:
             if(intData[2] == 1) putRAWMode(true);
             else putRAWMode(false);
@@ -1001,10 +1029,19 @@ void parsing() {
               HWprofPub();
             }
           break;
-         #endif        
+#endif 
+#ifdef CO2CONTROL
+          case 5:
+            // if(intData[2] > 0)
+            {
+              co2.calibrateZero();
+              Serial.println("co2.calibrateZero()");
+            }
+          break;
+#endif
         }
       break;
-#endif
+
 
       // ----------------------------------------------------
       // 6 - прием строки: строка принимается в формате N|text, где N:

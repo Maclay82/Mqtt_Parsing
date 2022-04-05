@@ -106,20 +106,6 @@ boolean subscribeMqttTopics() {
     else    Serial.println(F("FAIL"));
 
 #ifdef HUMCONTROL
-    Serial.print(F("Подписка на topic='minhum' >> "));
-    Serial.print(mqtt_topic(TOPIC_MINHUM));
-    Serial.print('\t');
-    ok = mqtt.subscribe(mqtt_topic(TOPIC_MINHUM).c_str());
-    if (ok) Serial.println(F("OK"));
-    else    Serial.println(F("FAIL"));
-  
-    Serial.print(F("Подписка на topic='maxhum' >> "));
-    Serial.print(mqtt_topic(TOPIC_MAXHUM));
-    Serial.print('\t');
-    ok = mqtt.subscribe(mqtt_topic(TOPIC_MAXHUM).c_str());
-    if (ok) Serial.println(F("OK"));
-    else    Serial.println(F("FAIL"));
-  
     Serial.print(F("Подписка на topic='relay' >> "));
     Serial.print(mqtt_topic(TOPIC_RELAY));
     Serial.print('\t');

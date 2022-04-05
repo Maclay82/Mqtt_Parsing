@@ -46,7 +46,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
 
-#define DEVICE_ID   6               // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID   0               // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
                                     // 3 - PhTDS контроллер тестовый
@@ -76,8 +76,6 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
                               // 0 - Настройки MQTT и API KEY OpenWeatherMap в скетче в def_soft.h в строках: (пароли и ключи доступа определены в тексте скетча)
                               // Файл a_def_pass.h в комплект не входит, нужно создать, скопировать туда указанные строки
 
-#define HUMPWR D6
-
 #define minhumDEF 69
 #define maxhumDEF 74
 
@@ -90,15 +88,13 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #define HUMCONTROL
 #endif
 #define DEV_ID 0
-#define REFRESHTIME 5000
 
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 #define HOST_NAME   F("humCtrl")
 #define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
 
-#define HUMPWR D7
-
+#define REFRESHTIME 5000
 #define minhumDEF 69
 #define maxhumDEF 74
 
@@ -115,9 +111,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #define DEFAULT_MQTT_PREFIX "gh2"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
 
-#define HUMPWR D7
 #define REFRESHTIME 5000
-
 #define minhumDEF 69
 #define maxhumDEF 74
 
@@ -195,11 +189,9 @@ I2C address 0x49 TDS
 
 #define ICCSCAN 0
 
-#ifndef HUMCONTROL
-#define HUMCONTROL
+#ifndef VENTCONTROL
+#define VENTCONTROL
 #endif
-
-#define HUMPWR D7
 
 #define minhumDEF 69
 #define maxhumDEF 74
@@ -264,7 +256,6 @@ I2C address 0x49 TDS
 
 // ************** ИСПОЛЬЗУЕМЫЕ БИБЛИОТЕКИ ****************
 #include <Wire.h>
-//#include <SparkFunHTU21D.h>
 
 #if defined(ESP8266)
   #include <ESP8266WiFi.h>
@@ -298,6 +289,11 @@ I2C address 0x49 TDS
 #include <MHZ.h>
 #endif
 
+#ifdef HUMCONTROL                // Hum lib
+
+#include "SparkFunHTU21D.h"
+#endif
+
 #include "timerMinim.h"          // Библиотека таймеров
 #include "a_main.h"     
 #include "eeprom1.h"             // Библиотека для работы с постоянной памятью
@@ -323,7 +319,20 @@ I2C address 0x49 TDS
 
 //Create an instance of the object
 #ifdef HUMCONTROL
+#if defined(ESP8266)
+  #define HUMPWR D7
+#endif
+#if defined(ESP32)
+  #define HUMPWR 23
+#endif
+#ifndef maxhumDEF
+  #define maxhumDEF 74
+#endif
+#ifndef minhumDEF
+  #define minhumDEF 69
+#endif
 extern HTU21D myHumidity;
+extern float temp, humd;
 #endif                                           
 
 #ifdef CO2CONTROL                // CO2 PPM MH-Z19B pin for uart reading
