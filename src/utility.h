@@ -20,7 +20,11 @@ void profpub();
 void calPointPub();
 void HWprofPub();
 boolean statusPub();    //Публикация состояния параметров системы
+
+#ifdef PHTDSCONTROL
 boolean setCollector(); //Приведение конфигурации коллектора в силу
+#endif
+
 void startWiFi(unsigned long waitTime);
 void startSoftAP();
 void connectToNetwork();

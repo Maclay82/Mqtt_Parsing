@@ -209,7 +209,11 @@ void profpub() {
 #ifdef HUMCONTROL
     doc["minhum"] = minhum;
     doc["maxhum"] = maxhum;
-    doc["hum_relay"] = digitalRead(HUMPWR);
+#endif
+
+#ifdef CO2CONTROL
+    doc["minCO2"] = minCO2;
+    doc["maxCO2"] = maxCO2;
 #endif
 
 #ifdef PHTDSCONTROL
@@ -236,6 +240,8 @@ void calPointPub() {
     DynamicJsonDocument doc(256);
     String out;
 #ifdef HUMCONTROL
+#endif
+#ifdef CO2CONTROL
 #endif
 
 #ifdef PHTDSCONTROL
@@ -267,9 +273,12 @@ void HWprofPub() {
   if (mqtt.connected()) {
     DynamicJsonDocument doc(256);
     String out;
-#ifdef HUMCONTROL
 
+#ifdef HUMCONTROL
 #endif
+#ifdef CO2CONTROL
+#endif
+
 #ifdef PHTDSCONTROL
     doc["RAWMode"] = RAWMode; //getTDSKb средняя точка
     doc["tKb"] = tdsKb; //getTDSKb средняя точка
@@ -293,11 +302,24 @@ boolean statusPub()    //Публикация состояния парамет�
     String out;
     char s[8];   //строка mqtt сообщения
 
-#ifdef HUMCONTROL
+    #ifdef HUMCONTROL
+      dtostrf(humd, 2, 2, s);
+      doc["hum"] = humd;
+      dtostrf(temp, 2, 2, s);
+      doc["temp"] = temp;
+      doc["Hum_relay"] = digitalRead(HUMPWR);
+    #endif
 
-#endif
+    #ifdef CO2CONTROL
+    // if(CO2PPM > 0) { 
+      dtostrf(CO2PPM, 1, 2, s);
+      doc["temp"] = temp;
+      doc["CO2PPM"] = CO2PPM;
+      doc["CO2_relay"] = digitalRead(CO2PWR);
+    // }
+    #endif
 
-#ifdef PHTDSCONTROL   
+    #ifdef PHTDSCONTROL   
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
       dtostrf(Wtemp, 1, 2, s);
       switch (thisMode) { 
@@ -343,12 +365,9 @@ boolean statusPub()    //Публикация состояния парамет�
   return(false);
 }
 
+#ifdef PHTDSCONTROL
 boolean setCollector() //Приведение конфигурации коллектора в силу
 {
-  #ifdef HUMCONTROL
-
-  #endif
-  #ifdef PHTDSCONTROL
   if(ioDeviceSync(ioExp2) == true)
   {
     switch (thisMode) 
@@ -374,8 +393,8 @@ boolean setCollector() //Приведение конфигурации колл�
     }
   }          
   return ioDeviceSync(ioExp2);
-  #endif
 }
+#endif
 
 void startWiFi(unsigned long waitTime) { 
   #if defined(ESP8266)

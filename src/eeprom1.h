@@ -14,9 +14,16 @@ float getMinHum();
 void putMinHum(float value);
 #endif
 
+#ifdef CO2CONTROL                       // CO2 PPM MH-Z19B setings reading
+void putMinCO2(uint16_t value);
+uint16_t getMinCO2();
+void putMaxCO2(uint16_t value);
+uint16_t getMaxCO2();
+#endif
+
 #ifdef PHTDSCONTROL
 void putRAWMode (boolean value);        // putRAWMode режим чтения "сырых" данных с Ph TDS
-boolean getRAWMode();                      // getRAWMode режим чтения "сырых" данных с Ph TDS
+boolean getRAWMode();                   // getRAWMode режим чтения "сырых" данных с Ph TDS
 void putPhKa (uint16_t value);          // усиление
 uint16_t getPhKa ();                    // усиление
 void putPhKb (uint16_t value);          // средняя точка

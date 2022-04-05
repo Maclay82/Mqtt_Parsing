@@ -80,7 +80,10 @@ void set_thisMode(int8_t value) {
 
   thisMode = value;
   putCurrentMode(thisMode);
-  setCollector(); //Приведение конфигурации коллектора в силу
+
+#ifdef PHTDSCONTROL
+  setCollector(); //Применение конфигурации коллектора
+#endif
   statusPub();
   if(thisMode%2 == 0 && thisMode != 0) count_mode = true;
   else count_mode = false;

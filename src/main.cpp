@@ -8,18 +8,21 @@ uint16_t AUTO_FILL_PERIOD = 24;    // Период активации автом
 boolean  auto_mode = true;         // Флаг автоматического режима
 boolean  count_mode = false;       // Флаг включения счетчика воды подлива
 
+#ifdef CO2CONTROL
+MHZ co2(MH_Z19_RX, MH_Z19_TX, MHZ19B);
+#endif
+
 #ifdef PHTDSCONTROL
 //Инициализация плат I2C расширителей
 //Экзэмпляры классов
 i2cPumps pumps(0x20, true);                       //Pumps
 IoAbstractionRef ioExp2   = ioFrom8574(0x24);     //Leds
 IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
+#endif
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-
-#endif
 
 // *************************** ПОДКЛЮЧЕНИЕ К СЕТИ **************************
 WiFiUDP udp;                                // Объект транспорта сетевых пакетов
@@ -39,10 +42,10 @@ boolean   ap_connected = false;            // true - работаем в реж�
 
 // **************** СИНХРОНИЗАЦИЯ ЧАСОВ ЧЕРЕЗ ИНТЕРНЕТ *******************
 
-boolean      useNtp;                       // Использовать синхронизацию времени с NTP-сервером
-IPAddress timeServerIP;                 // IP сервера времени
-uint16_t  syncTimePeriod;               // Период синхронизации в минутах по умолчанию
-byte      packetBuffer[NTP_PACKET_SIZE];// буфер для хранения входящих и исходящих пакетов NTP
+boolean   useNtp;                          // Использовать синхронизацию времени с NTP-сервером
+IPAddress timeServerIP;                    // IP сервера времени
+uint16_t  syncTimePeriod;                  // Период синхронизации в минутах по умолчанию
+byte      packetBuffer[NTP_PACKET_SIZE];   // буфер для хранения входящих и исходящих пакетов NTP
 
 int8_t timeZoneOffset;                  // смещение часового пояса от UTC
 long   ntp_t   = 0;                     // Время, прошедшее с запроса данных с NTP-сервера (таймаут)
@@ -185,6 +188,13 @@ void setup() {
     Wire.begin(5,4);
   #endif
 
+  #ifdef CO2CONTROL                // CO2 PPM MH-Z19B init
+
+
+  #endif
+
+
+
  #ifdef PHTDSCONTROL
 
  //test led
@@ -215,9 +225,9 @@ void setup() {
   Serial.println(FIRMWARE_VER);
   Serial.println("Host name:\t" + host_name);
 
-#ifdef PHTDSCONTROL
+//#ifdef PHTDSCONTROL
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) Serial.println(F("SSD1306 allocation failed")); 
-#endif
+//#endif
   
 //-------------------------Инициализация файловой системы--------------------
 
@@ -261,13 +271,15 @@ void setup() {
   // }
   loadSettings();
 
-  setCollector(); //Применение конфигурации коллектора
-    
 #ifdef PHTDSCONTROL
+  setCollector(); //Применение конфигурации коллектора
+#endif
+
+//#ifdef PHTDSCONTROL
   display.clearDisplay();
   display.setTextColor(WHITE);
   display.display();
-#endif
+//#endif
 
 
   // Подключение к сети
@@ -346,6 +358,11 @@ void setup() {
   timing = timing1 = timing2 = millis();
   timing3 = timing2 + ( regDelay / 2 );
 
+#ifdef CO2CONTROL
+  pinMode(CO2PWR, OUTPUT);
+  timing1 = timing1 + 180000;
+#endif
+
 
 #ifdef HUMCONTROL
   pinMode(HUMPWR, OUTPUT);
@@ -402,5 +419,7 @@ void loop() {
     auto_mode = true;
     profpub();
   }
+  #if (USE_MQTT == 1)
   mqtt.loop();
+  #endif
 }

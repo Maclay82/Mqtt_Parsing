@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include "def_soft.h"     // Определение параметров эффектов, переменных программы и т.п.
-extern i2cPumps pumps;
 
 // ----------------------------------------------------
 eSources  cmdSource; // Источник команды; NONE - нет значения; BOTH - любой, UDP-клиент, MQTT-клиент
@@ -10,12 +9,18 @@ unsigned long timing, timing1, timing2, timing3, per, regDelay; // Таймер�
 
 #ifdef HUMCONTROL
 HTU21D myHumidity;
-float temp = 0, humd = 0, humcorr = 3.2,
+float temp = 0, CO2PPM = 0, humcorr = 3.2,
 tempcorr = 0.0;
-float minhum, maxhum; // = minhumDEF // = maxhumDEF;
+float minhum, maxhum; // = minCO2PPMEF // = maxCO2PPMEF;
+#endif
+
+#ifdef CO2CONTROL
+int temp = 0, CO2PPM = 0;
+uint16_t minCO2, maxCO2;
 #endif
 
 #ifdef PHTDSCONTROL
+extern i2cPumps pumps;
   
 //Инициализация датчика температуры
 #if defined(ESP8266)
@@ -49,9 +54,7 @@ phKa,  // усиление
 phKb,  // средняя точка
 tdsKa,  // усиление
 tdsKb; // средняя точка
-
 #endif
-
 
 // ********************* ДЛЯ ПАРСЕРА КОМАНДНЫХ ПАКЕТОВ *************************
  
@@ -69,7 +72,7 @@ boolean    parseStarted;
 byte       parse_index;
 String     string_convert;
 String     receiveText;
-boolean       haveIncomeData;
+boolean    haveIncomeData;
 char       incomingByte;
 
 int16_t    bufIdx = 0;                                 // Могут приниматься пакеты > 255 байт - тип int16_t
@@ -255,7 +258,8 @@ void process() {
       }
 	  }
 
-  	if (realTDS > tdsmin && realTDS < tdsmax && PhOk == true && thisMode != 0 ){
+  	if (realTDS > tdsmin && realTDS < tdsmax && PhOk == true && thisMode != 0 )
+    {
 
   	}
 
@@ -264,7 +268,6 @@ void process() {
     {
 
 	  }
-
     timing3 = millis();
   }
 #endif
@@ -272,22 +275,47 @@ void process() {
   if (millis() - timing >= REFRESHTIME){
 
     #ifdef USE_LOG
-    Serial.print("\nTime:");
+    Serial.print("UpTime: ");
     Serial.print((float)millis()/60000.0);
     #endif  
-    char s[8];   //строка mqtt сообщения
-    String Str = "";
+
+#ifdef CO2CONTROL
+    if (millis() > timing1 && millis() - timing1  >=  CO2OPROSDELAY)  // opros datchika
+    {
+      CO2PPM = co2.readCO2UART();
+      temp = co2.getLastTemperature();
+      if(CO2PPM > 0){
+        if (auto_mode){
+          if ( CO2PPM > maxCO2 ){
+            digitalWrite (CO2PWR, LOW);  
+          }
+          if ( CO2PPM < minCO2 ){
+            digitalWrite (CO2PWR, HIGH);  
+          }
+        }
+        #ifdef USE_LOG
+        Serial.print("\nCO2PPM:");
+        Serial.print(CO2PPM);
+        Serial.print(" Temp:");
+        Serial.print(temp);
+        #endif      
+        if (mqtt.connected()) {
+          statusPub();
+        }
+      }
+    }
+#endif
 
 #ifdef HUMCONTROL
-    humd = myHumidity.readHumidity() + humcorr;
+    CO2PPM = myHumidity.readHumidity() + humcorr;
     temp = myHumidity.readTemperature() + tempcorr;
 
-    if(humd < 998){
+    if(CO2PPM < 998){
       if (auto_mode){
-        if ( humd > maxhum ){
+        if ( CO2PPM > maxhum ){
           digitalWrite (HUMPWR, LOW);  
         }
-        if ( humd < minhum ){
+        if ( CO2PPM < minhum ){
           digitalWrite (HUMPWR, HIGH);  
         }
       }
@@ -296,30 +324,17 @@ void process() {
       Serial.print(temp, 3);
       Serial.print("C");
       Serial.print(" Humidity:");
-      Serial.print(humd, 3);
+      Serial.print(CO2PPM, 3);
       Serial.println("%");
       #endif      
       if (mqtt.connected()) {
-        dtostrf(humd, 2, 2, s);
-        Str= s;
-        SendMQTT(Str, TOPIC_HUM);
-       
-        dtostrf(temp, 2, 2, s);
-        Str = "";
-        Str += s;
-        SendMQTT(Str, TOPIC_TEMP);    
-/*
-        if (digitalRead(HUMPWR) == true) 
-          mqtt.publish(mqtt_topic_hum_on, "1");
-        else 
-          mqtt.publish(mqtt_topic_hum_on, "0");
-*/
+        statusPub();
       }
     }
 #endif
 
 // I2C Scan
-#if (ICCSCAN== 1)
+#if (ICCSCAN == 1)
     byte error, address;
     int nDevices;
     Serial.println("Scanning...");
@@ -349,6 +364,8 @@ void process() {
     else
       Serial.println("done\n");
 #endif
+
+  display.clearDisplay();
 
 #ifdef PHTDSCONTROL
 #ifdef USE_LOG
@@ -421,71 +438,45 @@ void process() {
 
     if (mqtt.connected()){
       statusPub();    //Публикация состояния параметров системы
-
-      if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
-        dtostrf(Wtemp, 2, 2, s);
-        Str = s;
-        SendMQTT(Str, TOPIC_Wtemp);    
-      }
-      if (rawPh != -1){
-        if(RAWMode == true)
-        {
-          dtostrf(middleArifm(PhvalArray), 3, 3, s);
-          Str = s;
-          SendMQTT(Str, TOPIC_rawPh);
-        }    
-        dtostrf(realPh, 3, 3, s);
-        Str = s;
-        SendMQTT(Str, TOPIC_ph);    
-      }
-      if (rawTDS != -1){
-        if(RAWMode == true)
-        {
-          dtostrf(middleArifm(TDSvalArray), 1, 0, s);
-          Str = s;
-          SendMQTT(Str, (TOPIC_rawTDS));
-        }    
-        dtostrf(realTDS, 1, 0, s);
-        Str = s;
-        SendMQTT(Str, TOPIC_tds);    
-      } 
     } 
-#endif
 
-#ifdef USE_LOG
-    Serial.print("\n");
-#endif
-
-
-  display.clearDisplay();
-  display.setTextSize(2);
-  display.setCursor(0,0);
-  display.print("Ph: ");
-  if (rawPh == -1) display.print(String("ERR"));
-  else display.print(String(realPh));
+    display.setTextSize(2);
+    display.setCursor(0,0);
+    display.print("Ph: ");
+    if (rawPh == -1) display.print(String("ERR"));
+    else display.print(String(realPh));
   
-  display.setTextSize(2);
-  display.setCursor(0, 16);
-  display.print("TDS:");
+    display.setTextSize(2);
+    display.setCursor(0, 16);
+    display.print("TDS:");
 
-  if (rawTDS == -1) display.print(String("ERR"));
-  else display.print(String(realTDS));
+    if (rawTDS == -1) display.print(String("ERR"));
+    else display.print(String(realTDS));
 
-  display.setTextSize(2);
-  display.setCursor(0, 32);
-  display.print("Wt:");
-  if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
-    display.print(Wtemp,2);
-    display.print("C");
-  }
-  else display.print(String("ERR"));
-
+    display.setTextSize(2);
+    display.setCursor(0, 32);
+    display.print("Wt:");
+    if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
+      display.print(Wtemp,2);
+      display.print("C");
+    }
+    else display.print(String("ERR"));
+#endif
+  
     display.setTextSize(1);
     display.setCursor(0, 55);
     display.print(WiFi.localIP());
     display.print(":");
     display.print(localPort);
     display.display();
+
+
+#ifdef USE_LOG
+    Serial.print("\n");
+#endif
+
+
+
 
     timing = millis();
   }
@@ -735,6 +726,8 @@ void parsing() {
       // 1 - калибровка насосов
       //   $1 0 X N - налить калибровочный обьем X насосом N
       //   $1 1 X N - сообщить какой обьём жидкости X налил насос N действительно (измерить мензуркой)  
+
+#ifdef PHTDSCONTROL
       case 1:
         switch (intData[1]) { 
           // $1 0 X N - налить калибровочный обьем X насосом N
@@ -759,6 +752,7 @@ void parsing() {
            pumps.pourVol((uint16_t)(intData[1]), uint8_t(intData[2]));
         }
       break;
+#endif
 
       // $3 - Вывести профиль
       //   $3 1 - profpub профиль выращивания
@@ -791,6 +785,7 @@ void parsing() {
       //   $4 8 X - Задать TDS min (целое число)
       //   $4 9 X - Значение текущего калибровочного раствора Ph
       //   $4 10 X - Значение текущего калибровочного раствора TDS
+#ifdef PHTDSCONTROL
       case 4:
         switch (intData[1]) { 
           // $4 0 Х - Задать время регулирования X минут (целое число)
@@ -949,7 +944,6 @@ void parsing() {
       //     $5 2 Х - задать phKb
       //     $5 3 Х - задать tdsKa
       //     $5 4 Х - задать tdsKb
-
       case 5:
         switch (intData[1]) { 
          #ifdef PHTDSCONTROL
@@ -1010,7 +1004,7 @@ void parsing() {
          #endif        
         }
       break;
-
+#endif
 
       // ----------------------------------------------------
       // 6 - прием строки: строка принимается в формате N|text, где N:

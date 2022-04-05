@@ -45,7 +45,8 @@ void loadSettings()   // Загрузка настроек
   //  52 -
 
 
-
+  // 58 - minCO2
+  // 60 - maxC02
   // 62 - PhVol
   // 64 - regDelay
   // 66 - phmin
@@ -131,6 +132,12 @@ void loadSettings()   // Загрузка настроек
     minhum = getMinHum();
 #endif
 
+#ifdef CO2CONTROL
+    minCO2 = getMinCO2(); 
+    maxCO2 = getMaxCO2();
+#endif
+
+
 #ifdef PHTDSCONTROL
     RAWMode = getRAWMode();           // режим чтения "сырых" данных с Ph TDS
     thisMode = getCurrentMode();
@@ -192,6 +199,11 @@ void saveDefaults() {
   putMinHum(minhumDEF);
 #endif
 
+#ifdef CO2CONTROL
+  putMaxCO2(maxCO2DEF);
+  putMinCO2(minCO2DEF);
+#endif
+
 #ifdef PHTDSCONTROL
   putRAWMode      (false);
   putCurrentMode  (1);
@@ -241,9 +253,9 @@ void saveDefaults() {
   strcpy(mqtt_prefix, DEFAULT_MQTT_PREFIX);
   mqtt_port = DEFAULT_MQTT_PORT;
   mqtt_send_delay = MQTT_SEND_DELAY;
-  #endif  
   upTimeSendInterval = 0;
-
+  #endif  
+  
   putUseSoftAP(useSoftAP);
   putSoftAPName(String(apName));
   putSoftAPPass(String(apPass));
@@ -319,7 +331,20 @@ void putMinHum(float value) {
 }
 #endif
 
-#ifdef PHTDSCONTROL
+#ifdef CO2CONTROL                // CO2 PPM MH-Z19B pin for uart reading
+void putMinCO2(uint16_t value) {
+  if (value != getMinCO2()) EEPROM_int_write(58, value);
+}
+uint16_t getMinCO2() {
+  return EEPROM_int_read(58);
+}
+void putMaxCO2(uint16_t value) {
+  if (value != getMaxCO2()) EEPROM_int_write(60, value);
+}
+uint16_t getMaxCO2() {
+  return EEPROM_int_read(60);
+}
+#endif
 
 int8_t getCurrentMode() {
   return (int8_t)EEPROMread(4);
@@ -330,6 +355,8 @@ void putCurrentMode(int8_t mode) {
     EEPROMwrite(4, (byte)mode);
   }
 }
+
+#ifdef PHTDSCONTROL
 
 void putRAWMode (boolean value){
   if (value != getRAWMode()) EEPROMwrite(15, value);

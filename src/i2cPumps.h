@@ -3,9 +3,8 @@
 
 #ifndef I2CPUMPS_H
 #define I2CPUMPS_H
-
 #define PUMPCOUNT 8
-
+#ifdef PHTDSCONTROL
 class i2cPumps
 {
   public:
@@ -23,5 +22,5 @@ class i2cPumps
     float    scaleCal[PUMPCOUNT];
     uint16_t CalVol[PUMPCOUNT];
 };
-
+#endif
 #endif

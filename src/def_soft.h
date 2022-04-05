@@ -13,14 +13,19 @@ extern unsigned long timing, timing1, timing2, timing3, per, regDelay; // Тай
 extern float minhum, maxhum;
 #endif
 
+#ifdef CO2CONTROL
+#define CO2OPROSDELAY 120000  // время опроса MH-Z19B в миллисекундах
+#endif
+
 #ifdef PHTDSCONTROL
 #define OPROSDELAY 150        // время опроса Ph TDS в миллисекундах
 #define REGDELAY 1            // время цикла регулировки в минутах
 #define NUM_AVER 20           // выборка (из скольки усредняем)
-extern boolean     count_mode;         // Флаг автоматического режима
-extern Adafruit_SSD1306 display;
 extern DallasTemperature sensors;
 #endif
+
+extern boolean     count_mode;         // Флаг автоматического режима
+extern Adafruit_SSD1306 display;
 
 extern uint16_t AUTO_MODE_PERIOD;  // Период активации автоматического режима в минутах по умолчанию
 extern uint16_t AUTO_FILL_PERIOD;  // Период активации автоматического подлива в часах
@@ -68,8 +73,7 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 
 #ifndef MQTT_SEND_DELAY                          // Отправлять сообщение на MQTT-сервер не чаще 1 сообщения в секунду (ограничение бесплатного MQTT сервера);
 #define MQTT_SEND_DELAY      1                   // Сообщения, отправленные чаще защитного интервала "съедаются" сервером (игнорируются, пропадают); 
-#endif                                           // Если нет ограничений на частоту отправки сообщений - поставьте здесь 0
-                                                  
+#endif                                            
 
 // Код работы с MQTT-каналом ориентирован на использование MQTT-брокера mqtt.4api.ru
 // Для управления и отладки можно использовать одну из следующих консолей: client.mqtt.4api.ru, hivemq.com/demos/websocket-client
@@ -94,7 +98,7 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 #define  TOPIC_MAXHUM   "maxhum"                 // Топик - отправка клиенту значения максимальной влажности
 #define  TOPIC_MINHUM   "minhum"                 // Топик - отправка клиенту значения минимальной влажности
 #define  TOPIC_RELAY    "relay"                  // Топик - отправка клиенту сообщений статусе
-#endif                                           // Если нет ограничений на частоту отправки сообщений - поставьте здесь 0
+#endif
 
 #ifdef PHTDSCONTROL
 

@@ -2,7 +2,7 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA3       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA1       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
@@ -46,11 +46,13 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
 
-#define DEVICE_ID   3               // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID   6               // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
                                     // 3 - PhTDS контроллер тестовый
                                     // 4 - PhTDS контроллер Зеленка
+                                    // 5 - Контроллер приточка Зеленка
+                                    // 6 - Контроллер CO2 Зеленка
 
 // ================== Увлажнитель тестовый стенд =====================
 
@@ -153,7 +155,7 @@ I2C address 0x49 TDS
 #define REFRESHTIME 10000                 // Время обновления показаний прибора для MQTT
 
 #define USEDHCP  1
-#define DEFAULT_IP {192, 168, 2, 111}       // Сетевой адрес устройства по умолчанию
+//#define DEFAULT_IP {192, 168, 2, 111}       // Сетевой адрес устройства по умолчанию
 
 #define ICCSCAN 0
 
@@ -165,7 +167,7 @@ I2C address 0x49 TDS
 #define PHTDSCONTROL
 #endif
 
-#define DEV_ID 1
+#define DEV_ID 4
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 #define HOST_NAME   F("PhTDSCtrl")
 #define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
@@ -176,12 +178,56 @@ I2C address 0x49 TDS
 #define DEFAULT_IP {192, 168, 1, 112}       // Сетевой адрес устройства по умолчанию
 
 #define ICCSCAN 0
+#endif
 
+// ================== Контроллер приточка Зеленка =====================
+#if (DEVICE_ID == 5)
+
+#define DEV_ID 5
+#define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
+#define HOST_NAME   F("VentCtrl")
+#define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
+#define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
+
+#define REFRESHTIME 15000
+#define USEDHCP 0
+#define DEFAULT_IP {192, 168, 1, 112}       // Сетевой адрес устройства по умолчанию
+
+#define ICCSCAN 0
+
+#ifndef HUMCONTROL
+#define HUMCONTROL
+#endif
+
+#define HUMPWR D7
+
+#define minhumDEF 69
+#define maxhumDEF 74
+
+#endif
+
+// ================== Контроллер CO2 Зеленка =====================
+#if (DEVICE_ID == 6)
+
+#ifndef CO2CONTROL
+#define CO2CONTROL
+#endif
+
+#define DEV_ID 0
+#define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
+#define HOST_NAME   F("CO2Ctrl")
+#define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
+#define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
+
+#define REFRESHTIME 30000
+#define USEDHCP 1
+#define DEFAULT_IP {192, 168, 2, 162}       // Сетевой адрес устройства по умолчанию
+
+#define ICCSCAN 0
 
 #endif
 
 // =======================================================
-
 
 // *************************** ПОДКЛЮЧЕНИЕ К СЕТИ **************************
 
@@ -246,6 +292,12 @@ I2C address 0x49 TDS
 #include "i2cPumps.h"
 #endif
 
+#ifdef CO2CONTROL                // CO2 PPM MH-Z19B lib
+
+#include <SoftwareSerial.h>
+#include <MHZ.h>
+#endif
+
 #include "timerMinim.h"          // Библиотека таймеров
 #include "a_main.h"     
 #include "eeprom1.h"             // Библиотека для работы с постоянной памятью
@@ -272,7 +324,38 @@ I2C address 0x49 TDS
 //Create an instance of the object
 #ifdef HUMCONTROL
 extern HTU21D myHumidity;
-#endif                                           // Если нет ограничений на частоту отправки сообщений - поставьте здесь 0
+#endif                                           
+
+#ifdef CO2CONTROL                // CO2 PPM MH-Z19B pin for uart reading
+#if defined(ESP8266)
+  #define MH_Z19_RX D3
+  #define MH_Z19_TX D4
+#endif
+#if defined(ESP32)
+  #define MH_Z19_RX 17
+  #define MH_Z19_TX 16
+#endif
+extern MHZ co2;
+extern int CO2PPM, temp;
+extern uint16_t minCO2, maxCO2;
+
+#ifndef maxCO2DEF
+  #define maxCO2DEF 1400
+#endif
+#ifndef minCO2DEF
+  #define minCO2DEF 800
+#endif
+
+#ifndef CO2PWR
+#if defined(ESP8266)
+  #define CO2PWR D5
+#endif
+#if defined(ESP32)
+  #define CO2PWR 18
+#endif
+#endif
+
+#endif
 
 #ifdef PHTDSCONTROL
 extern i2cPumps pumps;
