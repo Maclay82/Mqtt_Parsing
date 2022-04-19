@@ -281,7 +281,7 @@ void process() {
     if (millis() > timing1 && millis() - timing1 >= CO2OPROSDELAY)  // opros datchika
     {
       CO2Ready = true;
-      
+
 ///maclay
 //      temp = co2.readCO2UART();
 //      if ( temp > 0 ) CO2PPM = temp;
@@ -990,7 +990,7 @@ void parsing() {
           case 14: 
             { 
               int CO2Temp = floatData[0]*100;
-              if (CO2Temp > 0 && CO2Set == true && CO2Check(CO2Temp) == 0)
+              if (CO2Temp >= 0 && CO2Set == true && CO2Check(CO2Temp) == 0)
               {
                 CO2Set = false;
                 CO2OFF[CO2Sel] = CO2Temp;

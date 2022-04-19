@@ -637,24 +637,24 @@ bool CO2Time (int ON, int OFF)
 
     if (ON > OFF){
       Serial.print("ON > OFF -> ");
-      if (curtime >= ON  || curtime < OFF) if(CO2On != true) {
-        CO2On = true;
+      if (curtime >= ON  || curtime < OFF) {
+        if(CO2On != true) CO2On = true;
         Serial.print("curtime >= ON  || curtime < OFF CO2On = true ");
       }
-      if (curtime >= OFF && curtime < ON ) if(CO2On == true){
-        CO2On = false;
+      if (curtime >= OFF && curtime < ON ) {
+        if(CO2On == true) CO2On = false;
         Serial.print("curtime >= OFF && curtime < ON CO2On = false ");
       }
     }
     else{
       Serial.print("ON !> OFF -> ");
-      if (curtime >= ON && curtime < OFF) if(CO2On != true) {
-        CO2On = true;
+      if (curtime >= ON && curtime < OFF) {
+        if(CO2On != true) CO2On = true;
         Serial.print("curtime >= ON && curtime < OFF CO2On = true ");
       } 
-      if (curtime >= OFF || curtime < ON) if(CO2On == true) {
-          CO2On = false;
-          Serial.print("curtime >= OFF || curtime < ON CO2On = false ");
+      if (curtime >= OFF || curtime < ON) {
+        if(CO2On == true) CO2On = false;
+        Serial.print("curtime >= OFF || curtime < ON CO2On = false ");
       }
     }
   }
