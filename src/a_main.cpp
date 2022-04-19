@@ -282,10 +282,10 @@ void process() {
     {
       CO2Ready = true;
 
-///maclay
-//      temp = co2.readCO2UART();
-//      if ( temp > 0 ) CO2PPM = temp;
-
+///mh-z19b uart debug
+     temp = co2.readCO2UART();
+     if ( temp > 0 ) CO2PPM = temp;
+///
       temp = co2.getLastTemperature();
       if(CO2PPM > 0){
         CO2Control(CO2PPM);
