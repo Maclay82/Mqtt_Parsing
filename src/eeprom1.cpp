@@ -296,7 +296,7 @@ void saveDefaults() {
 void saveSettings() {
 
   saveSettingsTimer.reset();
-//maclay  if (!eepromModified) return;
+  if (!eepromModified) return;
   
   // Поставить отметку, что EEPROM инициализировано
   EEPROMwrite(0, EEPROM_OK);
