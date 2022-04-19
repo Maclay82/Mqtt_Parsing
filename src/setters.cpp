@@ -84,9 +84,9 @@ void set_thisMode(int8_t value) {
 #ifdef PHTDSCONTROL
   setCollector(); //Применение конфигурации коллектора
 #endif
-  statusPub();
   if(thisMode%2 == 0 && thisMode != 0) count_mode = true;
   else count_mode = false;
+  statusPub();
 
   // addKeyToChanged("EF");
   // addKeyToChanged("EN");

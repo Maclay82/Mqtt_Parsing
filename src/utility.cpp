@@ -99,7 +99,7 @@ boolean LEAP_YEAR(uint16_t Y) {
 }
 
 void sendNTPpacket(IPAddress& address) {
-  Serial.print(F("\nОтправка NTP пакета на сервер "));
+  Serial.print(F("Отправка NTP пакета на сервер "));
   Serial.println(ntpServerName);
   // set all bytes in the buffer to 0
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
@@ -144,7 +144,14 @@ void parseNTP() {
   Serial.print(F(" Текущее время: ")); 
   Serial.println(t2);
 
-  setTime(t);  
+  setTime(t);
+
+  #ifdef RTC
+  rtc.adjust((DateTime)t); 
+  Serial.print(F("RTC time sync: ")); 
+  Serial.println(rtc.now().unixtime());
+  #endif
+
   //calculateDawnTime();
   //rescanTextEvents();
 
@@ -214,6 +221,13 @@ void profpub() {
 #ifdef CO2CONTROL
     doc["minCO2"] = minCO2;
     doc["maxCO2"] = maxCO2;
+    for (int i = 0; i < CO2_CYCLE; ++i)
+    {
+      String temps = (String)i + "CO2ON";
+      if (CO2ON [i] > 0.0 && CO2ON [i] > 24.00)  doc[temps] = CO2ON [i];
+             temps = (String)i + "CO2OFF";
+      if (CO2OFF[i] > 0.0 && CO2OFF[i] > 24.00)  doc[temps] = CO2OFF[i];
+    }
 #endif
 
 #ifdef PHTDSCONTROL
@@ -576,3 +590,80 @@ void connectToNetwork() {  // Подключиться к WiFi сети, ожи�
     Serial.print(localPort);
   }
 }
+
+#ifdef CO2CONTROL
+
+bool CO2Control(int cur) // vkl/otkl CO2
+{ 
+  for (int i = 0; i < CO2_CYCLE; ++i)
+    if (CO2ON[i] != 0 && CO2OFF[i] != 0) if (CO2Time(CO2ON[i], CO2OFF[i]) == true) {
+      CO2On = true;
+      i = CO2_CYCLE;
+    }
+
+    if (CO2On == true && CO2Ready == true){
+      if (cur <= minCO2) if(!digitalRead(CO2PWR)) digitalWrite(CO2PWR, HIGH);
+      if (cur >= maxCO2) if( digitalRead(CO2PWR)) digitalWrite(CO2PWR, LOW ); 
+    }
+    else 
+      if(digitalRead(CO2PWR)) digitalWrite(CO2PWR, LOW);
+
+  return digitalRead(CO2PWR);   
+}
+
+int CO2Check (int check)
+{
+  for (int i = 0; i < CO2_CYCLE; ++i)
+  {
+    if (CO2ON[i] == check) return 1;
+    if (CO2OFF[i] == check) return -1;
+  }
+  return 0;
+}
+
+bool CO2Time (int ON, int OFF)
+{
+  Serial.print("\n ON=");
+  Serial.print(ON);
+  Serial.print(" OFF=");
+  Serial.print(OFF);
+
+  if(ON != OFF)
+  {
+    Serial.print("\tcurtime =");
+    int curtime = hour()*100 + minute();
+    Serial.print(curtime);
+    Serial.print(" -> ");
+
+    if (ON > OFF){
+      Serial.print("ON > OFF -> ");
+      if (curtime >= ON  || curtime < OFF) if(CO2On != true) {
+        CO2On = true;
+        Serial.print("curtime >= ON  || curtime < OFF CO2On = true ");
+      }
+      if (curtime >= OFF && curtime < ON ) if(CO2On == true){
+        CO2On = false;
+        Serial.print("curtime >= OFF && curtime < ON CO2On = false ");
+      }
+    }
+    else{
+      Serial.print("ON !> OFF -> ");
+      if (curtime >= ON && curtime < OFF) if(CO2On != true) {
+        CO2On = true;
+        Serial.print("curtime >= ON && curtime < OFF CO2On = true ");
+      } 
+      if (curtime >= OFF || curtime < ON) if(CO2On == true) {
+          CO2On = false;
+          Serial.print("curtime >= OFF || curtime < ON CO2On = false ");
+      }
+    }
+  }
+  else
+    if(CO2On != true){ 
+      CO2On = true;
+      Serial.println("CO2On != true CO2On = true ");
+    }
+  
+  return CO2On;
+}
+#endif

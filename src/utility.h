@@ -28,4 +28,11 @@ boolean setCollector(); //Приведение конфигурации колл
 void startWiFi(unsigned long waitTime);
 void startSoftAP();
 void connectToNetwork();
+
+#ifdef CO2CONTROL
+bool CO2Control(int cur);
+int CO2Check (int check);
+bool CO2Time (int ON, int OFF);
+#endif
+
 #endif

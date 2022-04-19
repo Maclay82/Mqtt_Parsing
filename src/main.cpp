@@ -8,15 +8,22 @@ uint16_t AUTO_FILL_PERIOD = 24;    // Период активации автом
 boolean  auto_mode = true;         // Флаг автоматического режима
 boolean  count_mode = false;       // Флаг включения счетчика воды подлива
 
+#if defined(RTC)
+RTC_DS3231 rtc;
+#endif
+
 #ifdef CO2CONTROL
 MHZ co2(MH_Z19_RX, MH_Z19_TX, MHZ19B);
+int CO2Sel = 0, temp = 0, CO2PPM = 0;
+boolean CO2Set = false, CO2On = false, CO2Ready = false;
+uint16_t minCO2 = minCO2DEF, maxCO2 = maxCO2DEF;
+int CO2ON [CO2_CYCLE] = {0,0,0};     //массив времен начала впрыска CO2
+int CO2OFF[CO2_CYCLE] = {0,0,0};    //массив времен конца впрыска CO2
 #endif
 
 #ifdef HUMCONTROL
 HTU21D myHumidity;
 #endif
-
-
 
 #ifdef PHTDSCONTROL
 //Инициализация плат I2C расширителей
@@ -174,7 +181,11 @@ void setup() {
     Wire.begin();
   #endif
   #if defined(ESP32)
-    Wire.begin(5,4);
+    #if defined(lolin32)
+      Wire.begin(5,4);
+    #else
+      Wire.begin(21,22);
+    #endif
   #endif
 
   #ifdef HUMCONTROL                // Hum init
@@ -204,7 +215,19 @@ void setup() {
   EEPROM.begin(EEPROM_MAX);
 
   Serial.begin(115200);
-  delay(100);
+  while (!Serial);                    //ждем инициализации ком порта
+
+  #ifdef RTC                       // RTC clock init
+    if(rtc.begin())
+    {
+      Serial.print(F("\nRTC clock init: ")); 
+      // if(!rtc.lostPower())
+      { 
+        setTime(rtc.now().unixtime());
+        Serial.println((String)getDateTimeString(rtc.now().unixtime()));
+      }
+    }
+  #endif
 
   host_name = String(HOST_NAME) + //"-" + 
   String(DEV_ID);
@@ -347,9 +370,9 @@ void setup() {
 
 #ifdef CO2CONTROL
   pinMode(CO2PWR, OUTPUT);
-  timing1 = timing1 + 180000;
+  if(rtc.lostPower()) timing1 = timing1 + 180000;
+  else timing1 = timing1 + 60000;
 #endif
-
 
 #ifdef HUMCONTROL
   pinMode(HUMPWR, OUTPUT);

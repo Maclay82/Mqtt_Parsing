@@ -13,11 +13,6 @@ tempcorr = 0.0;
 float minhum, maxhum; // = minCO2PPMEF // = maxCO2PPMEF;
 #endif
 
-#ifdef CO2CONTROL
-int temp = 0, CO2PPM = 0;
-uint16_t minCO2, maxCO2;
-#endif
-
 #ifdef PHTDSCONTROL
 extern i2cPumps pumps;
   
@@ -274,26 +269,28 @@ void process() {
   if (millis() - timing >= REFRESHTIME){
 
     #ifdef USE_LOG
-    Serial.print("UpTime: ");
-    Serial.print((float)millis()/60000.0);
+    Serial.print((String)getDateTimeString(rtc.now().unixtime()));
+    Serial.print(", UpTime:");
+    Serial.print(((float)millis()/60000.0), 1);
+    Serial.print(" min, "); 
+
     #endif  
 
 #ifdef CO2CONTROL
-    if (millis() > timing1 && millis() - timing1  >=  CO2OPROSDELAY)  // opros datchika
+
+    if (millis() > timing1 && millis() - timing1 >= CO2OPROSDELAY)  // opros datchika
     {
-      CO2PPM = co2.readCO2UART();
+      CO2Ready = true;
+      
+///maclay
+//      temp = co2.readCO2UART();
+//      if ( temp > 0 ) CO2PPM = temp;
+
       temp = co2.getLastTemperature();
       if(CO2PPM > 0){
-        if (auto_mode){
-          if ( CO2PPM > maxCO2 ){
-            digitalWrite (CO2PWR, LOW);  
-          }
-          if ( CO2PPM < minCO2 ){
-            digitalWrite (CO2PWR, HIGH);  
-          }
-        }
+        CO2Control(CO2PPM);
         #ifdef USE_LOG
-        Serial.print("\nCO2PPM:");
+        Serial.print("\tCO2PPM:");
         Serial.print(CO2PPM);
         Serial.print(" Temp:");
         Serial.print(temp);
@@ -336,7 +333,7 @@ void process() {
 #if (ICCSCAN == 1)
     byte error, address;
     int nDevices;
-    Serial.println("Scanning...");
+    Serial.println("\nScanning...");
     nDevices = 0;
     for(address = 1; address < 127; address++ ) 
     {
@@ -361,7 +358,7 @@ void process() {
     if (nDevices == 0)
       Serial.println("No I2C devices found\n");
     else
-      Serial.println("done\n");
+      Serial.println("done");
 #endif
 
   display.clearDisplay();
@@ -492,15 +489,15 @@ void process() {
       // Если настройки программы предполагают синхронизацию с NTP сервером и время пришло - выполнить синхронизацию
       if (useNtp) {
         if ((ntp_t > 0) && getNtpInProgress && (millis() - ntp_t > 30000)) {
-#ifdef USE_LOG
+          #ifdef USE_LOG
           Serial.println(F("Таймаут NTP запроса!"));
-#endif
+          #endif
           ntp_cnt++;
           getNtpInProgress = false;
           if (init_time && ntp_cnt >= 10) {
-#ifdef USE_LOG
+            #ifdef USE_LOG
             Serial.println(F("Не удалось установить соединение с NTP сервером."));  
-#endif
+            #endif
             refresh_time = false;
           }
           
@@ -666,6 +663,9 @@ void parsing() {
         $4 10 X - Значение текущего калибровочного раствора TDS
         $4 11 X - Значение minHum
         $4 12 X - Значение maxHum
+        $4 13 Х - задать время начала подачи CO2      (Х=10.20  10 часов 20 мин)
+        $4 14 Х - задать время прекращения подачи CO2 (Х=10.25  10 часов 25 мин)  
+        $4 15   - указателя на начало массива времени CO2  (CO2Sel = 0) 
 
     5 - Калибровка датчиков и настройка усилителей Ph и TDS
         $5 0 Х - Включить - 1, выключить - 0 отображение сырых данных Ph и TDS
@@ -673,7 +673,7 @@ void parsing() {
         $5 2 Х - задать phKb
         $5 3 Х - задать tdsKa
         $5 4 Х - задать tdsKb
-        $5 5   - задать нулевое значение датчика CO2 MH-Z19B (400 PPM)
+        $5 5   - задать нулевое значение датчика CO2 MH-Z19B (400 PPM)        
 
         Протокол связи, посылка начинается с режима. Режимы:
     6 - текст $6 N|some text, где N - назначение текста;
@@ -792,6 +792,9 @@ void parsing() {
       //   $4 10 X - Значение текущего калибровочного раствора TDS
       //   $4 11 X - Значение minHum
       //   $4 12 X - Значение maxHum
+      //   $4 13 Х - задать время начала подачи CO2      (Х=10.20  10 часов 20 мин)
+      //   $4 14 Х - задать время прекращения подачи CO2 (Х=10.25  10 часов 25 мин)  
+      //   $4 15   - указателя на начало массива времени CO2  (CO2Sel = 0) 
       case 4:
         switch (intData[1]) { 
           // $4 0 Х - Задать время регулирования X минут (целое число)
@@ -961,6 +964,64 @@ void parsing() {
             }
           break;
 #endif
+
+#ifdef CO2CONTROL
+          //   $4 13 Х - задать время начала регулировки CO2      (Х=10.20  10 часов 20 мин)
+          case 13:  
+            {
+              int CO2Temp = floatData[0]*100;
+              if (CO2Sel>=0 && CO2Temp <= 0){
+                CO2ON[CO2Sel] = (int)0;
+                CO2OFF[CO2Sel] = (int)0;
+                if (CO2Sel >= CO2_CYCLE-1) CO2Sel = 0;
+                else ++CO2Sel;
+                saveSettings();
+              }
+              else
+              if (CO2Sel>=0 && CO2Check(CO2Temp)==0)
+              {
+                CO2ON[CO2Sel] = CO2Temp;
+                if (!CO2Set) CO2Set = true;
+              }
+              profpub();
+            }
+          break;
+          //   $4 14 Х - задать время прекращения регулировки CO2 (Х=10.25  10 часов 25 мин)  
+          case 14: 
+            { 
+              int CO2Temp = floatData[0]*100;
+              if (CO2Temp > 0 && CO2Set == true && CO2Check(CO2Temp) == 0)
+              {
+                CO2Set = false;
+                CO2OFF[CO2Sel] = CO2Temp;
+                putCO2On  (CO2Sel, CO2ON [CO2Sel]);
+                putCO2Off (CO2Sel, CO2OFF[CO2Sel]);
+                if (CO2Sel >= CO2_CYCLE-1) CO2Sel = 0;
+                else ++CO2Sel;
+              }
+              saveSettings();
+              profpub();
+            }
+          break;
+          //   $4 15   - указателя на начало массива времени CO2  (CO2Sel = 0) 
+          case 15:  
+              CO2Sel = 0;
+          break;
+
+
+          case 16:
+              int Temp = (int)floatData[0];
+              if( Temp > 0 && Temp < 10000){
+                CO2PPM = Temp ;
+              }
+              else {
+                CO2PPM = 0 ;
+              }  
+          break;
+
+
+#endif
+
         }
       break;
 
@@ -1032,7 +1093,6 @@ void parsing() {
 #endif 
 #ifdef CO2CONTROL
           case 5:
-            // if(intData[2] > 0)
             {
               co2.calibrateZero();
               Serial.println("co2.calibrateZero()");
@@ -1462,12 +1522,13 @@ void parsing() {
         Serial.print("'");
       }
       if (udp.remotePort() == 123) {
-        Serial.print(F("; ntp sync"));
+        Serial.print(F(" - ntp sync"));
       }
-      Serial.println();
+//      Serial.println();
 
-      Serial.print(F("UDP пакeт размером "));
-      Serial.println(packetSize);
+      Serial.print(F(" UDP packet "));
+      Serial.print(packetSize);
+      Serial.println(F(" байт"));
     }
 
     // NTP packet from time server

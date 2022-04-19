@@ -64,7 +64,7 @@ void putOutQueue(String topic, String message, boolean retain) {
         // Отправка прошла успешно
         Serial.print(F("MQTT >> OK >> ")); 
         Serial.print(topic);
-        Serial.print(F("\t >> ")); 
+        Serial.print(F(" >> \t")); 
         Serial.println(message);
       }
     }
@@ -98,15 +98,15 @@ void notifyUnknownCommand(const char* text) {
 boolean subscribeMqttTopics() {
   boolean ok = false;
   if (mqtt.connected() && millis() - mqtt_send_last > mqtt_send_delay) {
-    Serial.print(F("Подписка на topic='cmd' >> "));
+    Serial.print(F("\nПодписка на topic='cmd' >> "));
     Serial.print(mqtt_topic(TOPIC_CMD));
     Serial.print('\t');
     ok = mqtt.subscribe(mqtt_topic(TOPIC_CMD).c_str());
     if (ok) Serial.println(F("OK"));
     else    Serial.println(F("FAIL"));
 
-#ifdef HUMCONTROL
-    Serial.print(F("Подписка на topic='relay' >> "));
+#ifdef HUMCONTROL //or CO2CONTROL
+    Serial.print(F("\n Подписка на topic='relay' >> "));
     Serial.print(mqtt_topic(TOPIC_RELAY));
     Serial.print('\t');
     ok = mqtt.subscribe(mqtt_topic(TOPIC_RELAY).c_str());
@@ -161,7 +161,7 @@ void checkMqttConnection() {
 
     if (mqtt.connect(clientId.c_str(), mqtt_user, mqtt_pass, topic.c_str(), 0, true, "offline")) 
     {
-      Serial.println(F("\nПодключение к MQTT-серверу выполнено."));
+      Serial.print(F("\nПодключение к MQTT-серверу выполнено."));
       if (outQueueLength > 0) {
         Serial.print(F("Сообщений в очереди отправки: "));  
         Serial.println(outQueueLength);  
@@ -329,7 +329,7 @@ void processOutQueue() {
       // Отправка прошла успешно
       Serial.print(F("MQTT >> OK >> ")); 
       Serial.print(topic);
-      Serial.print(F("\t >> ")); 
+      Serial.print(F(" >> \t")); 
       Serial.println(message);
       // Извлекаем сообщение из очереди
       tpcQueue[outQueueReadIdx] = "";
@@ -342,7 +342,7 @@ void processOutQueue() {
       // Отправка не удалась
       Serial.print(F("MQTT >> FAIL >> ")); 
       Serial.print(topic);
-      Serial.print(F("\t >> ")); 
+      Serial.print(F(" >> \t")); 
       Serial.println(message);
     }
     // Запоминаем время отправки. Бесплатный сервер не позволяет отправлять сообщения чаще чем одно сообщение в секунду

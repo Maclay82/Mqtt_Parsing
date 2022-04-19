@@ -14,7 +14,14 @@ extern float minhum, maxhum;
 #endif
 
 #ifdef CO2CONTROL
-#define CO2OPROSDELAY 120000  // время опроса MH-Z19B в миллисекундах
+#define CO2_CYCLE     5       //  количество циклов регулировки в сутки
+#define CO2OPROSDELAY 120000  //  время опроса MH-Z19B в миллисекундах
+extern MHZ co2;
+extern int CO2PPM, temp, CO2Sel;
+extern uint16_t minCO2, maxCO2;
+extern boolean CO2Set, CO2Ready, CO2On;
+extern int CO2ON[];     //массив времен начала впрыска CO2
+extern int CO2OFF[];    //массив времен конца впрыска CO2
 #endif
 
 #ifdef PHTDSCONTROL
@@ -56,7 +63,7 @@ extern  PubSubClient mqtt;     // Объект соединения с MQTT се
 // чтобы изменения вступили в силу нужно также изменить значение константы EEPROM_OK в строке 8 этого файла
 
 #ifndef DEFAULT_MQTT_SERVER
-#define DEFAULT_MQTT_SERVER   "192.168.2.125"  //"192.168.1.166"  // MQTT сервер
+#define DEFAULT_MQTT_SERVER   "192.168.2.125"  //"192.168.1.166"  //"192.168.2.182"// MQTT сервер
 #endif
 
 #ifndef DEFAULT_MQTT_USER

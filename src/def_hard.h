@@ -2,7 +2,7 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA1       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xAA       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
@@ -46,7 +46,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
 
-#define DEVICE_ID   0               // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID   6               // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
                                     // 3 - PhTDS контроллер тестовый
@@ -205,6 +205,8 @@ I2C address 0x49 TDS
 #define CO2CONTROL
 #endif
 
+#define RTC
+
 #define DEV_ID 0
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 #define HOST_NAME   F("CO2Ctrl")
@@ -217,6 +219,9 @@ I2C address 0x49 TDS
 
 #define ICCSCAN 0
 
+//0x68 ds3231
+//0x38 atn10
+
 #endif
 
 // =======================================================
@@ -227,27 +232,27 @@ I2C address 0x49 TDS
 // чтобы изменения вступили в силу нужно также изменить значение константы EEPROM_OK в первой строке в файле eeprom.ino 
 
 #ifndef DEFAULT_NTP_SERVER
-#define DEFAULT_NTP_SERVER "ru.pool.ntp.org"  // NTP сервер по умолчанию "time.nist.gov"
+#define DEFAULT_NTP_SERVER "ru.pool.ntp.org"                    // NTP сервер по умолчанию "time.nist.gov"
 #endif
 
 #ifndef DEFAULT_AP_NAME
-#define DEFAULT_AP_NAME "StartAP"             // Имя точки доступа по умолчанию 
+#define DEFAULT_AP_NAME     "StartAP"                           // Имя точки доступа по умолчанию 
 #endif
 
 #ifndef DEFAULT_AP_PASS
-#define DEFAULT_AP_PASS "12341111"            // Пароль точки доступа по умолчанию
+#define DEFAULT_AP_PASS     "12341111"                          // Пароль точки доступа по умолчанию
 #endif
 
 #ifndef NETWORK_SSID
-#define NETWORK_SSID "OstrovDushi"//"yougrow"//                // Имя WiFi сети
+#define NETWORK_SSID        "OstrovDushi"//"yougrow"//          // Имя WiFi сети
 #endif
 
 #ifndef NETWORK_PASS
-#define NETWORK_PASS "LaIslaBonita"//"00007777"//               // Пароль для подключения к WiFi сети
+#define NETWORK_PASS        "LaIslaBonita"//"00007777"//        // Пароль для подключения к WiFi сети
 #endif
 
 #ifndef DEFAULT_IP
-#define DEFAULT_IP {192, 168, 1, 121}         // Сетевой адрес устройства по умолчанию
+#define DEFAULT_IP          {192, 168, 1, 121}                  // Сетевой адрес устройства по умолчанию
 #endif
 
 #ifndef USEDHCP
@@ -283,14 +288,16 @@ I2C address 0x49 TDS
 #include "i2cPumps.h"
 #endif
 
-#ifdef CO2CONTROL                // CO2 PPM MH-Z19B lib
+#if defined (RTC)
+#include "RTClib.h"
+#endif
 
+#ifdef CO2CONTROL                // CO2 PPM MH-Z19B lib
 #include <SoftwareSerial.h>
 #include <MHZ.h>
 #endif
 
 #ifdef HUMCONTROL                // Hum lib
-
 #include "SparkFunHTU21D.h"
 #endif
 
@@ -318,6 +325,10 @@ I2C address 0x49 TDS
 #endif
 
 //Create an instance of the object
+#if defined(RTC)
+  extern RTC_DS3231 rtc;
+#endif
+
 #ifdef HUMCONTROL
 #if defined(ESP8266)
   #define HUMPWR D7
@@ -336,17 +347,20 @@ extern float temp, humd;
 #endif                                           
 
 #ifdef CO2CONTROL                // CO2 PPM MH-Z19B pin for uart reading
+
 #if defined(ESP8266)
   #define MH_Z19_RX D3
   #define MH_Z19_TX D4
 #endif
 #if defined(ESP32)
-  #define MH_Z19_RX 17
-  #define MH_Z19_TX 16
+  #if defined(lolin32)
+    #define MH_Z19_RX 12
+    #define MH_Z19_TX 11
+  #else
+    #define MH_Z19_RX 17
+    #define MH_Z19_TX 16
+  #endif
 #endif
-extern MHZ co2;
-extern int CO2PPM, temp;
-extern uint16_t minCO2, maxCO2;
 
 #ifndef maxCO2DEF
   #define maxCO2DEF 1400
@@ -360,7 +374,11 @@ extern uint16_t minCO2, maxCO2;
   #define CO2PWR D5
 #endif
 #if defined(ESP32)
-  #define CO2PWR 18
+  #if defined(lolin32)
+    #define CO2PWR 13
+  #else
+    #define CO2PWR 26
+#endif
 #endif
 #endif
 
@@ -376,22 +394,22 @@ extern int Wlvl;
 extern IoAbstractionRef I2CExp, ioExp2, ioExpInp; //классы плат I2C расширителей
 
 
-#define PHUP        1       //  PH up pump
-#define PHDOWN      2       //  PH down pump
-#define TDSA        3       //  TDS A pump
-#define TDSB        4       //  TDS B pump
-#define TDSC        5       //  TDS C pump
-#define ADD         6       //  Addition pump
+#define PHUP            1   //  PH up pump
+#define PHDOWN          2   //  PH down pump
+#define TDSA            3   //  TDS A pump
+#define TDSB            4   //  TDS B pump
+#define TDSC            5   //  TDS C pump
+#define ADD             6   //  Addition pump
 
-#define ClWaterIn        7  //  Вход чистой воды
-#define ClWaterOut       6  //  Выход чистой воды  
-#define SolWaterIn_1     5  //  Вход бака расствора 1
-#define SolWaterOut_1    4  //  Выход бака расствора 1  
+#define ClWaterIn       7   //  Вход чистой воды
+#define ClWaterOut      6   //  Выход чистой воды  
+#define SolWaterIn_1    5   //  Вход бака расствора 1
+#define SolWaterOut_1   4   //  Выход бака расствора 1  
 
-#define PHREGADR   0x2C     //  PH reg. AD5282 address in 7bit format
-#define TDSREGADR  0x2E     // TDS reg. AD5282 address in 7bit format
-#define PHADDRESS  0x48     //  PH ADC MCP3221 address in 7bit format
-#define TDSADDRESS 0x49     // TDS ADC MCP3221 address in 7bit format
+#define PHREGADR     0x2C   //  PH reg. AD5282 address in 7bit format
+#define TDSREGADR    0x2E   // TDS reg. AD5282 address in 7bit format
+#define PHADDRESS    0x48   //  PH ADC MCP3221 address in 7bit format
+#define TDSADDRESS   0x49   // TDS ADC MCP3221 address in 7bit format
 
 #ifndef LVLSNSCOUNT 
 #define LVLSNSCOUNT 3       //количество датчиков уровня в ёмкости

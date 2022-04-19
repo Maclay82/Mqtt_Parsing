@@ -19,6 +19,10 @@ void putMinCO2(uint16_t value);
 uint16_t getMinCO2();
 void putMaxCO2(uint16_t value);
 uint16_t getMaxCO2();
+int getCO2On(int count);
+void putCO2On (int count, int value);
+int getCO2Off(int count);
+void putCO2Off (int count, int value);
 #endif
 
 #ifdef PHTDSCONTROL

@@ -45,18 +45,18 @@ void loadSettings()   // Загрузка настроек
   //  52 -
 
 
-  // 58 - minCO2
-  // 60 - maxC02
-  // 62 - PhVol
-  // 64 - regDelay
-  // 66 - phmin
-  // 70 - phmax
-  // 74 - tdsmin
-  // 76 - tdsmax
-  // 78 - maxhum                                                                                             // getMaxHum()                   // putMaxHum(maxhum)
-  // 82 - minhum                                                                                             // getMinHum()                   // putMinHum(minhum)  
-  // 86-95   - имя точки доступа    - 10 байт                                                                // getSoftAPName().toCharArray(apName, 10)       // putSoftAPName(String(apName))       // char apName[11] = ""
-  // 96-111  - пароль точки доступа - 16 байт                                                                // getSoftAPPass().toCharArray(apPass, 17)       // putSoftAPPass(String(apPass))       // char apPass[17] = "" 
+  //  58 - minCO2
+  //  60 - maxC02
+  //  62 - PhVol
+  //  64 - regDelay
+  //  66 - phmin
+  //  70 - phmax
+  //  74 - tdsmin
+  //  76 - tdsmax
+  //  78 - maxhum                                                                                            // getMaxHum()                   // putMaxHum(maxhum)
+  //  82 - minhum                                                                                            // getMinHum()                   // putMinHum(minhum)  
+  //  86-95  - имя точки доступа    - 10 байт                                                                // getSoftAPName().toCharArray(apName, 10)       // putSoftAPName(String(apName))       // char apName[11] = ""
+  //  96-111 - пароль точки доступа - 16 байт                                                                // getSoftAPPass().toCharArray(apPass, 17)       // putSoftAPPass(String(apPass))       // char apPass[17] = "" 
   // 112-135 - имя сети  WiFi       - 24 байта                                                               // getSsid().toCharArray(ssid, 25)               // putSsid(String(ssid))               // char ssid[25]   = ""
   // 136-151 - пароль сети  WiFi    - 16 байт                                                                // getPass().toCharArray(pass, 17)               // putPass(String(pass))               // char pass[17]   = ""
   // 152-181 - имя NTP сервера      - 30 байт                                                                // getNtpServer().toCharArray(ntpServerName, 31) // putNtpServer(String(ntpServerName)) // char ntpServerName[31] = ""
@@ -72,12 +72,14 @@ void loadSettings()   // Загрузка настроек
   
   //**275 - не используется
   //  ...
+  //  300-320 // 
   //  400-... //PumpScale коэффициенты нвсосов
   //**499 - не используется
 
   // Сначала инициализируем имя сети/точки доступа, пароли и имя NTP-сервера значениями по умолчанию.
   // Ниже, если EEPROM уже инициализирован - из него будут загружены актуальные значения
   
+
   strcpy(apName, DEFAULT_AP_NAME);
   strcpy(apPass, DEFAULT_AP_PASS);
   strcpy(ssid, NETWORK_SSID);
@@ -135,8 +137,11 @@ void loadSettings()   // Загрузка настроек
 #ifdef CO2CONTROL
     minCO2 = getMinCO2(); 
     maxCO2 = getMaxCO2();
+    for (int i = 0; i < CO2_CYCLE; ++i) {
+      CO2ON[i] = getCO2On(i);
+      CO2OFF[i] = getCO2Off(i);
+    }
 #endif
-
 
 #ifdef PHTDSCONTROL
     RAWMode = getRAWMode();           // режим чтения "сырых" данных с Ph TDS
@@ -202,6 +207,11 @@ void saveDefaults() {
 #ifdef CO2CONTROL
   putMaxCO2(maxCO2DEF);
   putMinCO2(minCO2DEF);
+  for (int i = 0; i < CO2_CYCLE; ++i)
+  {                
+    putCO2On  (i, (int)0);
+    putCO2Off (i, (int)0);
+  }
 #endif
 
 #ifdef PHTDSCONTROL
@@ -332,18 +342,14 @@ void putMinHum(float value) {
 #endif
 
 #ifdef CO2CONTROL                // CO2 PPM MH-Z19B pin for uart reading
-void putMinCO2(uint16_t value) {
-  if (value != getMinCO2()) EEPROM_int_write(58, value);
-}
-uint16_t getMinCO2() {
-  return EEPROM_int_read(58);
-}
-void putMaxCO2(uint16_t value) {
-  if (value != getMaxCO2()) EEPROM_int_write(60, value);
-}
-uint16_t getMaxCO2() {
-  return EEPROM_int_read(60);
-}
+void putMinCO2(uint16_t value) { if (value != getMinCO2()) EEPROM_int_write(58, value);}
+uint16_t getMinCO2() {                              return EEPROM_int_read (58); }
+void putMaxCO2(uint16_t value) { if (value != getMaxCO2()) EEPROM_int_write(60, value); }
+uint16_t getMaxCO2() {                              return EEPROM_int_read (60); }
+int getCO2On(int count) { return EEPROM_int_read ((uint16_t)(300+(count*4))); }
+void putCO2On (int count, int value) { if (value != getCO2On(count)) EEPROM_int_write((uint16_t)(300+(count*4)), value); }
+int getCO2Off(int count) { return EEPROM_int_read ((uint16_t)(302+(count*4))); }
+void putCO2Off (int count, int value) { if (value != getCO2On(count)) EEPROM_int_write((uint16_t)(302+(count*4)), value); }
 #endif
 
 int8_t getCurrentMode() {
