@@ -32,7 +32,7 @@ void connectToNetwork();
 #ifdef CO2CONTROL
 bool CO2Control(int cur);
 int CO2Check (int check);
-bool CO2Time (int ON, int OFF);
+bool TimeChk (int ON, int OFF);
 #endif
 
 #endif

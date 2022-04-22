@@ -46,13 +46,14 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
 
-#define DEVICE_ID   6               // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID   7               // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
                                     // 3 - PhTDS контроллер тестовый
                                     // 4 - PhTDS контроллер Зеленка
                                     // 5 - Контроллер приточка Зеленка
                                     // 6 - Контроллер CO2 Зеленка
+                                    // 7 - Контроллер CO2 Зеленка тест
 
 // ================== Увлажнитель тестовый стенд =====================
 
@@ -208,6 +209,32 @@ I2C address 0x49 TDS
 #define RTC
 
 #define DEV_ID 0
+#define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
+#define HOST_NAME   F("CO2Ctrl")
+#define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
+#define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
+
+#define REFRESHTIME 30000
+#define USEDHCP 1
+//#define DEFAULT_IP {192, 168, 2, 162}       // Сетевой адрес устройства по умолчанию
+
+#define ICCSCAN 0
+
+//0x68 ds3231
+//0x38 atn10
+
+#endif
+
+// ================== Контроллер CO2 Зеленка тест =====================
+#if (DEVICE_ID == 7)
+
+#ifndef CO2CONTROL
+#define CO2CONTROL
+#endif
+
+#define RTC
+
+#define DEV_ID 1
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 #define HOST_NAME   F("CO2Ctrl")
 #define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется

@@ -148,8 +148,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   strncpy(temp, (char*)payload, length);
 
   #ifdef USE_LOG
-  Serial.println();
-  Serial.print("Command from MQTT broker is : ");
+  Serial.print("\nCommand from MQTT broker is : ");
   Serial.print("topic ");
   Serial.print(topic);
   Serial.print(" payload ");

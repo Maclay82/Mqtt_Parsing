@@ -596,10 +596,11 @@ void connectToNetwork() {  // Подключиться к WiFi сети, ожи�
 bool CO2Control(int cur) // vkl/otkl CO2
 { 
   for (int i = 0; i < CO2_CYCLE; ++i)
-    if (CO2ON[i] != 0 && CO2OFF[i] != 0) if (CO2Time(CO2ON[i], CO2OFF[i]) == true) {
-      CO2On = true;
-      i = CO2_CYCLE;
-    }
+    if (CO2ON[i] != 0 && CO2OFF[i] != 0) 
+      if (TimeChk(CO2ON[i], CO2OFF[i]) == true) {
+        CO2On = true;
+        i = CO2_CYCLE;
+      }
 
     if (CO2On == true && CO2Ready == true){
       if (cur <= minCO2) if(!digitalRead(CO2PWR)) digitalWrite(CO2PWR, HIGH);
@@ -621,49 +622,23 @@ int CO2Check (int check)
   return 0;
 }
 
-bool CO2Time (int ON, int OFF)
+bool TimeChk (int ON, int OFF)
 {
-  Serial.print("\n ON=");
-  Serial.print(ON);
-  Serial.print(" OFF=");
-  Serial.print(OFF);
-
-  if(ON != OFF)
-  {
-    Serial.print("\tcurtime =");
+  bool temps = false;
+  if(ON != OFF) {
     int curtime = hour()*100 + minute();
-    Serial.print(curtime);
-    Serial.print(" -> ");
-
-    if (ON > OFF){
-      Serial.print("ON > OFF -> ");
-      if (curtime >= ON  || curtime < OFF) {
-        if(CO2On != true) CO2On = true;
-        Serial.print("curtime >= ON  || curtime < OFF CO2On = true ");
-      }
-      if (curtime >= OFF && curtime < ON ) {
-        if(CO2On == true) CO2On = false;
-        Serial.print("curtime >= OFF && curtime < ON CO2On = false ");
-      }
+    if (ON > OFF) {
+      if (curtime >= ON  || curtime < OFF) if(temps != true) temps = true;
+      if (curtime >= OFF && curtime < ON ) if(temps == true) temps = false;
     }
-    else{
-      Serial.print("ON !> OFF -> ");
-      if (curtime >= ON && curtime < OFF) {
-        if(CO2On != true) CO2On = true;
-        Serial.print("curtime >= ON && curtime < OFF CO2On = true ");
-      } 
-      if (curtime >= OFF || curtime < ON) {
-        if(CO2On == true) CO2On = false;
-        Serial.print("curtime >= OFF || curtime < ON CO2On = false ");
-      }
+    else {
+      if (curtime >= ON  && curtime < OFF) if(temps != true) temps = true;
+      if (curtime >= OFF || curtime < ON ) if(temps == true) temps = false;
     }
   }
   else
-    if(CO2On != true){ 
-      CO2On = true;
-      Serial.println("CO2On != true CO2On = true ");
-    }
+    if(temps != true)  temps = true;
   
-  return CO2On;
+  return temps;
 }
 #endif
