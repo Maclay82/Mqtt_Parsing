@@ -93,6 +93,13 @@ String getDateTimeString(time_t t) {
   return padNum(dy,2) + "." + padNum(mh,2) + "." + padNum(yr,4) + " " + padNum(hr,2) + ":" + padNum(mn,2) + ":" + padNum(sc,2);  
 }
 
+String getTimeString(time_t t) {
+  uint8_t hr = hour(t);
+  uint8_t mn = minute(t);
+  uint8_t sc = second(t);
+  return padNum(hr,2) + ":" + padNum(mn,2) + ":" + padNum(sc,2);  
+}
+
 // leap year calulator expects year argument as years offset from 1970
 boolean LEAP_YEAR(uint16_t Y) {
   return ((1970+(Y))>0) && !((1970+(Y))%4) && ( ((1970+(Y))%100) || !((1970+(Y))%400) );
@@ -315,7 +322,7 @@ boolean statusPub()    //Публикация состояния парамет�
     DynamicJsonDocument doc(256);
     String out;
     char s[8];   //строка mqtt сообщения
-
+      doc["time"] = getTimeString(rtc.now().unixtime());
     #ifdef HUMCONTROL
       dtostrf(humd, 2, 2, s);
       doc["hum"] = humd;
