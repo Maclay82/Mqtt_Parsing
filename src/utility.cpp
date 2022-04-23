@@ -1,43 +1,8 @@
 // служебные функции
 #include <Arduino.h>
-//#include "def_hard.h"     // Определение параметров матрицы, пинов подключения и т.п
-#include "def_soft.h"     // Определение параметров эффектов, переменных программы и т.п.
-
-uint32_t HEXtoInt(String hexValue) {
-  hexValue.toUpperCase();
-  if (hexValue.charAt(0) == '#') {  hexValue = hexValue.substring(1);  }
-
-  if (hexValue.startsWith("0X")) {  hexValue = hexValue.substring(2);  }
-
-  byte tens, ones, number1, number2, number3;
-  tens = (hexValue[0] <= '9') ? hexValue[0] - '0' : hexValue[0] - '7';
-  ones = (hexValue[1] <= '9') ? hexValue[1] - '0' : hexValue[1] - '7';
-  number1 = (16 * tens) + ones;
-
-  tens = (hexValue[2] <= '9') ? hexValue[2] - '0' : hexValue[2] - '7';
-  ones = (hexValue[3] <= '9') ? hexValue[3] - '0' : hexValue[3] - '7';
-  number2 = (16 * tens) + ones;
-
-  tens = (hexValue[4] <= '9') ? hexValue[4] - '0' : hexValue[4] - '7';
-  ones = (hexValue[5] <= '9') ? hexValue[5] - '0' : hexValue[5] - '7';
-  number3 = (16 * tens) + ones;
-
-  return ((uint32_t)number1 << 16 | (uint32_t)number2 << 8 | number3 << 0);
-}
-
-// uint32_t to Hex string
-String IntToHex(uint32_t value) {
-  String sHex = "00000" + String(value, HEX);
-  byte len = sHex.length();
-  if (len > 6) {
-    sHex = sHex.substring(len - 6);
-    sHex.toUpperCase();
-  }
-  return sHex;
-}
+#include "def_soft.h" 
 
 uint32_t CountTokens(String str, char separator) {
-
   uint32_t count = 0;
   int pos = 0;
   String l_str = str;
@@ -53,7 +18,6 @@ uint32_t CountTokens(String str, char separator) {
 }
 
 String GetToken(String &str, uint32_t index, char separator) {
-
   uint32_t count = CountTokens(str, separator);
 
   if (count <= 1 || index < 1 || index > count) return str;
@@ -76,14 +40,14 @@ String GetToken(String &str, uint32_t index, char separator) {
   return str.substring(pos_start, pos_end);
 }
 
-String padNum(int16_t num, byte cnt) {
+String padNum(int16_t num, byte cnt) { //сервисная функция вывода в строку
   char data[12];
   String fmt = "%0"+ String(cnt) + "d";
   sprintf(data, fmt.c_str(), num);
   return String(data);
 }
 
-String getDateTimeString(time_t t) {
+String getDateTimeString(time_t t) { //вывод даты и времени в строку
   uint8_t hr = hour(t);
   uint8_t mn = minute(t);
   uint8_t sc = second(t);
@@ -93,7 +57,7 @@ String getDateTimeString(time_t t) {
   return padNum(dy,2) + "." + padNum(mh,2) + "." + padNum(yr,4) + " " + padNum(hr,2) + ":" + padNum(mn,2) + ":" + padNum(sc,2);  
 }
 
-String getTimeString(time_t t) {
+String getTimeString(time_t t) {    //вывод времени в строку
   uint8_t hr = hour(t);
   uint8_t mn = minute(t);
   uint8_t sc = second(t);
@@ -648,4 +612,340 @@ bool TimeChk (int ON, int OFF)
   
   return temps;
 }
+
+
+/*
+// DM manualMode
+void set_manualMode(boolean value) {
+  if (manualMode == value) return;
+  putAutoplay(value);
+  manualMode = getAutoplay();
+}
+
+// PD autoplayTime
+void set_autoplayTime(uint32_t value) {
+  if (autoplayTime == value) return;
+  putAutoplayTime(value);
+  autoplayTime = getAutoplayTime();
+}
+
+// IT idleTime
+void set_idleTime(uint32_t value) {
+  if (idleTime == value) return;;
+  putIdleTime(value);
+  idleTime = getIdleTime();
+}
+
+// AL isAlarming 
+void set_isAlarming(boolean value) {
+  if (isAlarming == value) return;
+  isAlarming = value;
+}
+
+// AL isAlarmStopped
+void set_isAlarmStopped(boolean value) {
+  if (isAlarmStopped == value) return;
+  isAlarmStopped = value;
+}
+*/
+void set_thisMode(int8_t value) {
+  if (thisMode == value) return;
+  
+  // boolean valid = (value == -1) || (value >= 0 && value < MAX_EFFECT);
+  // if (!valid) return;
+
+  // valid = (value >= 0 && value < MAX_EFFECT);
+
+  thisMode = value;
+  putCurrentMode(thisMode);
+
+#ifdef PHTDSCONTROL
+  setCollector(); //Применение конфигурации коллектора
+#endif
+  if(thisMode%2 == 0 && thisMode != 0) count_mode = true;
+  else count_mode = false;
+  statusPub();
+}
+
+// useDHCP
+void set_useDHCP(boolean value) {
+  if (useDHCP == value) return;
+  putUseDHCP(value);
+  useDHCP = getUseDHCP();
+}
+
+// NP useNtp
+void set_useNtp(boolean value) {
+  if (useNtp == value) return;
+  putUseNtp(value);
+  useNtp = getUseNtp();
+}
+
+// NT syncTimePeriod
+void set_syncTimePeriod(uint16_t value) {
+  if (syncTimePeriod == value) return;
+  putNtpSyncTime(value);
+  syncTimePeriod = getNtpSyncTime();
+}
+
+// NZ timeZoneOffset
+void set_timeZoneOffset(int16_t value) {
+  if (timeZoneOffset == value) return;
+  putTimeZone(value);
+  timeZoneOffset = getTimeZone();
+}
+
+// NS ntpServerName
+void set_ntpServerName(String value) {
+  if (getNtpServer() == value) return;
+  putNtpServer(value);  
+  getNtpServer().toCharArray(ntpServerName, 31);
+}
+
+// NW ssid
+void set_Ssid(String value) {
+  if (getSsid() == value) return;
+  putSsid(value);
+  getSsid().toCharArray(ssid, 24);
+}
+
+// NA pass
+void set_pass(String value) {
+  if (getPass() == value) return;
+  putPass(value);
+  getPass().toCharArray(pass, 16);
+}
+              
+// AN apName
+void set_SoftAPName(String value) {
+  if (getSoftAPName() == value) return;
+  putSoftAPName(value);
+  getSoftAPName().toCharArray(pass, 16);
+}              
+
+// AA apPass
+void set_SoftAPPass(String value) {
+  if (getSoftAPPass() == value) return;
+  putSoftAPPass(value);
+  getSoftAPPass().toCharArray(apPass, 16);
+}              
+
+// IP wifi_connected
+void set_wifi_connected(boolean value) {
+  if (wifi_connected == value) return;
+  wifi_connected = value;
+}              
+
+// IP IP_STA[]
+void set_StaticIP(byte p1, byte p2, byte p3, byte p4) {
+  IP_STA[0] = p1; 
+  IP_STA[1] = p2; 
+  IP_STA[2] = p3; 
+  IP_STA[3] = p4; 
+  putStaticIP(p1, p2, p3, p4);
+}              
+/*
+// AW alarmWeekDay
+void set_alarmWeekDay(byte value) {
+  if (alarmWeekDay == value) return;
+  putAlarmParams(value,dawnDuration,alarmEffect,alarmDuration);
+  alarmWeekDay = getAlarmWeekDay();
+}
+
+// AE alarmEffect
+void set_alarmEffect(byte value) {
+  if (alarmEffect == value) return;
+  // byte alarmWeekDay = getAlarmWeekDay();
+//  putAlarmParams(alarmWeekDay,dawnDuration,value,alarmDuration);
+}
+
+// MD alarmDuration
+void set_alarmDuration(byte value) {
+  if (alarmDuration == value) return;
+  // byte alarmWeekDay = getAlarmWeekDay();
+//  putAlarmParams(alarmWeekDay,dawnDuration,alarmEffect,value);
+}
+
+// AT alarmHour[], alarmMinute[]
+void set_alarmTime(byte wd, byte hour_value, byte minute_value) {
+  byte old_hour   = getAlarmHour(wd);
+  byte old_minute = getAlarmMinute(wd);
+  if (old_hour == hour_value && old_minute == minute_value) return;
+  putAlarmTime(wd, hour_value, minute_value);
+  alarmHour[wd-1] = getAlarmHour(wd);
+  alarmMinute[wd-1] = getAlarmMinute(wd);
+}
+*/
+// AU useSoftAP
+void set_useSoftAP(boolean value) {
+  if (useSoftAP == value) return;
+  putUseSoftAP(value);
+  useSoftAP = getUseSoftAP();
+}
+/*
+// AM1T AM1_hour
+void set_AM1_hour(byte value) {
+  if (AM1_hour == value) return;
+  putAM1hour(value);
+  AM1_hour = getAM1hour();
+}
+
+// AM1T AM1_minute
+void set_AM1_minute(byte value) {
+  if (AM1_minute == value) return;
+  putAM1minute(value);
+  AM1_minute = getAM1minute();
+}
+
+// AM1A AM1_effect_id
+void set_AM1_effect_id(int8_t value) {
+  if (AM1_effect_id == value) return;
+  putAM1effect(value);
+  AM1_effect_id = getAM1effect();  
+}
+
+// AM2T AM2_hour
+void set_AM2_hour(byte value) {
+  if (AM2_hour == value) return;
+  putAM2hour(value);
+  AM2_hour = getAM2hour();
+}
+
+// AM2T AM2_minute
+void set_AM2_minute(byte value) {
+  if (AM2_minute == value) return;
+  putAM2minute(value);
+  AM2_minute = getAM2minute();
+}
+
+// AM2A AM2_effect_id
+void set_AM2_effect_id(int8_t value) {
+  if (AM2_effect_id == value) return;
+  putAM2effect(value);
+  AM2_effect_id = getAM2effect();
+}
+
+// AM3T AM3_hour
+void set_AM3_hour(byte value) {
+  if (AM3_hour == value) return;
+  putAM3hour(value);
+  AM3_hour = getAM3hour();
+}
+
+// AM3T AM3_minute
+void set_AM3_minute(byte value) {
+  if (AM3_minute == value) return;
+  putAM3minute(value);
+  AM3_minute = getAM3minute();
+}
+
+// AM3A AM3_effect_id
+void set_AM3_effect_id(int8_t value) {
+  if (AM3_effect_id == value) return;
+  putAM3effect(value);
+  AM3_effect_id = getAM3effect();
+}
+
+// AM4T AM4_hour
+void set_AM4_hour(byte value) {
+  if (AM4_hour == value) return;
+  putAM4hour(value);
+  AM4_hour = getAM4hour();
+}
+
+// AM4T AM4_minute
+void set_AM4_minute(byte value) {
+  if (AM4_minute == value) return;
+  putAM4minute(value);
+  AM4_minute = getAM4minute();
+}
+
+// AM4A AM4_effect_id
+void set_AM4_effect_id(int8_t value) {
+  if (AM4_effect_id == value) return;
+  putAM4effect(value);
+  AM4_effect_id = getAM4effect();
+}
+
+// AM5A dawn_effect_id
+void set_dawn_effect_id(int8_t value) {
+  if (dawn_effect_id == value) return;
+  putAM5effect(value);
+  dawn_effect_id = getAM5effect();
+}
+
+// AM6A dusk_effect_id
+void set_dusk_effect_id(int8_t value) {
+  if (dusk_effect_id == value) return;
+  putAM6effect(value);
+  dusk_effect_id = getAM6effect();
+}
+*/
+
+#if (USE_MQTT == 1)
+// useMQTT
+void set_useMQTT(boolean value) {
+  if (useMQTT == value) return;  
+  if (useMQTT || value) stopMQTT = false;
+  putUseMqtt(value);
+  useMQTT = getUseMqtt();
+}
+
+// mqtt_port
+void set_mqtt_port(int16_t value) {
+  if (mqtt_port == value) return;  
+  putMqttPort(value);
+  mqtt_port = getMqttPort();
+}
+
+// mqtt_server
+void set_MqttServer(String value) {
+  if (getMqttServer() == value) return;
+  putMqttServer(value);
+  getMqttServer().toCharArray(mqtt_server, 24);
+}
+
+// mqtt_user
+void set_MqttUser(String value) {
+  if (getMqttUser() == value) return;
+  putMqttUser(value);
+  getMqttUser().toCharArray(mqtt_user, 14);
+}
+
+// mqtt_pass
+void set_MqttPass(String value) {
+  if (getMqttPass() == value) return;
+  putMqttPass(value);
+  getMqttPass().toCharArray(mqtt_pass, 14);
+}
+
+// mqtt_send_delay
+void set_mqtt_send_delay(int16_t value) {
+  if (mqtt_send_delay == value) return;  
+  putMqttSendDelay(value);
+  mqtt_send_delay = getMqttSendDelay();
+}
+
+// mqtt_prefix
+void set_MqttPrefix(String value) {
+  if (getMqttPrefix() == value) return;
+  putMqttPrefix(value);
+  getMqttPrefix().toCharArray(mqtt_prefix, 30);
+}
+
+// mqtt_state_packet
+void set_mqtt_state_packet(boolean value) {
+  if (mqtt_state_packet == value) return;  
+  putSendStateInPacket(value);
+  mqtt_state_packet = getSendStateInPacket();
+}
+
+// upTimeSendInterval
+void set_upTimeSendInterval(uint16_t value) {
+  if (upTimeSendInterval == value) return;;
+  putUpTimeSendInterval(value);
+  upTimeSendInterval = getUpTimeSendInterval();
+}
+#endif
+
 #endif
