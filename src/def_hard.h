@@ -332,7 +332,6 @@ I2C address 0x49 TDS
 #include "a_main.h"     
 #include "eeprom1.h"             // Библиотека для работы с постоянной памятью
 #include "mqtt.h"
-#include "setters.h"
 #include "utility.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>

@@ -1169,29 +1169,29 @@ void parsing() {
               // Запрос значений параметров, требуемых приложением вида str="CE|CC|CO|CK|NC|SC|C1|DC|DD|DI|NP|NT|NZ|NS|DW|OF"
               // Каждый запрашиваемый приложением параметр - для заполнения соответствующего поля в приложении 
               // Передать строку для формирования, затем отправить параметры в приложение
-              if (cmdSource == UDP) {
-                str = "$18 " + getStateString(str) + ";";
-              } else {
-                #if (USE_MQTT == 1)
-                // Если ключи разделены пробелом - заменить на пайпы '|'
-                // Затем добавить в строку измененных параметров changed_keys
-                // На следующей итерации параметры из строки changed_keys будут отправлены в канал MQTT
-                str.replace(" ","|");
-                int16_t pos_start = 0;
-                int16_t pos_end = str.indexOf('|', pos_start);
-                int16_t len = str.length();
-                if (pos_end < 0) pos_end = len;
-                while (pos_start < len && pos_end >= pos_start) {
-                  if (pos_end > pos_start) {      
-                    String key = str.substring(pos_start, pos_end);
-                    if (key.length() > 0) addKeyToChanged(key);
-                  }
-                  pos_start = pos_end + 1;
-                  pos_end = str.indexOf('|', pos_start);
-                  if (pos_end < 0) pos_end = len;
-                }
-                #endif
-              }
+              // if (cmdSource == UDP) {
+              //   str = "$18 " + getStateString(str) + ";";
+              // } else {
+              //   #if (USE_MQTT == 1)
+              //   // Если ключи разделены пробелом - заменить на пайпы '|'
+              //   // Затем добавить в строку измененных параметров changed_keys
+              //   // На следующей итерации параметры из строки changed_keys будут отправлены в канал MQTT
+              //   str.replace(" ","|");
+              //   int16_t pos_start = 0;
+              //   int16_t pos_end = str.indexOf('|', pos_start);
+              //   int16_t len = str.length();
+              //   if (pos_end < 0) pos_end = len;
+              //   while (pos_start < len && pos_end >= pos_start) {
+              //     if (pos_end > pos_start) {      
+              //       String key = str.substring(pos_start, pos_end);
+              //       if (key.length() > 0) addKeyToChanged(key);
+              //     }
+              //     pos_start = pos_end + 1;
+              //     pos_end = str.indexOf('|', pos_start);
+              //     if (pos_end < 0) pos_end = len;
+              //   }
+              //   #endif
+              // }
             break;
               
           #if (USE_MQTT == 1)
@@ -1283,9 +1283,6 @@ void parsing() {
         switch (intData[1]) {
           case 1:               // $11 1 X; - Использовать канал MQTT: 0 - нет; 1 - да
             set_useMQTT(intData[2] == 1);
-            // Если MQTT канал только что включили - отправить туда все начальные настройки,
-            // т.к. пока канал был отключен - состояние параметров изменялось, но сервер об этом не знает
-            if (useMQTT) mqttSendStartState();
           break;
           case 2:   // $11 2 D; - Порт MQTT
             set_mqtt_port(intData[2]);
@@ -1304,8 +1301,6 @@ void parsing() {
             if (last_mqtt_server != String(mqtt_server) || last_mqtt_port != mqtt_port) {              
               ESP.restart();
             }
-            // MQTT сервер мог поменять свои настройки, переключились на другой сервер или другой аккаунт - отправить туда все начальные настройки,
-            if (useMQTT) mqttSendStartState();
           break;
           case 6:   // $11 6 X; - Отправка параметров состояния в MQTT: 0 - индивидуально; 1 - пакетом
             set_mqtt_state_packet ( intData[2] == 1 );
