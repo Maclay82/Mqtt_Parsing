@@ -8,7 +8,7 @@ uint16_t AUTO_FILL_PERIOD = 24;    // Период активации автом
 boolean  auto_mode = true;         // Флаг автоматического режима
 boolean  count_mode = false;       // Флаг включения счетчика воды подлива
 
-#if defined(RTC)
+#ifdef RTC
 RTC_DS3231 rtc;
 #endif
 

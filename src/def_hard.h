@@ -99,6 +99,11 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #define minhumDEF 69
 #define maxhumDEF 74
 
+#define USEDHCP 1
+//#define DEFAULT_IP {192, 168, 2, 162}       // Сетевой адрес устройства по умолчанию
+
+#define ICCSCAN 0
+
 #endif
 
 // ================== Увлажнитель Перцы =====================
@@ -315,7 +320,7 @@ I2C address 0x49 TDS
 #include "i2cPumps.h"
 #endif
 
-#if defined (RTC)
+#ifdef RTC
 #include "RTClib.h"
 #endif
 
@@ -351,7 +356,7 @@ I2C address 0x49 TDS
 #endif
 
 //Create an instance of the object
-#if defined(RTC)
+#ifdef RTC
   extern RTC_DS3231 rtc;
 #endif
 

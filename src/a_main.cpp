@@ -271,7 +271,11 @@ void process() {
   if (millis() - timing >= REFRESHTIME){
 
     #ifdef USE_LOG
+
+    #ifdef RTC
     Serial.print((String)getDateTimeString(rtc.now().unixtime()));
+    #endif
+
     Serial.print(", UpTime:");
     Serial.print(((float)millis()/60000.0), 1);
     Serial.print(" min, "); 
@@ -1340,12 +1344,15 @@ void parsing() {
             ntpSyncTimer.setInterval ( 1000L * 60 * syncTimePeriod );
             if (wifi_connected) {  refresh_time = true; ntp_t = 0; ntp_cnt = 0;  }
           break;
+
+#ifdef RTC
           case 8:               // $19 8 YYYY MM DD HH MM; - Установить текущее время YYYY.MM.DD HH:MM
             setTime ( intData[5],intData[6],0,intData[4],intData[3],intData[2] );
             rtc.adjust(rtc.now().unixtime()); 
             init_time = true; refresh_time = false; ntp_cnt = 0;
             //  rescanTextEvents();
           break;
+#endif
           default:
             err = true;
             #if (USE_MQTT == 1)

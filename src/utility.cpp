@@ -156,7 +156,8 @@ void getNTP() {
     Serial.print(ntpServerName);
     Serial.print(F(" -> "));
     Serial.println(timeServerIP);
-    timeServerIP.fromString(F("85.21.78.91"));  // Один из ru.pool.ntp.org  // 91.207.136.55, 91.207.136.50, 46.17.46.226
+//hmm...  85.21.78.91 || local ntp?
+    timeServerIP.fromString(F("192.168.1.166"));  // Один из ru.pool.ntp.org  // 91.207.136.55, 91.207.136.50, 46.17.46.226
     Serial.print(F("Используем сервер по умолчанию: "));
     Serial.println(timeServerIP);
   }
@@ -286,7 +287,10 @@ boolean statusPub()    //Публикация состояния парамет�
     DynamicJsonDocument doc(256);
     String out;
     char s[8];   //строка mqtt сообщения
+      doc["IP"] = String(wifi_connected ? WiFi.localIP().toString() : "");
+    #ifdef RTC
       doc["time"] = getTimeString(rtc.now().unixtime());
+    #endif
     #ifdef HUMCONTROL
       dtostrf(humd, 2, 2, s);
       doc["hum"] = humd;
