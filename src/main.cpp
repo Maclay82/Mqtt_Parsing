@@ -180,11 +180,11 @@ void setup() {
     Wire.begin();
   #endif
   #if defined(ESP32)
-    #if defined(lolin32)
+//    #if defined(lolin32)
       Wire.begin(5,4);
-    #else
-      Wire.begin(21,22);
-    #endif
+//    #else
+//      Wire.begin(21,22);
+//    #endif
   #endif
 
   #ifdef HUMCONTROL                // Hum init
@@ -230,7 +230,7 @@ void setup() {
 
   host_name = String(HOST_NAME) + //"-" + 
   String(DEV_ID);
-  Serial.print("FIRMWARE:\t");
+  Serial.print("\tFIRMWARE:\t");
   Serial.println(FIRMWARE_VER);
   Serial.println("Host name:\t" + host_name);
 

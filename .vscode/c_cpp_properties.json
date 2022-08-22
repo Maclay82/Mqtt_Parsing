@@ -10,6 +10,7 @@
             "includePath": [
                 "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/include",
                 "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/src",
+                "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/EEPROM/src",
                 "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/ArduinoOTA/src",
                 "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/ESPmDNS/src",
                 "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
@@ -17,7 +18,6 @@
                 "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/mhetesp32minikit/MH-Z CO2 Sensors",
                 "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/mhetesp32minikit/EspSoftwareSerial/src",
                 "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/mhetesp32minikit/IoAbstraction/src",
-                "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/EEPROM/src",
                 "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/mhetesp32minikit/TaskManagerIO/src",
                 "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/mhetesp32minikit/SimpleCollections/src",
                 "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/mhetesp32minikit/RTClib/src",
@@ -120,7 +120,6 @@
                 "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                 "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                 "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
-                "/home/maclay/.platformio/packages/tool-unity",
                 ""
             ],
             "browse": {
@@ -128,6 +127,7 @@
                 "path": [
                     "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/include",
                     "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/src",
+                    "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/EEPROM/src",
                     "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/ArduinoOTA/src",
                     "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/ESPmDNS/src",
                     "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
@@ -135,7 +135,6 @@
                     "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/mhetesp32minikit/MH-Z CO2 Sensors",
                     "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/mhetesp32minikit/EspSoftwareSerial/src",
                     "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/mhetesp32minikit/IoAbstraction/src",
-                    "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/EEPROM/src",
                     "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/mhetesp32minikit/TaskManagerIO/src",
                     "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/mhetesp32minikit/SimpleCollections/src",
                     "/home/maclay/Documents/PlatformIO/Projects/WifiMQTTNode/.pio/libdeps/mhetesp32minikit/RTClib/src",
@@ -238,12 +237,11 @@
                     "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                     "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                     "/home/maclay/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
-                    "/home/maclay/.platformio/packages/tool-unity",
                     ""
                 ]
             },
             "defines": [
-                "PLATFORMIO=50205",
+                "PLATFORMIO=60104",
                 "ARDUINO_MH_ET_LIVE_ESP32MINIKIT",
                 "ESP32",
                 "ESP_PLATFORM",

@@ -2,7 +2,7 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xAA       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA1       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
@@ -46,7 +46,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
 
-#define DEVICE_ID   6               // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID  3                // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
                                     // 3 - PhTDS контроллер тестовый
@@ -276,11 +276,11 @@ I2C address 0x49 TDS
 #endif
 
 #ifndef NETWORK_SSID
-#define NETWORK_SSID        "yougrow"//"OstrovDushi"//          // Имя WiFi сети
+#define NETWORK_SSID        "OstrovDushi"//"yougrow"//          // Имя WiFi сети
 #endif
 
 #ifndef NETWORK_PASS
-#define NETWORK_PASS        "00007777"//"LaIslaBonita"//        // Пароль для подключения к WiFi сети
+#define NETWORK_PASS        "LaIslaBonita"//"00007777"//        // Пароль для подключения к WiFi сети
 #endif
 
 #ifndef DEFAULT_IP

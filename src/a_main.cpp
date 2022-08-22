@@ -274,9 +274,10 @@ void process() {
 
     #ifdef RTC
     Serial.print((String)getDateTimeString(rtc.now().unixtime()));
+    Serial.print(", ");
     #endif
 
-    Serial.print(", UpTime:");
+    Serial.print("UpTime:");
     Serial.print(((float)millis()/60000.0), 1);
     Serial.print(" min, "); 
 
@@ -457,7 +458,7 @@ void process() {
 
     display.setTextSize(2);
     display.setCursor(0, 32);
-    display.print("Wt:");
+    display.print("Wt: ");
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
       display.print(Wtemp,2);
       display.print("C");

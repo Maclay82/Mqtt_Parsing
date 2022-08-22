@@ -616,7 +616,7 @@ bool TimeChk (int ON, int OFF)
   
   return temps;
 }
-
+#endif
 
 /*
 // DM manualMode
@@ -887,7 +887,6 @@ void set_dusk_effect_id(int8_t value) {
 */
 
 #if (USE_MQTT == 1)
-// useMQTT
 void set_useMQTT(boolean value) {
   if (useMQTT == value) return;  
   if (useMQTT || value) stopMQTT = false;
@@ -950,6 +949,4 @@ void set_upTimeSendInterval(uint16_t value) {
   putUpTimeSendInterval(value);
   upTimeSendInterval = getUpTimeSendInterval();
 }
-#endif
-
 #endif

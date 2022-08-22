@@ -228,7 +228,7 @@ void saveDefaults() {
   putregDelay     (15);
 
   putPhmin        (6.0);    //нижняя граница Ph
-  putPhmax        (6.8);    //верхняя граница Ph
+  putPhmax        (6.80);    //верхняя граница Ph
   putTDSmin       (700);    //нижняя граница TDS
   putTDSmax       (1200);   //верхняя граница TDS
   putPhCalP1      (4.0); 
