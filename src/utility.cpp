@@ -204,8 +204,8 @@ void profpub() {
 
 #ifdef PHTDSCONTROL
     doc["regDelay"] = regDelay / 60000;
-    doc["phmax"] = phmax;
-    doc["phmin"] = phmin;
+    doc["phmax"] = serialized(String(phmax,2));
+    doc["phmin"] = serialized(String(phmin,2));
     doc["tdsmax"] = tdsmax;
     doc["tdsmin"] = tdsmin;
     doc["phVol"] = phVol;
@@ -312,25 +312,25 @@ boolean statusPub()    //Публикация состояния парамет�
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
       dtostrf(Wtemp, 1, 2, s);
       switch (thisMode) { 
-        case 0: doc["tSoil0"] = s; break;
-        case 1: doc["tSoil1"] = s; break;
-        case 2: doc["tSoil0"] = s; break;
+        case 0: doc["tSoil0"] = serialized(String(Wtemp,2)); break;
+        case 1: doc["tSoil1"] = serialized(String(Wtemp,2)); break;
+        case 2: doc["tSoil0"] = serialized(String(Wtemp,2)); break;
       }
     }
     if (realPh != -1){
       dtostrf(realPh, 3, 3, s);
-      switch (thisMode) { 
-        case 0: doc["phSoil0"] = s; break;
-        case 1: doc["phSoil1"] = s; break;
-        case 2: doc["phSoil0"] = s; break;
+       switch (thisMode) { 
+        case 0: doc["phSoil0"] = serialized(String(realPh,3)); break;
+        case 1: doc["phSoil1"] = serialized(String(realPh,3)); break;
+        case 2: doc["phSoil0"] = serialized(String(realPh,3)); break;
       }
     }
     if ( realTDS  != -1 ) {
-      dtostrf(realTDS, 1, 0, s);
+      // dtostrf(realTDS, 1, 0, s);
       switch (thisMode) { 
-        case 0: doc["tdsSoil0"] = s; break;
-        case 1: doc["tdsSoil1"] = s; break;
-        case 2: doc["tdsSoil0"] = s; break;
+        case 0: doc["tdsSoil0"] = serialized(String(realTDS,0)); break;
+        case 1: doc["tdsSoil1"] = serialized(String(realTDS,0)); break;
+        case 2: doc["tdsSoil0"] = serialized(String(realTDS,0)); break;
       }
     }
 
