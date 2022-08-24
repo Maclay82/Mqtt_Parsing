@@ -155,8 +155,8 @@ void loadSettings()   // Загрузка настроек
     tdsBVol = getTdsBVol();
     tdsCVol = getTdsCVol();
     regDelay = getregDelay() * 60000;
-    phmin = getPhmin();
-    phmax = getPhmax();
+    phmin = (float)(round(getPhmin()*10)/10);
+    phmax = (float)(round(getPhmax()*10)/10);
     tdsmin = getTDSmin();
     tdsmax = getTDSmax();
     PhCalP1 = getPhCalP1(), 

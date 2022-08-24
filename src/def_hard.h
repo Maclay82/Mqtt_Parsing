@@ -2,7 +2,7 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA1       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA4       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
@@ -46,7 +46,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
 
-#define DEVICE_ID  3                // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID 4                 // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
                                     // 3 - PhTDS контроллер тестовый
@@ -174,8 +174,8 @@ I2C address 0x49 TDS
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
 
 #define REFRESHTIME 15000
-#define USEDHCP 0
-#define DEFAULT_IP {192, 168, 1, 112}       // Сетевой адрес устройства по умолчанию
+#define USEDHCP 1
+//#define DEFAULT_IP {192, 168, 1, 112}       // Сетевой адрес устройства по умолчанию
 
 #define ICCSCAN 0
 #endif
@@ -276,11 +276,11 @@ I2C address 0x49 TDS
 #endif
 
 #ifndef NETWORK_SSID
-#define NETWORK_SSID        "OstrovDushi"//"yougrow"//          // Имя WiFi сети
+#define NETWORK_SSID        "TechNet1"//"OstrovDushi"//"yougrow"//          // Имя WiFi сети
 #endif
 
 #ifndef NETWORK_PASS
-#define NETWORK_PASS        "LaIslaBonita"//"00007777"//        // Пароль для подключения к WiFi сети
+#define NETWORK_PASS        "fuhtufnec"//"LaIslaBonita"//"00007777"//        // Пароль для подключения к WiFi сети
 #endif
 
 #ifndef DEFAULT_IP

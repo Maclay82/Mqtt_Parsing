@@ -181,7 +181,7 @@ void setup() {
   #endif
   #if defined(ESP32)
 //    #if defined(lolin32)
-      Wire.begin(5,4);
+        Wire.begin(5,4);
 //    #else
 //      Wire.begin(21,22);
 //    #endif
@@ -230,7 +230,7 @@ void setup() {
 
   host_name = String(HOST_NAME) + //"-" + 
   String(DEV_ID);
-  Serial.print("\tFIRMWARE:\t");
+  Serial.print("FIRMWARE:\t");
   Serial.println(FIRMWARE_VER);
   Serial.println("Host name:\t" + host_name);
 
