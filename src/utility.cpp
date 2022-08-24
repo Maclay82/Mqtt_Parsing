@@ -286,22 +286,19 @@ boolean statusPub()    //Публикация состояния парамет�
   {
     DynamicJsonDocument doc(256);
     String out,temp;
-    char s[8];   //строка mqtt сообщения
-      doc["IP"] = String(wifi_connected ? WiFi.localIP().toString() : "");
+//    char s[8];   //строка mqtt сообщения
+      if(wifi_connected) doc["IP"] = String(wifi_connected ? WiFi.localIP().toString() : "");
     #ifdef RTC
       doc["time"] = getTimeString(rtc.now().unixtime());
     #endif
     #ifdef HUMCONTROL
-      dtostrf(humd, 2, 2, s);
-      doc["hum"] = humd;
-      dtostrf(temp, 2, 2, s);
-      doc["temp"] = temp;
+      doc["hum"] = serialized(String(humd,2));
+      doc["temp"] = serialized(String(temp,2));;
       doc["Hum_relay"] = digitalRead(HUMPWR);
     #endif
 
     #ifdef CO2CONTROL
     // if(CO2PPM > 0) { 
-      dtostrf(CO2PPM, 1, 2, s);
       doc["temp"] = temp;
       doc["CO2PPM"] = CO2PPM;
       doc["CO2_relay"] = digitalRead(CO2PWR);
