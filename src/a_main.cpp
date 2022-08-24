@@ -1567,7 +1567,7 @@ void parsing() {
         receiveText = String(&incomeBuffer[bufIdx]);
         receiveText.trim();
       }                
-      incomingByte = ending;                       // сразу завершаем парс
+      incomingByte = ending;                       // сразу завершаем парсинг
       parseMode = NORMAL;
       bufIdx = 0; 
       packetSize = 0;                              // все байты из входящего пакета обработаны

@@ -285,7 +285,7 @@ boolean statusPub()    //Публикация состояния парамет�
   if (mqtt.connected()) 
   {
     DynamicJsonDocument doc(256);
-    String out;
+    String out,temp;
     char s[8];   //строка mqtt сообщения
       doc["IP"] = String(wifi_connected ? WiFi.localIP().toString() : "");
     #ifdef RTC
@@ -310,35 +310,34 @@ boolean statusPub()    //Публикация состояния парамет�
 
     #ifdef PHTDSCONTROL   
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
-      dtostrf(Wtemp, 1, 2, s);
+      temp = "tSoil";
       switch (thisMode) { 
-        case 0: doc["tSoil0"] = serialized(String(Wtemp,2)); break;
-        case 1: doc["tSoil1"] = serialized(String(Wtemp,2)); break;
-        case 2: doc["tSoil0"] = serialized(String(Wtemp,2)); break;
+        case 0: temp += "0";; break;
+        case 1: temp += "1";; break;
+        case 2: temp += "0";; break;
       }
+      doc[temp] = serialized(String(Wtemp,2));
     }
     if (realPh != -1){
-      dtostrf(realPh, 3, 3, s);
-       switch (thisMode) { 
-        case 0: doc["phSoil0"] = serialized(String(realPh,3)); break;
-        case 1: doc["phSoil1"] = serialized(String(realPh,3)); break;
-        case 2: doc["phSoil0"] = serialized(String(realPh,3)); break;
+      temp = "phSoil";
+      switch (thisMode) { 
+        case 0: temp += "0";; break;
+        case 1: temp += "1";; break;
+        case 2: temp += "0";; break;
       }
+      doc[temp] = serialized(String(realPh,3));
     }
     if ( realTDS  != -1 ) {
-      // dtostrf(realTDS, 1, 0, s);
+      temp = "tdsSoil";
       switch (thisMode) { 
-        case 0: doc["tdsSoil0"] = serialized(String(realTDS,0)); break;
-        case 1: doc["tdsSoil1"] = serialized(String(realTDS,0)); break;
-        case 2: doc["tdsSoil0"] = serialized(String(realTDS,0)); break;
+        case 0: temp += "0";; break;
+        case 1: temp += "1";; break;
+        case 2: temp += "0";; break;
       }
+      doc[temp] = serialized(String(realTDS,0));
     }
-
     if (thisMode != 0 && thisMode%2 != 0 ) doc["Wlvl"] = Wlvl;
-
-    if(PhOk) doc["PhOk"] = 1; 
-    else doc["PhOk"] = 0;
-
+    if(PhOk) doc["PhOk"] = 1; else doc["PhOk"] = 0;
     doc["ColMd"] = thisMode;
 #endif
 
