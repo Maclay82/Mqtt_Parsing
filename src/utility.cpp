@@ -400,7 +400,7 @@ void startWiFi(unsigned long waitTime) {
     display.clearDisplay();
     display.setTextSize(1);
     display.setCursor(0,0);
-    display.print("connect to:");
+    display.print("WiFi->");
     display.print(ssid);
     display.display();
 
@@ -550,11 +550,17 @@ void connectToNetwork() {  // Подключиться к WiFi сети, ожи�
 
   // Сообщить UDP порт, на который ожидаются подключения
   if (wifi_connected || ap_connected) {
-
     display.setTextSize(1);
-    display.setCursor(20, 50);
-    display.print("udp:");
+
+    display.setCursor(0, 57);
+    display.print(WiFi.localIP());
+    display.print(":");
     display.print(localPort);
+
+    display.setCursor(0, 48);
+    display.print("wait udp:");
+    display.print(localPort);
+
     display.display();
 
     Serial.print(F("UDP-сервер на порту "));

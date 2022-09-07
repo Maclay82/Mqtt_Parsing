@@ -2,7 +2,7 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA4       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA5       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
@@ -140,6 +140,9 @@ I2C address 0x49 TDS
 5 - tds elec. 2 жел
 
 */
+#ifndef DS18B20
+#define DS18B20
+#endif
 
 #ifndef PHTDSCONTROL
 #define PHTDSCONTROL
@@ -167,6 +170,10 @@ I2C address 0x49 TDS
 #define PHTDSCONTROL
 #endif
 
+#ifndef DS18B20
+#define DS18B20
+#endif
+
 #define DEV_ID 4
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 #define HOST_NAME   F("PhTDSCtrl")
@@ -177,7 +184,7 @@ I2C address 0x49 TDS
 #define USEDHCP 1
 //#define DEFAULT_IP {192, 168, 1, 112}       // Сетевой адрес устройства по умолчанию
 
-#define ICCSCAN 0
+#define ICCSCAN 1
 #endif
 
 // ================== Контроллер приточка Зеленка =====================
@@ -276,11 +283,11 @@ I2C address 0x49 TDS
 #endif
 
 #ifndef NETWORK_SSID
-#define NETWORK_SSID        "TechNet1"//"OstrovDushi"//"yougrow"//          // Имя WiFi сети
+#define NETWORK_SSID        "OstrovDushi"//"TechNet1"//         // Имя WiFi сети
 #endif
 
 #ifndef NETWORK_PASS
-#define NETWORK_PASS        "fuhtufnec"//"LaIslaBonita"//"00007777"//        // Пароль для подключения к WiFi сети
+#define NETWORK_PASS        "LaIslaBonita"//"fuhtufnec"//       // Пароль для подключения к WiFi сети
 #endif
 
 #ifndef DEFAULT_IP
@@ -312,8 +319,12 @@ I2C address 0x49 TDS
 #include <EEPROM.h>              // Библиотека поддержки постоянной памяти
 #include <ArduinoJson.h>         // Библиотека для работы с JSON (mqtt, состояние системы)
 
-#ifdef PHTDSCONTROL
+#ifdef DS18B20
 #include <OneWire.h>             // Библиотека работы с датчиком температуры DS18B20 
+#include <DallasTemperature.h>   // Библиотека работы с датчиком температуры DS18B20 
+#endif
+
+#ifdef PHTDSCONTROL
 #include <DallasTemperature.h>   // Библиотека работы с датчиком температуры DS18B20 
 #include <IoAbstraction.h>
 #include <IoAbstractionWire.h>
@@ -405,11 +416,11 @@ extern float temp, humd;
   #define CO2PWR D5
 #endif
 #if defined(ESP32)
-  #if defined(lolin32)
-    #define CO2PWR 13
-  #else
+  // #if defined(lolin32)
+  //   #define CO2PWR 13
+  // #else
     #define CO2PWR 26
-#endif
+//#endif
 #endif
 #endif
 

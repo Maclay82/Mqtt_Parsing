@@ -2,7 +2,9 @@
 #ifdef PHTDSCONTROL
 i2cPumps::i2cPumps(byte address, boolean revers) {
   onpump = revers;
-  Wire.begin();
+//  Wire.begin();
+  Wire.begin(5,4); //lolin
+
   I2CExp    = ioFrom8574(address);//0x20);     //Pumps
   for(int i = 0; i <= PUMPCOUNT-1; i++ ){ 
     ioDevicePinMode(I2CExp, i, OUTPUT);

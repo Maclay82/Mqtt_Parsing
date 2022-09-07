@@ -180,11 +180,11 @@ void setup() {
     Wire.begin();
   #endif
   #if defined(ESP32)
-//    #if defined(lolin32)
+    // #if defined(lolin32)//for lolin32 oled
         Wire.begin(5,4);
-//    #else
-//      Wire.begin(21,22);
-//    #endif
+    // #else
+    //   Wire.begin(21,22);
+    // #endif
   #endif
 
   #ifdef HUMCONTROL                // Hum init
@@ -195,7 +195,7 @@ void setup() {
   #endif
 
 #ifdef PHTDSCONTROL
- //test led
+ //init ioExp
   for(int i = 0; i <= 7; i++ ){ 
     //ioDevicePinMode(ioExp, i, OUTPUT);
     ioDevicePinMode(ioExp2, i, OUTPUT);
@@ -375,7 +375,7 @@ void setup() {
 
 #ifdef HUMCONTROL
   pinMode(HUMPWR, OUTPUT);
-  myHumidity.begin();
+  // myHumidity.begin();
 #endif
 
 #ifdef PHTDSCONTROL

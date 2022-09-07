@@ -13,10 +13,9 @@ tempcorr = 0.0;
 float minhum, maxhum; // = minCO2PPMEF // = maxCO2PPMEF;
 #endif
 
-#ifdef PHTDSCONTROL
-extern i2cPumps pumps;
   
 //Инициализация датчика температуры
+#ifdef DS18B20
 #if defined(ESP8266)
 OneWire oneWire(D5); 
 #endif
@@ -24,6 +23,10 @@ OneWire oneWire(D5);
 OneWire oneWire(15);
 #endif
 DallasTemperature sensors(&oneWire);
+#endif
+
+#ifdef PHTDSCONTROL
+extern i2cPumps pumps;
 
 boolean TDScal=false;  //  TDS Calibration start 
 boolean PhCal=false;  //  Ph Calibration start
@@ -389,12 +392,12 @@ void process() {
     Serial.print("| ");
 #endif
 
-//water temp read
+#ifdef DS18B20      //water temp read
     sensors.requestTemperatures(); // Send the command to get temperatures
     Wtemp = sensors.getTempCByIndex(0);
     if(Wtemp == DEVICE_DISCONNECTED_C) Serial.println("Error: Could not read temperature data");
     // else Serial.println(Wtemp);
-//---
+#endif
 
     realPh = phk * middleArifm(PhvalArray) - PhMP;
     if ( realPh < 0 ) realPh = 0;
@@ -408,18 +411,20 @@ void process() {
     Serial.print(" | TDS=");
     if (rawTDS == -1) Serial.print("err");
     else Serial.print(realTDS);
+#ifdef DS18B20
     Serial.print(" | ");
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
       Serial.print("Water temp=");
       Serial.print(Wtemp, 2);
-      Serial.print(" C ");
+      Serial.print(" C");
     }
     else {
       Serial.print("Water temp=Error ");
     }
+#endif
     if (rawPh != -1){
       if(RAWMode == true){
-        Serial.print("| Avg Ph RAW:");
+        Serial.print(" | Avg Ph RAW:");
         Serial.print(middleArifm(PhvalArray));
         Serial.print(" | ");
 //      Serial.print(" Ph RAW:");
@@ -467,7 +472,7 @@ void process() {
 #endif
   
     display.setTextSize(1);
-    display.setCursor(0, 55);
+    display.setCursor(0, 57);
     display.print(WiFi.localIP());
     display.print(":");
     display.print(localPort);
