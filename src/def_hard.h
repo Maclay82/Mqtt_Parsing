@@ -46,11 +46,11 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
 
-#define DEVICE_ID 4                 // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID 1                 // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
                                     // 3 - PhTDS контроллер тестовый
-                                    // 4 - PhTDS контроллер Зеленка
+                                    // 4 - PhTDS контроллер Зеленка lolin
                                     // 5 - Контроллер приточка Зеленка
                                     // 6 - Контроллер CO2 Зеленка
                                     // 7 - Контроллер CO2 Зеленка тест
@@ -168,6 +168,10 @@ I2C address 0x49 TDS
 #if (DEVICE_ID == 4)
 #ifndef PHTDSCONTROL
 #define PHTDSCONTROL
+#endif
+
+#ifndef lolin32
+#define lolin32
 #endif
 
 #ifndef DS18B20
