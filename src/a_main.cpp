@@ -371,9 +371,9 @@ void process() {
       Serial.println("done");
 #endif
 
-  display.clearDisplay();
 
 #ifdef PHTDSCONTROL
+  display.clearDisplay();
 #ifdef USE_LOG
     Serial.print(" | sensor_scan >> ");
 #endif
@@ -448,11 +448,12 @@ void process() {
       statusPub();    //Публикация состояния параметров системы
     } 
 
+#ifdef PHTDSCONTROL
     display.setTextSize(2);
     display.setCursor(0,0);
     display.print("Ph: ");
     if (rawPh == -1) display.print(String("ERR"));
-    else display.print(String(realPh));
+    else display.print(String(realPh,3));
   
     display.setTextSize(2);
     display.setCursor(0, 16);
@@ -469,7 +470,6 @@ void process() {
       display.print("C");
     }
     else display.print(String("ERR"));
-#endif
   
     display.setTextSize(1);
     display.setCursor(0, 57);
@@ -477,6 +477,8 @@ void process() {
     display.print(":");
     display.print(localPort);
     display.display();
+#endif
+#endif
 
 
 #ifdef USE_LOG

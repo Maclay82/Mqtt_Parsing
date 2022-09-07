@@ -285,7 +285,7 @@ boolean statusPub()    //Публикация состояния парамет�
   if (mqtt.connected()) 
   {
     DynamicJsonDocument doc(256);
-    String out,temp;
+    String out,temps;
 //    char s[8];   //строка mqtt сообщения
       if(wifi_connected) doc["IP"] = String(wifi_connected ? WiFi.localIP().toString() : "");
     #ifdef RTC
@@ -293,13 +293,13 @@ boolean statusPub()    //Публикация состояния парамет�
     #endif
     #ifdef HUMCONTROL
       doc["hum"] = serialized(String(humd,2));
-      doc["temp"] = serialized(String(temp,2));;
+      doc["Atemp"] = serialized(String(temp,2));;
       doc["Hum_relay"] = digitalRead(HUMPWR);
     #endif
 
     #ifdef CO2CONTROL
     // if(CO2PPM > 0) { 
-      doc["temp"] = temp;
+      doc["Atemp"] = temp;
       doc["CO2PPM"] = CO2PPM;
       doc["CO2_relay"] = digitalRead(CO2PWR);
     // }
@@ -307,31 +307,31 @@ boolean statusPub()    //Публикация состояния парамет�
 
     #ifdef PHTDSCONTROL   
     if(Wtemp != DEVICE_DISCONNECTED_C && Wtemp > 0) { 
-      temp = "tSoil";
+      temps = "tSoil";
       switch (thisMode) { 
-        case 0: temp += "0";; break;
-        case 1: temp += "1";; break;
-        case 2: temp += "0";; break;
+        case 0: temps += "0";; break;
+        case 1: temps += "1";; break;
+        case 2: temps += "0";; break;
       }
-      doc[temp] = serialized(String(Wtemp,2));
+      doc[temps] = serialized(String(Wtemp,2));
     }
     if (realPh != -1){
-      temp = "phSoil";
+      temps = "phSoil";
       switch (thisMode) { 
-        case 0: temp += "0";; break;
-        case 1: temp += "1";; break;
-        case 2: temp += "0";; break;
+        case 0: temps += "0";; break;
+        case 1: temps += "1";; break;
+        case 2: temps += "0";; break;
       }
-      doc[temp] = serialized(String(realPh,3));
+      doc[temps] = serialized(String(realPh,3));
     }
     if ( realTDS  != -1 ) {
-      temp = "tdsSoil";
+      temps = "tdsSoil";
       switch (thisMode) { 
-        case 0: temp += "0";; break;
-        case 1: temp += "1";; break;
-        case 2: temp += "0";; break;
+        case 0: temps += "0";; break;
+        case 1: temps += "1";; break;
+        case 2: temps += "0";; break;
       }
-      doc[temp] = serialized(String(realTDS,0));
+      doc[temps] = serialized(String(realTDS,0));
     }
     if (thisMode != 0 && thisMode%2 != 0 ) doc["Wlvl"] = Wlvl;
     if(PhOk) doc["PhOk"] = 1; else doc["PhOk"] = 0;
@@ -396,13 +396,14 @@ void startWiFi(unsigned long waitTime) {
   if (strlen(ssid) > 0) {
     Serial.print(F("Подключение к "));
     Serial.print(ssid);
-
+#ifdef PHTDSCONTROL
     display.clearDisplay();
     display.setTextSize(1);
     display.setCursor(0,0);
     display.print("WiFi->");
     display.print(ssid);
     display.display();
+#endif
 
     if (IP_STA[0] + IP_STA[1] + IP_STA[2] + IP_STA[3] > 0 && useDHCP == false) {
       WiFi.config(IPAddress(IP_STA[0], IP_STA[1], IP_STA[2], IP_STA[3]),  // 192.168.0.106 
@@ -479,12 +480,14 @@ void startWiFi(unsigned long waitTime) {
 void startSoftAP() {
   WiFi.softAPdisconnect(true);
   ap_connected = false;
-
+  
+#ifdef PHTDSCONTROL
   display.clearDisplay();
   display.setTextSize(2);
   display.setCursor(0,0);
   display.print("Wifi AP");
   display.display();
+#endif
 
   Serial.print(F("Создание точки доступа "));
   Serial.print(apName);
@@ -550,6 +553,7 @@ void connectToNetwork() {  // Подключиться к WiFi сети, ожи�
 
   // Сообщить UDP порт, на который ожидаются подключения
   if (wifi_connected || ap_connected) {
+#ifdef PHTDSCONTROL
     display.setTextSize(1);
 
     display.setCursor(0, 57);
@@ -562,7 +566,7 @@ void connectToNetwork() {  // Подключиться к WiFi сети, ожи�
     display.print(localPort);
 
     display.display();
-
+#endif
     Serial.print(F("UDP-сервер на порту "));
     Serial.print(localPort);
   }

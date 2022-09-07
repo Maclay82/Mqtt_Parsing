@@ -31,11 +31,11 @@ HTU21D myHumidity;
 i2cPumps pumps(0x20, true);                       //Pumps
 IoAbstractionRef ioExp2   = ioFrom8574(0x24);     //Leds
 IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
-#endif
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+#endif
 
 // *************************** ПОДКЛЮЧЕНИЕ К СЕТИ **************************
 WiFiUDP udp;                                // Объект транспорта сетевых пакетов
@@ -180,11 +180,11 @@ void setup() {
     Wire.begin();
   #endif
   #if defined(ESP32)
-    // #if defined(lolin32)//for lolin32 oled
+     #if defined(lolin32)//for lolin32 oled
         Wire.begin(5,4);
-    // #else
-    //   Wire.begin(21,22);
-    // #endif
+     #else
+       Wire.begin(21,22);
+     #endif
   #endif
 
   #ifdef HUMCONTROL                // Hum init
@@ -234,9 +234,9 @@ void setup() {
   Serial.println(FIRMWARE_VER);
   Serial.println("Host name:\t" + host_name);
 
-//#ifdef PHTDSCONTROL
+#ifdef PHTDSCONTROL
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) Serial.println(F("SSD1306 allocation failed")); 
-//#endif
+#endif
   
 //-------------------------Инициализация файловой системы--------------------
 
@@ -282,13 +282,10 @@ void setup() {
 
 #ifdef PHTDSCONTROL
   setCollector(); //Применение конфигурации коллектора
-#endif
-
-//#ifdef PHTDSCONTROL
   display.clearDisplay();
   display.setTextColor(WHITE);
   display.display();
-//#endif
+#endif
 
 
   // Подключение к сети

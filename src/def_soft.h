@@ -29,13 +29,13 @@ extern int CO2OFF[];    //массив времен конца впрыска CO
 #define REGDELAY 1            // время цикла регулировки в минутах
 #define NUM_AVER 20           // выборка (из скольки усредняем)
 extern DallasTemperature sensors;
+extern Adafruit_SSD1306 display;
+extern uint16_t AUTO_FILL_PERIOD;  // Период активации автоматического подлива в часах
 #endif
 
 extern boolean     count_mode;         // Флаг автоматического режима
-extern Adafruit_SSD1306 display;
 
 extern uint16_t AUTO_MODE_PERIOD;  // Период активации автоматического режима в минутах по умолчанию
-extern uint16_t AUTO_FILL_PERIOD;  // Период активации автоматического подлива в часах
 extern boolean     auto_mode;         // Флаг автоматического режима
 
 // *************************** ПОДКЛЮЧЕНИЕ К СЕТИ **************************
