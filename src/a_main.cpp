@@ -326,12 +326,12 @@ void process() {
         }
       }
       #ifdef USE_LOG
-      Serial.print(" Temperature:");
+      Serial.print(" Temperature=");
       Serial.print(temp, 3);
-      Serial.print("C");
-      Serial.print(" Humidity:");
+      Serial.print(" C");
+      Serial.print(" | Humidity=");
       Serial.print(humd, 3);
-      Serial.println("%");
+      Serial.print(" %");
       #endif      
       if (mqtt.connected()) {
         statusPub();

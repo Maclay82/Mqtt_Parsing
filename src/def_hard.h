@@ -69,7 +69,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #define DEV_ID 0
 #define REFRESHTIME 10000
 
-#define HOST_NAME   F("humCtrlTest")
+#define HOST_NAME   F("HumCtrlTest")
 
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
 #define DEFAULT_MQTT_PREFIX "ghTest"      // Префикс топика сообщения или пустая строка, если префикс не требуется
@@ -91,7 +91,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #define DEV_ID 0
 
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
-#define HOST_NAME   F("humCtrl")
+#define HOST_NAME   F("HumCtrl")
 #define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
 
@@ -113,13 +113,13 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #endif
 #define DEV_ID 0
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
-#define HOST_NAME   F("humCtrl")
+#define HOST_NAME   F("HumCtrl")
 #define DEFAULT_MQTT_PREFIX "gh2"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
 
 #define REFRESHTIME 5000
-#define minhumDEF 69
-#define maxhumDEF 74
+#define minhumDEF 57
+#define maxhumDEF 63
 
 #endif
 

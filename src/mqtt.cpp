@@ -98,7 +98,7 @@ void notifyUnknownCommand(const char* text) {
 boolean subscribeMqttTopics() {
   boolean ok = false;
   if (mqtt.connected() && millis() - mqtt_send_last > mqtt_send_delay) {
-    Serial.print(F("\nПодписка на topic='cmd' >> "));
+    Serial.print(F("Подписка на topic='cmd' >> "));
     Serial.print(mqtt_topic(TOPIC_CMD));
     Serial.print('\t');
     ok = mqtt.subscribe(mqtt_topic(TOPIC_CMD).c_str());
@@ -106,7 +106,7 @@ boolean subscribeMqttTopics() {
     else    Serial.println(F("FAIL"));
 
 #ifdef HUMCONTROL //or CO2CONTROL
-    Serial.print(F("\n Подписка на topic='relay' >> "));
+    Serial.print(F("Подписка на topic='relay' >> "));
     Serial.print(mqtt_topic(TOPIC_RELAY));
     Serial.print('\t');
     ok = mqtt.subscribe(mqtt_topic(TOPIC_RELAY).c_str());
