@@ -161,7 +161,7 @@ void checkMqttConnection() {
 
     if (mqtt.connect(clientId.c_str(), mqtt_user, mqtt_pass, topic.c_str(), 0, true, "offline")) 
     {
-      Serial.print(F("\nПодключение к MQTT-серверу выполнено."));
+      Serial.print(F("\nПодключение к MQTT-серверу выполнено.\n "));
       if (outQueueLength > 0) {
         Serial.print(F("Сообщений в очереди отправки: "));  
         Serial.println(outQueueLength);  
