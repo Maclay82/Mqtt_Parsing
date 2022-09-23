@@ -12,6 +12,11 @@ boolean  count_mode = false;       // Флаг включения счетчик
 RTC_DS3231 rtc;
 #endif
 
+#ifdef AHTX0
+Adafruit_AHTX0 aht;
+sensors_event_t SensHum, SensTemp;
+#endif
+
 #ifdef CO2CONTROL
 MHZ co2(MH_Z19_RX, MH_Z19_TX, MHZ19B);
 int CO2Sel = 0, temp = 0, CO2PPM = 0;
@@ -192,6 +197,11 @@ void setup() {
   #endif
 
   #ifdef CO2CONTROL                // CO2 PPM MH-Z19B init
+  #endif
+
+  #ifdef AHTX0                     // AHT10 init
+   if (! aht.begin()) Serial.println("Could not find AHT? Check wiring");
+   else Serial.println("AHT10 or AHT20 found");
   #endif
 
 #ifdef PHTDSCONTROL

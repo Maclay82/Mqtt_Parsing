@@ -286,6 +286,12 @@ void process() {
 
     #endif  
 
+#ifdef AHTX0
+  aht.getEvent(&SensHum, &SensTemp);// populate temp and humidity objects with fresh data
+  Serial.print("\nTemperature: "); Serial.print(SensTemp.temperature); Serial.print(" C \t");
+  Serial.print("Humidity: "); Serial.print(SensHum.relative_humidity); Serial.println("% rH");
+#endif  
+
 #ifdef CO2CONTROL
 
     if (millis() > timing1 && millis() - timing1 >= CO2OPROSDELAY)  // opros datchika

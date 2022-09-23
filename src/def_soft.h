@@ -24,6 +24,11 @@ extern int CO2ON[];     //массив времен начала впрыска 
 extern int CO2OFF[];    //массив времен конца впрыска CO2
 #endif
 
+#ifdef AHTX0
+extern Adafruit_AHTX0 aht;
+extern sensors_event_t SensHum, SensTemp;
+#endif
+
 #ifdef PHTDSCONTROL
 #define OPROSDELAY 150        // время опроса Ph TDS в миллисекундах
 #define REGDELAY 1            // время цикла регулировки в минутах

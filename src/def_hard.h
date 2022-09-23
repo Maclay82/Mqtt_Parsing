@@ -46,7 +46,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
 
-#define DEVICE_ID 4                 // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID 8                 // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
                                     // 3 - PhTDS контроллер тестовый
@@ -54,15 +54,10 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
                                     // 5 - Контроллер приточка Зеленка
                                     // 6 - Контроллер CO2 Зеленка
                                     // 7 - Контроллер CO2 Зеленка тест
+                                    // 8 - Сенсорный модуль Зеленка
 
 // ================== Увлажнитель тестовый стенд =====================
-
 #if (DEVICE_ID == 0)
-/*
- * Wemos D1 mini
- * В менеджере плат выбрано NodeMCU v1.0 (ESP-12E)
- */
-//#if defined(ESP8266)
 #ifndef HUMCONTROL
 #define HUMCONTROL
 #endif
@@ -76,13 +71,9 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
                               // 0 - Настройки MQTT и API KEY OpenWeatherMap в скетче в def_soft.h в строках: (пароли и ключи доступа определены в тексте скетча)
                               // Файл a_def_pass.h в комплект не входит, нужно создать, скопировать туда указанные строки
-
 #define minhumDEF 69
 #define maxhumDEF 74
-
-
 #endif
-
 // ================== Увлажнитель Зеленка =====================
 #if (DEVICE_ID == 1)
 #ifndef HUMCONTROL
@@ -101,11 +92,8 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 #define USEDHCP 1
 //#define DEFAULT_IP {192, 168, 2, 162}       // Сетевой адрес устройства по умолчанию
-
 #define ICCSCAN 0
-
 #endif
-
 // ================== Увлажнитель Перцы =====================
 #if (DEVICE_ID == 2)
 #ifndef HUMCONTROL
@@ -267,6 +255,29 @@ I2C address 0x49 TDS
 
 #endif
 
+// ================== Сенсорный модуль Зеленка =====================
+#if (DEVICE_ID == 8)
+
+#ifndef AHTX0
+#define AHTX0
+#endif
+
+#define DEV_ID 0
+
+#define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
+#define HOST_NAME   F("SensNode")
+#define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
+#define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
+
+#define REFRESHTIME 5000
+#define minhumDEF 69
+#define maxhumDEF 74
+
+#define USEDHCP 1
+//#define DEFAULT_IP {192, 168, 2, 162}       // Сетевой адрес устройства по умолчанию
+#define ICCSCAN 0
+#endif
+
 // =======================================================
 
 // *************************** ПОДКЛЮЧЕНИЕ К СЕТИ **************************
@@ -343,6 +354,10 @@ I2C address 0x49 TDS
 #include <SoftwareSerial.h>
 #include <MHZ.h>
 #endif
+
+#ifdef AHTX0
+#include <Adafruit_AHTX0.h>
+#endif  
 
 #ifdef HUMCONTROL                // Hum lib
 #include "SparkFunHTU21D.h"

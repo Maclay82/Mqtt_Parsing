@@ -264,6 +264,8 @@ void HWprofPub() {
 #endif
 #ifdef CO2CONTROL
 #endif
+#ifdef AHTX0
+#endif
 
 #ifdef PHTDSCONTROL
     doc["RAWMode"] = RAWMode; //getTDSKb средняя точка
@@ -292,10 +294,14 @@ boolean statusPub()    //Публикация состояния парамет�
       doc["time"] = getTimeString(rtc.now().unixtime());
     #endif
     #ifdef HUMCONTROL
-      doc["hum"] = serialized(String(humd,2));
+      doc["Ahum"] = serialized(String(humd,2));
       doc["Atemp"] = serialized(String(temp,2));;
       doc["Hum_relay"] = digitalRead(HUMPWR);
     #endif
+    #ifdef AHTX0
+      doc["SensHum"] = serialized(String(SensHum.relative_humidity,2));
+      doc["SensTemp"] = serialized(String(SensTemp.temperature,2));;
+   #endif  
 
     #ifdef CO2CONTROL
     // if(CO2PPM > 0) { 
