@@ -282,15 +282,15 @@ void process() {
 
     Serial.print("UpTime:");
     Serial.print(((float)millis()/60000.0), 1);
-    Serial.print(" min, "); 
+    Serial.print(" min"); 
 
     #endif  
 
-#ifdef AHTX0
-  aht.getEvent(&SensHum, &SensTemp);// populate temp and humidity objects with fresh data
-  Serial.print("\nTemperature: "); Serial.print(SensTemp.temperature); Serial.print(" C \t");
-  Serial.print("Humidity: "); Serial.print(SensHum.relative_humidity); Serial.println("% rH");
-#endif  
+    #ifdef AHTX0
+      aht.getEvent(&SensHum, &SensTemp);// populate temp and humidity objects with fresh data
+      Serial.print(", Temperature: "); Serial.print(SensTemp.temperature); Serial.print(" C, ");
+      Serial.print(", Humidity: "); Serial.print(SensHum.relative_humidity); Serial.print("% rH, ");
+    #endif  
 
 #ifdef CO2CONTROL
 
@@ -306,9 +306,9 @@ void process() {
       if(CO2PPM > 0){
         CO2Control(CO2PPM);
         #ifdef USE_LOG
-        Serial.print("\tCO2PPM:");
+        Serial.print(", CO2PPM:");
         Serial.print(CO2PPM);
-        Serial.print(" Temp:");
+        Serial.print(", Temp:");
         Serial.print(temp);
         #endif      
         if (mqtt.connected()) {
@@ -332,10 +332,10 @@ void process() {
         }
       }
       #ifdef USE_LOG
-      Serial.print(" Temperature=");
+      Serial.print(", Temperature=");
       Serial.print(temp, 3);
       Serial.print(" C");
-      Serial.print(" | Humidity=");
+      Serial.print(", Humidity=");
       Serial.print(humd, 3);
       Serial.print(" %");
       #endif      
