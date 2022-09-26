@@ -286,11 +286,14 @@ void process() {
 
     #endif  
 
-    #ifdef AHTX0
-      aht.getEvent(&SensHum, &SensTemp);// populate temp and humidity objects with fresh data
-      Serial.print(", Temperature: "); Serial.print(SensTemp.temperature); Serial.print(" C, ");
-      Serial.print(", Humidity: "); Serial.print(SensHum.relative_humidity); Serial.print("% rH, ");
-    #endif  
+#ifdef AHTX0
+    aht.getEvent(&SensHum, &SensTemp);// populate temp and humidity objects with fresh data
+    Serial.print(", Temperature: "); Serial.print(SensTemp.temperature); Serial.print(" C, ");
+    Serial.print(", Humidity: "); Serial.print(SensHum.relative_humidity); Serial.print("% rH, ");
+    if (mqtt.connected()) {
+      statusPub();
+    }
+#endif  
 
 #ifdef CO2CONTROL
 

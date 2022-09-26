@@ -2,7 +2,7 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA2       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA0       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
@@ -298,11 +298,11 @@ I2C address 0x49 TDS
 #endif
 
 #ifndef NETWORK_SSID
-#define NETWORK_SSID        "OstrovDushi"//"TechNet1"//         // Имя WiFi сети
+#define NETWORK_SSID        "TechNet1"//"OstrovDushi"//         // Имя WiFi сети
 #endif
 
 #ifndef NETWORK_PASS
-#define NETWORK_PASS        "LaIslaBonita"//"fuhtufnec"//       // Пароль для подключения к WiFi сети
+#define NETWORK_PASS        "0quTQGOc"//"LaIslaBonita"//       // Пароль для подключения к WiFi сети
 #endif
 
 #ifndef DEFAULT_IP
