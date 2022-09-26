@@ -303,7 +303,7 @@ void process() {
 
 ///mh-z19b uart debug
      temp = co2.readCO2UART();
-     if ( temp > 0 ) CO2PPM = temp;
+     if ( temp > 0 || temp != 253) CO2PPM = temp;
 ///
       temp = co2.getLastTemperature();
       if(CO2PPM > 0){

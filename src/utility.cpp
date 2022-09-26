@@ -295,17 +295,17 @@ boolean statusPub()    //Публикация состояния парамет�
     #endif
     #ifdef HUMCONTROL
       doc["Ahum"] = serialized(String(humd,2));
-      doc["Atemp"] = serialized(String(temp,2));;
+      if(temp!=999) doc["Atemp"] = serialized(String(temp,2));
       doc["Hum_relay"] = digitalRead(HUMPWR);
     #endif
     #ifdef AHTX0
       doc["SensHum"] = serialized(String(SensHum.relative_humidity,2));
-      doc["SensTemp"] = serialized(String(SensTemp.temperature,2));;
+      doc["SensTemp"] = serialized(String(SensTemp.temperature,2));
    #endif  
 
     #ifdef CO2CONTROL
     // if(CO2PPM > 0) { 
-      doc["Atemp"] = temp;
+      if(temp!=255) doc["Atemp"] = temp;
       doc["CO2PPM"] = CO2PPM;
       doc["CO2_relay"] = digitalRead(CO2PWR);
     // }
