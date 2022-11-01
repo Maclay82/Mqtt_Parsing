@@ -582,20 +582,23 @@ void connectToNetwork() {  // Подключиться к WiFi сети, ожи�
 
 bool CO2Control(int cur) // vkl/otkl CO2
 { 
+  CO2On = false;
   for (int i = 0; i < CO2_CYCLE; ++i)
+  {
     if (CO2ON[i] != 0 && CO2OFF[i] != 0) 
       if (TimeChk(CO2ON[i], CO2OFF[i]) == true) {
         CO2On = true;
         i = CO2_CYCLE;
       }
+  }
 
-    if (CO2On == true && CO2Ready == true){
-      if (cur <= minCO2) if(!digitalRead(CO2PWR)) digitalWrite(CO2PWR, HIGH);
-      if (cur >= maxCO2) if( digitalRead(CO2PWR)) digitalWrite(CO2PWR, LOW ); 
-    }
-    else 
-      if(digitalRead(CO2PWR)) digitalWrite(CO2PWR, LOW);
-
+  if (CO2On == true && CO2Ready == true){
+    if (cur <= minCO2) if(!digitalRead(CO2PWR)) digitalWrite(CO2PWR, HIGH);
+    if (cur >= maxCO2) if( digitalRead(CO2PWR)) digitalWrite(CO2PWR, LOW );
+  }
+  else {
+    if(digitalRead(CO2PWR)) digitalWrite(CO2PWR, LOW);
+  }
   return digitalRead(CO2PWR);   
 }
 
