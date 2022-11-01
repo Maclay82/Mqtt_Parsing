@@ -301,11 +301,14 @@ void process() {
     {
       CO2Ready = true;
 
-///mh-z19b uart debug
+///mh-z19b uart read
      temp = co2.readCO2UART();
      if ( temp > 0 || temp != 253) CO2PPM = temp;
 ///
       temp = co2.getLastTemperature();
+#ifdef CO2TEST
+    CO2PPM = 790; temp = 21;
+#endif
       if(CO2PPM > 0){
         CO2Control(CO2PPM);
         #ifdef USE_LOG

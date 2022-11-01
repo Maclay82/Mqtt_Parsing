@@ -2,7 +2,7 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA0       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA1       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
@@ -46,7 +46,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
 
-#define DEVICE_ID 6                 // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID 7                 // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
                                     // 3 - PhTDS контроллер тестовый
@@ -248,8 +248,9 @@ I2C address 0x49 TDS
 #define USEDHCP 1
 //#define DEFAULT_IP {192, 168, 2, 162}       // Сетевой адрес устройства по умолчанию
 
-#define ICCSCAN 0
+#define CO2TEST
 
+#define ICCSCAN 0
 //0x68 ds3231
 //0x38 atn10
 
