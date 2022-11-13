@@ -429,6 +429,8 @@ void loop() {
       }
     #endif
   }
+  else connectToNetwork();
+
   process();
 
   if(AutoModeTimer.isReady()){ //Активация автоматического режима

@@ -241,7 +241,7 @@
                 ]
             },
             "defines": [
-                "PLATFORMIO=60104",
+                "PLATFORMIO=60105",
                 "ARDUINO_MH_ET_LIVE_ESP32MINIKIT",
                 "ESP32",
                 "ESP_PLATFORM",
