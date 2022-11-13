@@ -443,7 +443,7 @@ void startWiFi(unsigned long waitTime) {
       if (millis() - last_wifi_check > 250) {
         last_wifi_check = millis();
         set_wifi_connected(WiFi.status() == WL_CONNECTED); 
-        if (WiFi.status() == WL_CONNECTED) wifi_connected = true;
+        if (WiFi.status() == WL_CONNECTED)  wifi_connected = true;
         
         if (wifi_connected) {
           // Подключение установлено

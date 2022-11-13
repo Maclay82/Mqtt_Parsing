@@ -420,6 +420,8 @@ void setup() {
 }
 
 void loop() {
+  set_wifi_connected(WiFi.status() == WL_CONNECTED); 
+
   if (wifi_connected) {
     ArduinoOTA.handle();
     #if (USE_MQTT == 1)
@@ -429,7 +431,7 @@ void loop() {
       }
     #endif
   }
-  else connectToNetwork();
+  else startWiFi(60000);
 
   process();
 
