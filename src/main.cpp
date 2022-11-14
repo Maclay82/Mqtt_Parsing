@@ -431,7 +431,9 @@ void loop() {
       }
     #endif
   }
-  else startWiFi(60000);
+  else {
+    startWiFi(15000);
+  }
 
   process();
 
