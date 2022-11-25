@@ -26,7 +26,7 @@ DallasTemperature sensors(&oneWire);
 #endif
 
 #ifdef PHTDSCONTROL
-extern i2cPumps pumps;
+//extern i2cPumps pumps;
 
 boolean TDScal=false;  //  TDS Calibration start 
 boolean PhCal=false;  //  Ph Calibration start

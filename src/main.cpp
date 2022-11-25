@@ -33,7 +33,8 @@ HTU21D myHumidity;
 #ifdef PHTDSCONTROL
 //Инициализация плат I2C расширителей
 //Экзэмпляры классов
-i2cPumps pumps(0x20, true);                       //Pumps
+// i2cPumps pumps(0x20, true);                       //Pumps
+i2cPumps pumps(0x21, true);                       //Pumps
 IoAbstractionRef ioExp2   = ioFrom8574(0x24);     //Leds
 IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
 
