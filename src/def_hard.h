@@ -162,6 +162,8 @@ I2C address 0x49 TDS
 #define lolin32
 #endif
 
+#define RTC
+
 #ifndef DS18B20
 #define DS18B20
 #endif
@@ -445,8 +447,6 @@ extern float temp, humd;
 extern i2cPumps pumps;
 extern float realTDS, realPh, Wtemp;
 extern int Wlvl;
-
-#define MOTOR_EN 26
 
 #define PUMPSCALEADR 400    // start pumps scale address 
 #define PUMPCALVOLADR 350

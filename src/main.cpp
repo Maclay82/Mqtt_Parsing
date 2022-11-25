@@ -180,12 +180,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
 #endif
 
 void setup() {
-
-  #ifdef PHTDSCONTROL //Деактивация моторов при старте
- //init ioExp
-  pinMode(MOTOR_EN, OUTPUT);
-  digitalWrite(MOTOR_EN, false);
-
   #if defined(ESP8266)
     ESP.wdtEnable(WDTO_8S);
     Wire.begin();
@@ -212,7 +206,6 @@ void setup() {
 
 #ifdef PHTDSCONTROL       //Инициализация моторов (все выкл)
  //init ioExp
-  digitalWrite(MOTOR_EN, true);
 
   for(int i = 0; i <= 7; i++ ){ 
     //ioDevicePinMode(ioExp, i, OUTPUT);
@@ -394,9 +387,7 @@ void setup() {
 #endif
 
 #ifdef PHTDSCONTROL
-  pinMode(MOTOR_EN, OUTPUT);
-  digitalWrite(MOTOR_EN, false);
-//ds18b20 Begin "Dallas Temperature IC Control Library"
+  //ds18b20 Begin "Dallas Temperature IC Control Library"
   sensors.begin();
   // if (!sensors.getAddress(WaterThermAdr, 0)) Serial.println("Unable to find address for WaterTherm"); 
   // // show the addresses we found on the bus
