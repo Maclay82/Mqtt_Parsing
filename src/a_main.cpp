@@ -772,6 +772,14 @@ void parsing() {
               putPumpScl(pumps.returnScaleCalVol(uint16_t(intData[2]), uint8_t(intData[3])), (int)(intData[3]) );
             }
           break;
+
+          case 2:  
+
+            digitalWrite(MOTOR_EN, true);
+            delay(1000);
+              digitalWrite(MOTOR_EN, false);
+Serial.print("\n$1 2 ");
+         break;
         }
       break;
       // ----------------------------------------------------

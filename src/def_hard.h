@@ -2,7 +2,7 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA1       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA4       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
 
@@ -46,7 +46,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
 
-#define DEVICE_ID 1                 // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID 4                  // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
                                     // 3 - PhTDS контроллер тестовый
@@ -297,11 +297,11 @@ I2C address 0x49 TDS
 #endif
 
 #ifndef NETWORK_SSID
-#define NETWORK_SSID        "TechNet1"//"OstrovDushi"//         // Имя WiFi сети
+#define NETWORK_SSID        "OstrovDushi"//"TechNet1"//         // Имя WiFi сети
 #endif
 
 #ifndef NETWORK_PASS
-#define NETWORK_PASS        "0quTQGOc"//"LaIslaBonita"//       // Пароль для подключения к WiFi сети
+#define NETWORK_PASS        "LaIslaBonita"//"0quTQGOc"//       // Пароль для подключения к WiFi сети
 #endif
 
 #ifndef DEFAULT_IP
@@ -434,9 +434,6 @@ extern float temp, humd;
   #define CO2PWR D5
 #endif
 #if defined(ESP32)
-  // #if defined(lolin32)
-  //   #define CO2PWR 13
-  // #else
     #define CO2PWR 26
 //#endif
 #endif
@@ -448,6 +445,8 @@ extern float temp, humd;
 extern i2cPumps pumps;
 extern float realTDS, realPh, Wtemp;
 extern int Wlvl;
+
+#define MOTOR_EN 26
 
 #define PUMPSCALEADR 400    // start pumps scale address 
 #define PUMPCALVOLADR 350
