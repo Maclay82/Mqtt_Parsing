@@ -941,7 +941,7 @@ void parsing() {
           // $4 10 X - Значение текущего калибровочного раствора TDS
           case 10:  
             if (floatData[0] > 0){
-              if (!TDScal){
+              if (TDScal != true){
                 TDSCalP1 = floatData[0];
                 rawTDSCalP1 = rawTDS;
                 TDScal = true;
@@ -951,7 +951,7 @@ void parsing() {
                 rawTDSCalP2 = rawTDS;
                 uint16_t  tmp;
                 if(TDSCalP2 < TDSCalP1 && rawTDSCalP2 > rawTDSCalP1){
-                  tmp = TDSCalP2;
+                 tmp = TDSCalP2;
                   TDSCalP2 = TDSCalP1;
                   TDSCalP1 = tmp;
                 }
@@ -967,7 +967,7 @@ void parsing() {
                 putRawTDSCalP1   (rawTDSCalP1); 
                 putTDSCalP2      (TDSCalP2 );
                 putRawTDSCalP2   (rawTDSCalP2);
-                tdsk = ( TDSCalP2 - TDSCalP1 ) / ( rawTDSCalP2 - rawTDSCalP1 );
+                tdsk = (( (float)TDSCalP2 - (float)TDSCalP1 ) / ( rawTDSCalP2 - rawTDSCalP1 ));
                 TdsMP = tdsk * rawTDSCalP1 - TDSCalP1;
                 TDScal = false;
                 calPointPub();
