@@ -236,7 +236,7 @@ void calPointPub() {
     doc["PhCP2"] = PhCalP2;
     doc["rPhCP2"] = rawPhCalP2;
     doc["TDSCP1"] = TDSCalP1;
-    doc["rDSCP1"] = rawTDSCalP1;        
+    doc["rTDSCP1"] = rawTDSCalP1;        
     doc["TDSCP2"] = TDSCalP2;        
     doc["rTDSCP2"] = rawTDSCalP2;
     doc["P1Sc"] = getPumpScl(1);
