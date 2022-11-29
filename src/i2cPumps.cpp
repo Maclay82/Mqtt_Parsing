@@ -2,17 +2,18 @@
 #ifdef PHTDSCONTROL
 i2cPumps::i2cPumps(byte address, boolean revers) {
   onpump = revers;
-  #if defined(ESP32)
-    #if defined(lolin32)//for lolin32 oled
-      Wire.begin(5,4);
-    #else
-      Wire.begin(21,22);
-    #endif
-  #else
-    Wire.begin();
-  #endif
+  // #if defined(ESP32)
+  //   #if defined(lolin32)//for lolin32 oled
+  //     Wire.begin(5,4);
+  //   #else
+  //     Wire.begin(21,22);
+  //   #endif
+  // #else
+  //   Wire.begin();
+  // #endif
 
-  I2CExp    = ioFrom8574(address);//0x20);     //Pumps
+// I2CExp    = ioFrom8574(address);//0x20);     //Pumps
+  I2CExp  = ioFrom23017(address);//0x21);     //Pumps
   for(int i = 0; i <= PUMPCOUNT-1; i++ ){ 
     ioDevicePinMode(I2CExp, i, OUTPUT);
     ioDeviceDigitalWrite(I2CExp, i, !onpump);

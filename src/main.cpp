@@ -33,7 +33,8 @@ HTU21D myHumidity;
 #ifdef PHTDSCONTROL
 //Инициализация плат I2C расширителей
 //Экзэмпляры классов
-i2cPumps pumps(0x20, true);                       //Pumps
+// i2cPumps pumps(0x20, true);                       //Pumps
+i2cPumps pumps(0x21, true);                       //Pumps
 IoAbstractionRef ioExp2   = ioFrom8574(0x24);     //Leds
 IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
 
@@ -204,8 +205,9 @@ void setup() {
    else Serial.println("AHT10 or AHT20 found");
   #endif
 
-#ifdef PHTDSCONTROL
+#ifdef PHTDSCONTROL       //Инициализация моторов (все выкл)
  //init ioExp
+
   for(int i = 0; i <= 7; i++ ){ 
     //ioDevicePinMode(ioExp, i, OUTPUT);
     ioDevicePinMode(ioExp2, i, OUTPUT);
@@ -386,7 +388,7 @@ void setup() {
 #endif
 
 #ifdef PHTDSCONTROL
-//ds18b20 Begin "Dallas Temperature IC Control Library"
+  //ds18b20 Begin "Dallas Temperature IC Control Library"
   sensors.begin();
   // if (!sensors.getAddress(WaterThermAdr, 0)) Serial.println("Unable to find address for WaterTherm"); 
   // // show the addresses we found on the bus
