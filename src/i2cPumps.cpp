@@ -1,27 +1,11 @@
 #include "i2cPumps.h"
 #ifdef PHTDSCONTROL
-i2cPumps::i2cPumps(byte address, boolean revers) {
+i2cPumps::i2cPumps(boolean revers)
+{
   onpump = revers;
-  // #if defined(ESP32)
-  //   #if defined(lolin32)//for lolin32 oled
-  //     Wire.begin(5,4);
-  //   #else
-  //     Wire.begin(21,22);
-  //   #endif
-  // #else
-  //   Wire.begin();
-  // #endif
-
-// I2CExp    = ioFrom8574(address);//0x20);     //Pumps
-  I2CExp  = ioFrom23017(address);//0x21);     //Pumps
-  for(int i = 0; i <= PUMPCOUNT-1; i++ ){ 
-    ioDevicePinMode(I2CExp, i, OUTPUT);
-    ioDeviceDigitalWrite(I2CExp, i, !onpump);
-  }
   for(int i = 0; i <= PUMPCOUNT-1; i++ ){
     scaleCal[i]=10;
   }
-  ioDeviceSync(I2CExp);
 }
 
 boolean   i2cPumps::pourVol (uint16_t volume, uint8_t num){
@@ -33,9 +17,10 @@ boolean   i2cPumps::pourVol (uint16_t volume, uint8_t num){
   Serial.println(scaleCal[num-1]);
 
   if(num >= 1 && num <= PUMPCOUNT){
-    result = ioDeviceDigitalWriteS(I2CExp, num-1, onpump);
+    mcp.digitalWrite(num-1, onpump);
     delay (volume*scaleCal[num-1]);
-    result = ioDeviceDigitalWriteS(I2CExp, num-1, !onpump);
+    mcp.digitalWrite(num-1, !onpump);
+    result = true;
   }
   return result;
 }
@@ -43,9 +28,9 @@ boolean   i2cPumps::pourVol (uint16_t volume, uint8_t num){
 void i2cPumps::pourCalVol (uint16_t volume, uint8_t num) {
   CalVol[num-1] = volume;
   if(num>0 && num<=PUMPCOUNT){
-    ioDeviceDigitalWriteS(I2CExp, num-1, onpump);
+    mcp.digitalWrite(num-1, onpump);
     delay (CalVol[num-1]*scaleCal[num-1]);
-    ioDeviceDigitalWriteS(I2CExp, num-1, !onpump);
+    mcp.digitalWrite(num-1, !onpump);
   }
 }
 
@@ -69,3 +54,7 @@ uint8_t i2cPumps::getPumpCount(){
   return uint8_t(PUMPCOUNT);
 }
 #endif
+
+boolean  i2cPumps::getinit (){
+  return (onpump);
+}

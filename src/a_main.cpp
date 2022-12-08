@@ -273,6 +273,20 @@ void process() {
 
   if (millis() - timing >= REFRESHTIME){
 
+    #ifdef PHTDSCONTROL
+    // Чтение состояния моторов
+    for(int i = 0; i < PUMPCOUNT; i++ ){
+  #ifdef USE_LOG
+      Serial.print(i);  
+      Serial.print("-");
+      Serial.print(mcp.digitalRead(i));
+      Serial.print(" ");
+  #endif
+    }
+    Serial.println();
+    #endif
+
+
     #ifdef USE_LOG
 
     #ifdef RTC
@@ -804,6 +818,11 @@ void parsing() {
           case 0:
             resetFunc();
           break;
+
+          case 8:
+            // pumps.cngrl();
+          break;
+
         }
       break;
 

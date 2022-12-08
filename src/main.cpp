@@ -33,10 +33,13 @@ HTU21D myHumidity;
 #ifdef PHTDSCONTROL
 //Инициализация плат I2C расширителей
 //Экзэмпляры классов
-// i2cPumps pumps(0x20, true);                       //Pumps
-i2cPumps pumps(0x21, true);                       //Pumps
-IoAbstractionRef ioExp2   = ioFrom8574(0x24);     //Leds
-IoAbstractionRef ioExpInp = ioFrom8574(0x26);     //Level Sensors
+
+IoAbstractionRef ioExp2       = ioFrom8574  (0x24);          //Leds
+IoAbstractionRef ioExpInp     = ioFrom8574  (0x26);        //Level Sensors
+//IoAbstractionRef I2CmotorExp  = ioFrom23017 (0x21);     //Pumps
+Adafruit_MCP23X17 mcp;        //Pumps
+i2cPumps pumps(true);             
+boolean  booolik = true;                          // Использовать синхронизацию времени с NTP-сервером
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -205,14 +208,21 @@ void setup() {
    else Serial.println("AHT10 or AHT20 found");
   #endif
 
-#ifdef PHTDSCONTROL       //Инициализация моторов (все выкл)
+#ifdef PHTDSCONTROL       
  //init ioExp
 
   for(int i = 0; i <= 7; i++ ){ 
-    //ioDevicePinMode(ioExp, i, OUTPUT);
     ioDevicePinMode(ioExp2, i, OUTPUT);
     ioDevicePinMode(ioExpInp, i, INPUT);
   }
+
+//Инициализация моторов (все выкл)
+  mcp.begin_I2C(0x20);
+  for(int i = 0; i < PUMPCOUNT; i++ ){ 
+    mcp.pinMode(i, OUTPUT);
+    mcp.digitalWrite(i, pumps.getinit());
+  }
+
  //test led
 
   for(int i = 0; i <= 7; i++ ){

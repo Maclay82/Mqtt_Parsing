@@ -2,9 +2,10 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA4       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA6       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
+#define PUMPCOUNT 16
 
 // *************************************************************************
 enum  eModes   {NORMAL, FRACTION, TEXT};
@@ -178,7 +179,7 @@ I2C address 0x49 TDS
 #define USEDHCP 1
 //#define DEFAULT_IP {192, 168, 1, 112}       // Сетевой адрес устройства по умолчанию
 
-#define ICCSCAN 1
+#define ICCSCAN 0
 #endif
 
 // ================== Контроллер приточка Зеленка =====================
@@ -345,6 +346,8 @@ I2C address 0x49 TDS
 #include <IoAbstraction.h>
 #include <IoAbstractionWire.h>
 #include "i2cPumps.h"
+#include <Adafruit_MCP23X17.h>
+
 #endif
 
 #ifdef RTC
@@ -450,8 +453,10 @@ extern int Wlvl;
 
 #define PUMPSCALEADR 400    // start pumps scale address 
 #define PUMPCALVOLADR 350
-extern IoAbstractionRef I2CExp, ioExp2, ioExpInp; //классы плат I2C расширителей
+extern IoAbstractionRef ioExp2, ioExpInp; //классы плат I2C расширителей
+extern Adafruit_MCP23X17 mcp;        //Pumps
 
+extern boolean  booolik;
 
 #define PHUP            1   //  PH up pump
 #define PHDOWN          2   //  PH down pump
