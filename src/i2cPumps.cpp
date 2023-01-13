@@ -17,9 +17,14 @@ boolean   i2cPumps::pourVol (uint16_t volume, uint8_t num){
   Serial.println(scaleCal[num-1]);
 
   if(num >= 1 && num <= PUMPCOUNT){
-    mcp.digitalWrite(num-1, onpump);
+    mcp.digitalWrite(num-1, !pumps.getinit());
+    mcp.digitalWrite(num+7, pumps.getinit());
     delay (volume*scaleCal[num-1]);
-    mcp.digitalWrite(num-1, !onpump);
+    mcp.digitalWrite(num-1, pumps.getinit());
+    mcp.digitalWrite(num+7, pumps.getinit());
+
+//   mcp.digitalWrite(num-1, onpump);
+//    mcp.digitalWrite(num-1, !onpump);
     result = true;
   }
   return result;
@@ -28,9 +33,11 @@ boolean   i2cPumps::pourVol (uint16_t volume, uint8_t num){
 void i2cPumps::pourCalVol (uint16_t volume, uint8_t num) {
   CalVol[num-1] = volume;
   if(num>0 && num<=PUMPCOUNT){
-    mcp.digitalWrite(num-1, onpump);
+    mcp.digitalWrite(num-1, !pumps.getinit());
+    mcp.digitalWrite(num+7, pumps.getinit());
     delay (CalVol[num-1]*scaleCal[num-1]);
-    mcp.digitalWrite(num-1, !onpump);
+    mcp.digitalWrite(num-1, pumps.getinit());
+    mcp.digitalWrite(num+7, pumps.getinit());
   }
 }
 

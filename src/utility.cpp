@@ -245,8 +245,8 @@ void calPointPub() {
     doc["P4Sc"] = getPumpScl(4);
     doc["P5Sc"] = getPumpScl(5);
     doc["P6Sc"] = getPumpScl(6);
-    doc["P7Sc"] = getPumpScl(7);
-    doc["P8Sc"] = getPumpScl(8);
+//    doc["P7Sc"] = getPumpScl(7);
+//    doc["P8Sc"] = getPumpScl(8);
 #endif
     serializeJson(doc, out);      
     SendMQTT(out, TOPIC_CAL);
@@ -268,7 +268,7 @@ void HWprofPub() {
 #endif
 
 #ifdef PHTDSCONTROL
-    doc["RAWMode"] = RAWMode; //getTDSKb средняя точка
+    doc["RAWMode"] = RAWMode; //RAWMode режим выдачи сврых данных Ph и TDS
     doc["tKb"] = tdsKb; //getTDSKb средняя точка
     doc["tKa"] = tdsKa; //getTDSKa усиление
     doc["pKb"] = phKb; //getPhKb средняя точка
@@ -402,7 +402,7 @@ void startWiFi(unsigned long waitTime) {
   if (strlen(ssid) > 0) {
     Serial.print(F("Подключение к "));
     Serial.print(ssid);
-#ifdef PHTDSCONTROL
+#ifdef DISPLAY
     display.clearDisplay();
     display.setTextSize(1);
     display.setCursor(0,0);
@@ -487,7 +487,7 @@ void startSoftAP() {
   WiFi.softAPdisconnect(true);
   ap_connected = false;
   
-#ifdef PHTDSCONTROL
+#ifdef DISPLAY
   display.clearDisplay();
   display.setTextSize(2);
   display.setCursor(0,0);
@@ -559,7 +559,7 @@ void connectToNetwork() {  // Подключиться к WiFi сети, ожи�
 
   // Сообщить UDP порт, на который ожидаются подключения
   if (wifi_connected || ap_connected) {
-#ifdef PHTDSCONTROL
+#ifdef DISPLAY
     display.setTextSize(1);
 
     display.setCursor(0, 57);

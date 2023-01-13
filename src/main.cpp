@@ -8,6 +8,17 @@ uint16_t AUTO_FILL_PERIOD = 24;    // Период активации автом
 boolean  auto_mode = true;         // Флаг автоматического режима
 boolean  count_mode = false;       // Флаг включения счетчика воды подлива
 
+/* I2C адреса
+OLED SSD1306  0x3C
+RTC_DS3231    0x57
+TDS           0x49
+TDSadj        0x2E
+PH            0x48
+PHadj         0x2C
+MotorEXT      0x20
+WaterLVL      0x26  0x7C??
+*/
+
 #ifdef RTC
 RTC_DS3231 rtc;
 #endif
@@ -36,10 +47,9 @@ HTU21D myHumidity;
 
 IoAbstractionRef ioExp2       = ioFrom8574  (0x24);          //Leds
 IoAbstractionRef ioExpInp     = ioFrom8574  (0x26);        //Level Sensors
-//IoAbstractionRef I2CmotorExp  = ioFrom23017 (0x21);     //Pumps
 Adafruit_MCP23X17 mcp;        //Pumps
-i2cPumps pumps(true);             
-boolean  booolik = true;                          // Использовать синхронизацию времени с NTP-сервером
+i2cPumps pumps(false);        //Pumps
+boolean  booolik = true;      // Программная защелка
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -209,25 +219,18 @@ void setup() {
   #endif
 
 #ifdef PHTDSCONTROL       
- //init ioExp
-
-  for(int i = 0; i <= 7; i++ ){ 
-    ioDevicePinMode(ioExp2, i, OUTPUT);
-    ioDevicePinMode(ioExpInp, i, INPUT);
-  }
-
 //Инициализация моторов (все выкл)
   mcp.begin_I2C(0x20);
-  for(int i = 0; i < PUMPCOUNT; i++ ){ 
+  for(int i = 0; i < 16; i++ ){ 
     mcp.pinMode(i, OUTPUT);
     mcp.digitalWrite(i, pumps.getinit());
   }
 
- //test led
-
-  for(int i = 0; i <= 7; i++ ){
-    //ioDeviceDigitalWrite(ioExp, i, !true);
-    ioDeviceDigitalWrite(ioExp2, i, true);
+ //init ioExp //test led
+  for(int i = 0; i <= 7; i++ ){ 
+    ioDevicePinMode     (ioExpInp,i, INPUT);
+    ioDevicePinMode     (ioExp2,  i, OUTPUT);
+    ioDeviceDigitalWrite(ioExp2,  i, true);
   }
   ioDeviceSync(ioExp2);
   ioDeviceSync(ioExpInp);
@@ -257,7 +260,10 @@ void setup() {
   Serial.println("Host name:\t" + host_name);
 
 #ifdef PHTDSCONTROL
+#ifdef DISPLAY
+
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) Serial.println(F("SSD1306 allocation failed")); 
+#endif
 #endif
   
 //-------------------------Инициализация файловой системы--------------------
@@ -304,14 +310,25 @@ void setup() {
 
 #ifdef PHTDSCONTROL
   setCollector(); //Применение конфигурации коллектора
+#endif
+#ifdef DISPLAY
   display.clearDisplay();
   display.setTextColor(WHITE);
   display.display();
-#endif
-
+#endif  
 
   // Подключение к сети
   connectToNetwork();
+
+#ifdef PHTDSCONTROL
+  setCollector(); //Применение конфигурации коллектора
+#endif
+#ifdef DISPLAY
+  display.setTextSize(2);
+  display.setCursor(0, 21);
+  display.print("WARM. WAIT");
+  display.display();
+#endif
 
   ntpSyncTimer.setInterval ( 60000L * syncTimePeriod );
 
@@ -347,7 +364,12 @@ void setup() {
   // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
 
   ArduinoOTA.onStart([]() {
-    
+
+#ifdef DISPLAY
+    display.clearDisplay();
+    display.setTextColor(WHITE);
+#endif
+
     String type;
     if (ArduinoOTA.getCommand() == U_FLASH)
       type = F("скетча...");
@@ -363,6 +385,14 @@ void setup() {
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Serial.printf("\nProgress: %u%%\r", (progress / (total / 100)));
+#ifdef DISPLAY
+    display.setTextSize(2);
+    display.setCursor(0, 21);
+    display.print("Flash-");
+    display.print(progress / (total / 100));
+    display.print("%");
+    display.display();
+#endif
   });
 
   ArduinoOTA.onError([](ota_error_t error) {

@@ -275,16 +275,16 @@ void process() {
 
     #ifdef PHTDSCONTROL
     // Чтение состояния моторов
-    for(int i = 0; i < PUMPCOUNT; i++ ){
-  #ifdef USE_LOG
-      Serial.print(i);  
-      Serial.print("-");
-      Serial.print(mcp.digitalRead(i));
-      Serial.print(" ");
-  #endif
-    }
-    Serial.println();
-    #endif
+  //   for(int i = 0; i < 16; i++ ){
+  // #ifdef USE_LOG
+  //     Serial.print(i);  
+  //     Serial.print("-");
+  //     Serial.print(mcp.digitalRead(i));
+  //     Serial.print(" ");
+  // #endif
+  //   }
+  //   Serial.println();
+     #endif
 
 
     #ifdef USE_LOG
@@ -393,23 +393,53 @@ void process() {
       Serial.println("done");
 #endif
 
+#ifdef DISPLAY
+  display.clearDisplay();
+#endif
 
 #ifdef PHTDSCONTROL
-  display.clearDisplay();
 #ifdef USE_LOG
-    Serial.print(" | sensor_scan >> ");
+    Serial.print(" | Wlvl_scan >> ");
 #endif
     ioDeviceSync(ioExpInp);
     for(int i = 0; i < LVLSNSCOUNT; i++ ){
-      ioDeviceDigitalWrite(ioExp2, i, ioDeviceDigitalRead(ioExpInp, i));
+      ioDeviceDigitalWrite(ioExp2, i, ioDeviceDigitalRead(ioExpInp, i) == invLVLsensor[i]);
 #ifdef USE_LOG
-      Serial.print(i);  
+      Serial.print(i);
+      switch (i) { 
+        case 0:
+          Serial.print("(Hi)");
+        break;
+        case 1:
+          Serial.print("(Mid)");
+        break;
+        case 2:
+          Serial.print("(Low)");
+        break;
+      }
       Serial.print("-");
-      Serial.print(ioDeviceDigitalRead(ioExpInp, i));
+      if(ioDeviceDigitalRead(ioExpInp, i) == invLVLsensor[i]) Serial.print("0"); 
+      else Serial.print("1"); 
       Serial.print(" ");
 #endif
     }
     ioDeviceSync(ioExp2);
+
+      switch (Wlvl) { 
+        case 0:
+          Serial.print(" Wlvl-NULL ");
+        break;
+        case 1:
+          Serial.print(" Wlvl-Low ");
+        break;
+        case 2:
+          Serial.print(" Wlvl-Mid ");
+        break;
+        case 3:
+          Serial.print(" Wlvl-Hi ");
+        break;
+      }
+
 #ifdef USE_LOG
     Serial.print("| ");
 #endif
@@ -471,6 +501,7 @@ void process() {
     } 
 
 #ifdef PHTDSCONTROL
+#ifdef DISPLAY
     display.setTextSize(2);
     display.setCursor(0,0);
     display.print("Ph: ");
@@ -499,6 +530,7 @@ void process() {
     display.print(":");
     display.print(localPort);
     display.display();
+#endif  
 #endif
 #endif
 
@@ -820,9 +852,21 @@ void parsing() {
           break;
 
           case 8:
-            // pumps.cngrl();
-          break;
-
+            if (intData[2] > 0 && intData[2] <= 8){
+              mcp.digitalWrite(intData[2]-1, !pumps.getinit());
+              if (intData[2]<=PUMPCOUNT) mcp.digitalWrite(intData[2]+7, pumps.getinit());
+              delay (3000);
+              mcp.digitalWrite(intData[2]-1, pumps.getinit());
+              if (intData[2]<=PUMPCOUNT) mcp.digitalWrite(intData[2]+7, pumps.getinit());
+            }
+            else if (intData[2] < 0 && intData[2] >= -PUMPCOUNT){
+              mcp.digitalWrite(-intData[2]-1, pumps.getinit());
+              mcp.digitalWrite(-intData[2]+7, !pumps.getinit());
+              delay (3000);
+              mcp.digitalWrite(-intData[2]-1, pumps.getinit());
+              mcp.digitalWrite(-intData[2]+7, pumps.getinit());
+            }
+         break;
         }
       break;
 

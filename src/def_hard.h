@@ -2,10 +2,10 @@
 #define DEF_HARD_H
 #endif
 
-#define EEPROM_OK     0xA6       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
+#define EEPROM_OK     0xA5       // Флаг, показывающий, что EEPROM инициализирована корректными данными 
 #define EEPROM_MAX    4096       // Максимальный размер EEPROM доступный для использования
 #define EFFECT_EEPROM  500       // начальная ячейка eeprom с параметрами эффектов, 5 байт на эффект
-#define PUMPCOUNT 16
+#define PUMPCOUNT 6
 
 // *************************************************************************
 enum  eModes   {NORMAL, FRACTION, TEXT};
@@ -129,12 +129,25 @@ I2C address 0x49 TDS
 5 - tds elec. 2 жел
 
 */
-#ifndef DS18B20
-#define DS18B20
-#endif
 
 #ifndef PHTDSCONTROL
 #define PHTDSCONTROL
+#endif
+
+#ifndef lolin32
+#define lolin32
+#endif
+
+#ifndef OLED
+#define OLED
+#endif
+
+#ifndef RTC
+#define RTC
+#endif
+
+#ifndef DS18B20
+#define DS18B20
 #endif
 
 #define DEV_ID 0
@@ -163,7 +176,13 @@ I2C address 0x49 TDS
 #define lolin32
 #endif
 
+#ifndef OLED
+#define OLED
+#endif
+
+#ifndef RTC
 #define RTC
+#endif
 
 #ifndef DS18B20
 #define DS18B20
