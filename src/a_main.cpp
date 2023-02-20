@@ -393,7 +393,7 @@ void process() {
       Serial.println("done");
 #endif
 
-#ifdef DISPLAY
+#ifdef  OLED
   display.clearDisplay();
 #endif
 
@@ -501,7 +501,7 @@ void process() {
     } 
 
 #ifdef PHTDSCONTROL
-#ifdef DISPLAY
+#ifdef  OLED
     display.setTextSize(2);
     display.setCursor(0,0);
     display.print("Ph: ");
@@ -851,22 +851,22 @@ void parsing() {
             resetFunc();
           break;
 
-          case 8:
-            if (intData[2] > 0 && intData[2] <= 8){
-              mcp.digitalWrite(intData[2]-1, !pumps.getinit());
-              if (intData[2]<=PUMPCOUNT) mcp.digitalWrite(intData[2]+7, pumps.getinit());
-              delay (3000);
-              mcp.digitalWrite(intData[2]-1, pumps.getinit());
-              if (intData[2]<=PUMPCOUNT) mcp.digitalWrite(intData[2]+7, pumps.getinit());
-            }
-            else if (intData[2] < 0 && intData[2] >= -PUMPCOUNT){
-              mcp.digitalWrite(-intData[2]-1, pumps.getinit());
-              mcp.digitalWrite(-intData[2]+7, !pumps.getinit());
-              delay (3000);
-              mcp.digitalWrite(-intData[2]-1, pumps.getinit());
-              mcp.digitalWrite(-intData[2]+7, pumps.getinit());
-            }
-         break;
+        //   case 8:
+        //     if (intData[2] > 0 && intData[2] <= 8){
+        //       mcp.digitalWrite(intData[2]-1, !pumps.getinit());
+        //       if (intData[2]<=PUMPCOUNT) mcp.digitalWrite(intData[2]+7, pumps.getinit());
+        //       delay (3000);
+        //       mcp.digitalWrite(intData[2]-1, pumps.getinit());
+        //       if (intData[2]<=PUMPCOUNT) mcp.digitalWrite(intData[2]+7, pumps.getinit());
+        //     }
+        //     else if (intData[2] < 0 && intData[2] >= -PUMPCOUNT){
+        //       mcp.digitalWrite(-intData[2]-1, pumps.getinit());
+        //       mcp.digitalWrite(-intData[2]+7, !pumps.getinit());
+        //       delay (3000);
+        //       mcp.digitalWrite(-intData[2]-1, pumps.getinit());
+        //       mcp.digitalWrite(-intData[2]+7, pumps.getinit());
+        //     }
+        //  break;
         }
       break;
 

@@ -260,7 +260,7 @@ void setup() {
   Serial.println("Host name:\t" + host_name);
 
 #ifdef PHTDSCONTROL
-#ifdef DISPLAY
+#ifdef  OLED
 
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) Serial.println(F("SSD1306 allocation failed")); 
 #endif
@@ -311,7 +311,7 @@ void setup() {
 #ifdef PHTDSCONTROL
   setCollector(); //Применение конфигурации коллектора
 #endif
-#ifdef DISPLAY
+#ifdef  OLED
   display.clearDisplay();
   display.setTextColor(WHITE);
   display.display();
@@ -323,7 +323,7 @@ void setup() {
 #ifdef PHTDSCONTROL
   setCollector(); //Применение конфигурации коллектора
 #endif
-#ifdef DISPLAY
+#ifdef  OLED
   display.setTextSize(2);
   display.setCursor(0, 21);
   display.print("WARM. WAIT");
@@ -365,7 +365,7 @@ void setup() {
 
   ArduinoOTA.onStart([]() {
 
-#ifdef DISPLAY
+#ifdef  OLED
     display.clearDisplay();
     display.setTextColor(WHITE);
 #endif
@@ -385,7 +385,7 @@ void setup() {
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Serial.printf("\nProgress: %u%%\r", (progress / (total / 100)));
-#ifdef DISPLAY
+#ifdef  OLED
     display.setTextSize(2);
     display.setCursor(0, 21);
     display.print("Flash-");

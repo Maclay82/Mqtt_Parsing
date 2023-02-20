@@ -402,7 +402,7 @@ void startWiFi(unsigned long waitTime) {
   if (strlen(ssid) > 0) {
     Serial.print(F("Подключение к "));
     Serial.print(ssid);
-#ifdef DISPLAY
+#ifdef  OLED
     display.clearDisplay();
     display.setTextSize(1);
     display.setCursor(0,0);
@@ -487,7 +487,7 @@ void startSoftAP() {
   WiFi.softAPdisconnect(true);
   ap_connected = false;
   
-#ifdef DISPLAY
+#ifdef  OLED
   display.clearDisplay();
   display.setTextSize(2);
   display.setCursor(0,0);
@@ -559,7 +559,7 @@ void connectToNetwork() {  // Подключиться к WiFi сети, ожи�
 
   // Сообщить UDP порт, на который ожидаются подключения
   if (wifi_connected || ap_connected) {
-#ifdef DISPLAY
+#ifdef  OLED
     display.setTextSize(1);
 
     display.setCursor(0, 57);

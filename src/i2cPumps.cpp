@@ -60,8 +60,8 @@ float i2cPumps::getPumpScale (uint8_t num){
 uint8_t i2cPumps::getPumpCount(){
   return uint8_t(PUMPCOUNT);
 }
-#endif
 
 boolean  i2cPumps::getinit (){
   return (onpump);
 }
+#endif

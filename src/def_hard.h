@@ -47,7 +47,7 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 
 // Профиль устройства, под которое выполняется компиляция и сборка проекта
 
-#define DEVICE_ID 4                 // 0 - Увлажнитель тестовый стенд
+#define DEVICE_ID 1                 // 0 - Увлажнитель тестовый стенд
                                     // 1 - Увлажнитель Зеленка
                                     // 2 - Увлажнитель Перцы
                                     // 3 - PhTDS контроллер тестовый
@@ -64,7 +64,6 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #endif
 #define DEV_ID 0
 #define REFRESHTIME 10000
-
 #define HOST_NAME   F("HumCtrlTest")
 
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
@@ -81,13 +80,13 @@ enum  eSources {NONE, BOTH, UDP, MQTT};
 #define HUMCONTROL
 #endif
 #define DEV_ID 0
+#define REFRESHTIME 5000
+#define HOST_NAME   F("HumCtrl")
 
 #define USE_MQTT 1            // 1 - использовать управление по MQTT-каналу; 0 - не использовать 
-#define HOST_NAME   F("HumCtrl")
 #define DEFAULT_MQTT_PREFIX "gh1"      // Префикс топика сообщения или пустая строка, если префикс не требуется
 #define A_DEF_PASS 0          // 1 - Настройки MQTT и API KEY OpenWeatherMap в отдельном файле a_def_pass.h     (пароли и ключи доступа как приватные данные в отдельном файле)
 
-#define REFRESHTIME 5000
 #define minhumDEF 69
 #define maxhumDEF 74
 
